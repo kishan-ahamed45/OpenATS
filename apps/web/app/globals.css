@@ -45,6 +45,7 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+  --color-brand: #355872;
 }
 
 :root {
@@ -72,14 +73,14 @@
   --chart-4: oklch(0.60 0.13 163);
   --chart-5: oklch(0.51 0.10 166);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.60 0.13 163);
-  --sidebar-primary-foreground: oklch(0.98 0.02 166);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: #F8FAFC;
+  --sidebar-foreground: #64748B;
+  --sidebar-primary: #355872;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #E2E8F0;
+  --sidebar-accent-foreground: #355872;
+  --sidebar-border: #F1F5F9;
+  --sidebar-ring: #355872;
 }
 
 .dark {
@@ -123,4 +124,16 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Global scrollbar hiding */
+* , html, body {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+*::-webkit-scrollbar, html::-webkit-scrollbar, body::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
