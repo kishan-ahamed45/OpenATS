@@ -389,7 +389,7 @@ export default function AssessmentPage() {
                       Stay in Quiz
                     </AlertDialogCancel>
                     <AlertDialogAction
-                      onClick={() => { window.location.href = "/dashboard/assessments" }}
+                      onClick={() => { window.location.href = "/assessments" }}
                       className="h-9 px-5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-[13px] font-medium shadow-none border-none"
                     >
                       Yes, Quit
