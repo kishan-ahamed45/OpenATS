@@ -23,53 +23,57 @@ import {
 const navMainData = [
   {
     title: "Overview",
-    url: "/dashboard",
+    url: "/",
     icon: Home01Icon,
   },
   {
     title: "Manage Jobs",
-    url: "/dashboard/jobs",
+    url: "/jobs",
     icon: Briefcase01Icon,
   },
   {
     title: "Candidates",
-    url: "/dashboard/candidates",
+    url: "/candidates",
     icon: UserGroupIcon,
   },
   {
     title: "Assessments",
-    url: "/dashboard/assessments",
+    url: "/assessments",
     icon: CheckListIcon,
   },
   {
     title: "Manage Offers",
-    url: "/dashboard/offers",
+    url: "/offers",
     icon: Message01Icon,
   },
   {
     title: "Settings",
-    url: "/dashboard/settings",
+    url: "/settings",
     icon: Settings02Icon,
     items: [
       {
         title: "General",
-        url: "/dashboard/settings/general",
+        url: "/settings/general",
       },
       {
         title: "Page Setup",
-        url: "/dashboard/settings/setup",
+        url: "/settings/setup",
       },
       {
         title: "Templates",
-        url: "/dashboard/settings/templates",
+        url: "/settings/templates",
       },
       {
         title: "Team",
-        url: "/dashboard/settings/team",
+        url: "/settings/team",
       },
       {
         title: "Profile",
-        url: "/dashboard/settings/profile",
+        url: "/settings/profile",
+      },
+      {
+        title: "Archive",
+        url: "/settings/archive",
       },
     ],
   },
@@ -80,8 +84,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const items = navMainData.map((item) => ({
     ...item,
-    isActive: item.url === "/dashboard" 
-      ? pathname === "/dashboard" 
+    isActive: item.url === "/"
+      ? pathname === "/"
       : pathname === item.url || pathname.startsWith(item.url + "/"),
   }))
 
