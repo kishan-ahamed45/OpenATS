@@ -1,9 +1,3 @@
-// =============================================================================
-// Schema barrel — import everything from here across your app:
-//   import { jobs, candidates, users } from "@/db/schema"
-//   import type { Job, Candidate }     from "@/db/schema"
-// =============================================================================
-
 export * from "./enums";
 export * from "./company";
 export * from "./users";

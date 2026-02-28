@@ -30,7 +30,7 @@ import {
 import { offers } from "./offers";
 import { emailMessages, jobChatMessages } from "./communications";
 
-// ── Company ──────────────────────────────────────────────────────────────────
+// company
 export const companyRelations = relations(company, ({ many }) => ({
   departments: many(departments),
 }));
@@ -43,7 +43,7 @@ export const departmentsRelations = relations(departments, ({ one, many }) => ({
   jobs: many(jobs),
 }));
 
-// ── Users ─────────────────────────────────────────────────────────────────────
+// users
 export const usersRelations = relations(users, ({ many }) => ({
   createdJobs: many(jobs),
   createdTemplates: many(templates),
@@ -55,7 +55,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   stageMoves: many(candidateStageHistory),
 }));
 
-// ── Templates ─────────────────────────────────────────────────────────────────
+// templates
 export const templatesRelations = relations(templates, ({ one, many }) => ({
   createdBy: one(users, {
     fields: [templates.createdBy],
@@ -69,7 +69,7 @@ export const templatesRelations = relations(templates, ({ one, many }) => ({
   emailMessages: many(emailMessages),
 }));
 
-// ── Jobs ──────────────────────────────────────────────────────────────────────
+// jobs
 export const jobsRelations = relations(jobs, ({ one, many }) => ({
   department: one(departments, {
     fields: [jobs.departmentId],
@@ -97,7 +97,7 @@ export const jobSkillsRelations = relations(jobSkills, ({ one }) => ({
   }),
 }));
 
-// ── Pipeline ──────────────────────────────────────────────────────────────────
+// pipeline
 export const pipelineStageTemplatesRelations = relations(
   pipelineStageTemplates,
   ({ many }) => ({
@@ -143,7 +143,7 @@ export const jobHiringTeamRelations = relations(jobHiringTeam, ({ one }) => ({
   }),
 }));
 
-// ── Assessments ───────────────────────────────────────────────────────────────
+// assessments
 export const assessmentsRelations = relations(assessments, ({ one, many }) => ({
   createdBy: one(users, {
     fields: [assessments.createdBy],
@@ -219,7 +219,7 @@ export const jobAssessmentAttachmentsRelations = relations(
   }),
 );
 
-// ── Candidates ────────────────────────────────────────────────────────────────
+// candidates
 export const candidatesRelations = relations(candidates, ({ one, many }) => ({
   job: one(jobs, {
     fields: [candidates.jobId],
@@ -346,7 +346,7 @@ export const candidateCvAnalysisRelations = relations(
   }),
 );
 
-// ── Offers ────────────────────────────────────────────────────────────────────
+// offers
 export const offersRelations = relations(offers, ({ one }) => ({
   candidate: one(candidates, {
     fields: [offers.candidateId],
@@ -366,7 +366,7 @@ export const offersRelations = relations(offers, ({ one }) => ({
   }),
 }));
 
-// ── Communications ────────────────────────────────────────────────────────────
+// communications
 export const emailMessagesRelations = relations(emailMessages, ({ one }) => ({
   candidate: one(candidates, {
     fields: [emailMessages.candidateId],

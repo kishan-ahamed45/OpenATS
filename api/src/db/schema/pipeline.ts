@@ -13,34 +13,16 @@ import { jobs } from "./jobs";
 import { templates } from "./templates";
 import { users } from "./users";
 
-// ------------------------------------------------------------------
-// Pipeline Stage Templates
-// Global default stages — copied into job_pipeline_stages on every
-// new job creation. Changes here only affect future jobs.
-// ------------------------------------------------------------------
 export const pipelineStageTemplates = pgTable("pipeline_stage_templates", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 100 }).notNull().unique(),
-  // 1 = leftmost kanban column
   position: integer("position").notNull(),
   stageType: stageType("stage_type").notNull().default("none"),
-  // FALSE = protected system stage (Applied, Rejected); cannot be deleted
   isDeletable: boolean("is_deletable").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-// ------------------------------------------------------------------
-// Job Pipeline Stages
-// Each job gets its own independent copy of the pipeline stages,
-// seeded from pipelineStageTemplates at job creation time.
-//
-// ⚠️  Drizzle circular-import note:
-//   This table references templates(id). templates has NO dependency
-//   on pipeline, so the import direction is safe:
-//     pipeline → templates  ✅
-//     templates → pipeline  ❌ (never do this)
-// ------------------------------------------------------------------
 export const jobPipelineStages = pgTable(
   "job_pipeline_stages",
   {
@@ -49,34 +31,25 @@ export const jobPipelineStages = pgTable(
       .notNull()
       .references(() => jobs.id, { onDelete: "cascade" }),
 
-    // Copied from pipelineStageTemplates.name; can be renamed per-job
     name: varchar("name", { length: 100 }).notNull(),
 
-    // 1 = leftmost column on THIS job's kanban board
     position: integer("position").notNull(),
 
     stageType: stageType("stage_type").notNull().default("none"),
 
-    // ── Offer stage config (set only when stageType = 'offer') ────
     offerTemplateId: integer("offer_template_id").references(
       () => templates.id,
       { onDelete: "set null" },
     ),
-    // auto_send only valid for fixed-salary jobs; app layer must guard this
     offerMode: offerMode("offer_mode"),
-    // calendar days after sending before the offer expires
     offerExpiryDays: integer("offer_expiry_days"),
-    // ──────────────────────────────────────────────────────────────
 
-    // ── Rejection stage config (set only when stageType = 'rejection') ──
     rejectionTemplateId: integer("rejection_template_id").references(
       () => templates.id,
       { onDelete: "set null" },
     ),
     // ──────────────────────────────────────────────────────────────
 
-    // Which global template stage this was seeded from.
-    // NULL for custom stages added after job creation.
     sourceTemplateId: integer("source_template_id").references(
       () => pipelineStageTemplates.id,
       { onDelete: "set null" },
@@ -88,11 +61,6 @@ export const jobPipelineStages = pgTable(
   (t) => [unique().on(t.jobId, t.position)],
 );
 
-// ------------------------------------------------------------------
-// Job Hiring Team
-// Users assigned to work on a specific job.
-// The creating Hiring Manager is auto-inserted on job creation.
-// ------------------------------------------------------------------
 export const jobHiringTeam = pgTable(
   "job_hiring_team",
   {
