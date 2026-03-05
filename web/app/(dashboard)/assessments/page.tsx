@@ -29,6 +29,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import Link from "next/link";
 
 const INITIAL_ASSESSMENTS = [
   {
@@ -147,14 +148,19 @@ export default function AssessmentsPage() {
         <h1 className="text-[28px] font-medium text-slate-900 leading-none">
           Assessments
         </h1>
-        <Button className="bg-[#355872] hover:bg-[#355872]/90 text-white rounded-lg h-10 px-5 flex items-center gap-2 border-none shadow-none text-sm font-medium transition-colors">
-          <HugeiconsIcon
-            icon={PlusSignIcon}
-            className="size-4"
-            strokeWidth={2.5}
-          />
-          <span>Add New Assessment</span>
-        </Button>
+        <Link
+          href="assessment/new"
+          className="bg-[#355872] hover:bg-[#355872]/90 text-white rounded-lg h-10 px-4 flex items-center gap-2 border-none shadow-none text-sm font-medium transition-colors"
+        >
+          <Button className="bg-[#355872] hover:bg-[#355872]/90 text-white rounded-lg h-10 px-5 flex items-center gap-2 border-none shadow-none text-sm font-medium transition-colors">
+            <HugeiconsIcon
+              icon={PlusSignIcon}
+              className="size-4"
+              strokeWidth={2.5}
+            />
+            <span>Add New Assessment</span>
+          </Button>
+        </Link>
       </div>
 
       <div className="border-y border-slate-200 px-8 py-3.5 flex items-center gap-4">
