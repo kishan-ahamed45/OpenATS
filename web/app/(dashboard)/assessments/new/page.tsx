@@ -231,7 +231,7 @@ export default function CreateAssessmentPage() {
           >
             Save Assessment
           </Button>
-          <Link href="assessments">
+          <Link href="/assessments">
             <Button
               variant="outline"
               className="h-10 px-6 rounded-lg border-slate-200 text-slate-600 bg-white hover:bg-slate-50 shadow-none font-medium text-sm"

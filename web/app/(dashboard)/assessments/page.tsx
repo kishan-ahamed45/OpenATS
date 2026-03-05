@@ -1,17 +1,21 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
+import Link from "next/link";
 import {
   Search01Icon,
   PlusSignIcon,
   Delete02Icon,
-  MoreVerticalIcon,
+  Copy01Icon,
+  CheckmarkCircle01Icon,
+  Time01Icon,
+  QuestionIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { ThemeButton } from "@/components/theme-button";
 import {
   Select,
   SelectContent,
@@ -29,7 +33,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import Link from "next/link";
 
 const INITIAL_ASSESSMENTS = [
   {
@@ -42,84 +45,56 @@ const INITIAL_ASSESSMENTS = [
   },
   {
     id: "a2",
-    title: "Frontend Developer L01",
+    title: "Backend Engineer Assessment",
     status: "Active",
-    difficulty: "Easy",
-    questions: 10,
-    duration: 120,
+    difficulty: "Medium",
+    questions: 15,
+    duration: 90,
   },
   {
     id: "a3",
-    title: "Frontend Developer L01",
-    status: "Active",
+    title: "UI/UX Designer Challenge",
+    status: "Inactive",
     difficulty: "Easy",
-    questions: 10,
-    duration: 120,
+    questions: 8,
+    duration: 60,
   },
   {
     id: "a4",
-    title: "Frontend Developer L01",
+    title: "DevOps Engineer – Level 2",
     status: "Active",
-    difficulty: "Easy",
-    questions: 10,
-    duration: 120,
+    difficulty: "Hard",
+    questions: 20,
+    duration: 180,
   },
   {
     id: "a5",
-    title: "Frontend Developer L01",
+    title: "Data Analyst Screening",
     status: "Active",
-    difficulty: "Easy",
-    questions: 10,
-    duration: 120,
+    difficulty: "Medium",
+    questions: 12,
+    duration: 75,
   },
   {
     id: "a6",
-    title: "Frontend Developer L01",
-    status: "Active",
+    title: "Mobile Developer L01",
+    status: "Inactive",
     difficulty: "Easy",
     questions: 10,
     duration: 120,
   },
 ];
 
-function CardMenu({ onDelete }: { onDelete(): void }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!open) return;
-    const fn = (e: MouseEvent) => {
-      if (!ref.current?.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", fn);
-    return () => document.removeEventListener("mousedown", fn);
-  }, [open]);
-  return (
-    <div ref={ref} className="relative">
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => setOpen((o) => !o)}
-        className="size-9 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 ml-auto"
-      >
-        <HugeiconsIcon icon={MoreVerticalIcon} className="size-4" />
-      </Button>
-      {open && (
-        <div className="absolute right-0 top-10 z-50 w-40 bg-white border border-slate-200 rounded-lg shadow-lg py-1 text-sm">
-          <button
-            onClick={() => {
-              setOpen(false);
-              onDelete();
-            }}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-red-500 hover:bg-red-50"
-          >
-            <HugeiconsIcon icon={Delete02Icon} className="size-4" />
-            Delete
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
+const STATUS_STYLES: Record<string, string> = {
+  Active: "bg-emerald-50 text-emerald-700",
+  Inactive: "bg-slate-100 text-slate-500",
+};
+
+const DIFFICULTY_STYLES: Record<string, string> = {
+  Easy: "bg-blue-50 text-blue-600",
+  Medium: "bg-amber-50 text-amber-600",
+  Hard: "bg-red-50 text-red-600",
+};
 
 export default function AssessmentsPage() {
   const [assessments, setAssessments] = useState(INITIAL_ASSESSMENTS);
@@ -148,48 +123,56 @@ export default function AssessmentsPage() {
         <h1 className="text-[28px] font-medium text-slate-900 leading-none">
           Assessments
         </h1>
-        <Link
-          href="assessment/new"
-          className="inline-flex items-center gap-2 text-white rounded-lg h-10 px-4 border-none shadow-none text-sm font-medium transition-colors"
-          style={{ backgroundColor: "var(--theme-color)" }}
+        <ThemeButton
+          asChild
+          href="/assessments/new"
+          className="h-10 px-4 gap-2 text-sm shadow-none border-none"
         >
           <HugeiconsIcon
             icon={PlusSignIcon}
             className="size-4"
             strokeWidth={2.5}
           />
-          <span>Add New Assessment</span>
-        </Link>
+          <span>New Assessment</span>
+        </ThemeButton>
       </div>
 
       <div className="border-y border-slate-200 px-8 py-3.5 flex items-center gap-4">
-        <div className="relative w-72">
+        <div className="relative w-80">
           <HugeiconsIcon
             icon={Search01Icon}
             className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-300 pointer-events-none"
           />
           <Input
-            placeholder="Search"
-            className="pl-10 h-10! bg-white border-slate-200 shadow-none rounded-lg text-sm placeholder:text-slate-400 transition-[border-color] duration-200 ease-in-out"
+            placeholder="Search assessments…"
+            className="pl-11 h-10! bg-white border-slate-200 shadow-none rounded-lg text-sm placeholder:text-slate-300 transition-[border-color] duration-200 ease-in-out"
           />
         </div>
-        <div className="ml-auto flex items-center gap-3">
-          <Select>
-            <SelectTrigger className="w-36 h-10! bg-white border-slate-200 shadow-none rounded-lg text-slate-500 text-sm focus:ring-0 px-4">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent className="rounded-lg shadow-lg border-slate-200">
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button
-            variant="ghost"
-            className="text-slate-500 font-medium text-sm h-10 px-3 hover:bg-transparent hover:text-slate-900"
-          >
-            Clear All
-          </Button>
-        </div>
+        <Select>
+          <SelectTrigger className="w-36 h-10! bg-white border-slate-200 shadow-none rounded-lg text-slate-500 text-sm focus:ring-0 px-4">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent className="rounded-lg shadow-lg border-slate-200">
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="inactive">Inactive</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select>
+          <SelectTrigger className="w-36 h-10! bg-white border-slate-200 shadow-none rounded-lg text-slate-500 text-sm focus:ring-0 px-4">
+            <SelectValue placeholder="Difficulty" />
+          </SelectTrigger>
+          <SelectContent className="rounded-lg shadow-lg border-slate-200">
+            <SelectItem value="easy">Easy</SelectItem>
+            <SelectItem value="medium">Medium</SelectItem>
+            <SelectItem value="hard">Hard</SelectItem>
+          </SelectContent>
+        </Select>
+        <Button
+          variant="ghost"
+          className="text-slate-600 font-medium text-sm h-10 px-4 hover:bg-transparent hover:text-slate-900 border-none ml-2"
+        >
+          Clear All
+        </Button>
       </div>
 
       <div className="px-8 py-6">
@@ -198,48 +181,81 @@ export default function AssessmentsPage() {
             No assessments found.
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {assessments.map((assessment) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {assessments.map((a) => (
               <div
-                key={assessment.id}
-                className="border border-slate-200 rounded-xl bg-white p-6 flex flex-col gap-4 hover:border-slate-300 transition-all"
+                key={a.id}
+                className="flex flex-col border border-slate-200 rounded-lg bg-white"
               >
-                <div className="space-y-2">
-                  <h3 className="text-[15px] font-semibold text-slate-900 leading-snug">
-                    {assessment.title}
-                  </h3>
+                {/* Card body */}
+                <div className="flex flex-col gap-2.5 px-5 pt-5 pb-4">
+                  {/* Title */}
+                  <Link
+                    href={`/assessments/${a.id}`}
+                    className="text-[15px] font-semibold text-slate-800 leading-snug hover:underline underline-offset-4 decoration-1 truncate"
+                  >
+                    {a.title}
+                  </Link>
+
+                  {/* Badges + stats in one row */}
                   <div className="flex items-center gap-2">
-                    <Badge className="bg-[#E6F4EA] text-[#1E8E3E] border-none shadow-none font-medium text-[11px] px-2.5 py-0.5 rounded-full">
-                      {assessment.status}
-                    </Badge>
-                    <Badge className="bg-[#EEF2FF] text-[#4338CA] border-none shadow-none font-medium text-[11px] px-2.5 py-0.5 rounded-full">
-                      {assessment.difficulty}
-                    </Badge>
+                    <span
+                      className={`inline-flex items-center text-[12px] font-medium px-2.5 py-1 rounded-md ${STATUS_STYLES[a.status] ?? "bg-slate-100 text-slate-500"}`}
+                    >
+                      {a.status}
+                    </span>
+                    <span
+                      className={`inline-flex items-center text-[12px] font-medium px-2.5 py-1 rounded-md ${DIFFICULTY_STYLES[a.difficulty] ?? "bg-slate-100 text-slate-500"}`}
+                    >
+                      {a.difficulty}
+                    </span>
+                    <span className="ml-auto flex items-center gap-3">
+                      <span className="flex items-center gap-1 text-[12px] text-slate-400">
+                        <HugeiconsIcon
+                          icon={QuestionIcon}
+                          className="size-3.5"
+                        />
+                        {a.questions}
+                      </span>
+                      <span className="flex items-center gap-1 text-[12px] text-slate-400">
+                        <HugeiconsIcon icon={Time01Icon} className="size-3.5" />
+                        {a.duration}m
+                      </span>
+                    </span>
                   </div>
                 </div>
-                <p className="text-[13px] text-slate-500 font-medium">
-                  {assessment.questions} Questions · {assessment.duration}{" "}
-                  Minutes
-                </p>
-                <div className="flex items-center gap-2 pt-1">
-                  <Button
-                    onClick={() => copyPreviewLink(assessment.id)}
-                    className={`text-[13px] font-medium h-9 px-5 rounded-lg shadow-none border-none gap-2 transition-all active:scale-[0.98] ${copiedId === assessment.id ? "bg-emerald-500 text-white" : "text-white"}`}
-                    style={
-                      copiedId === assessment.id
-                        ? {}
-                        : { backgroundColor: "var(--theme-color)" }
-                    }
-                  >
-                    {copiedId === assessment.id ? "Link Copied!" : "Preview"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="text-slate-600 text-[13px] font-medium h-9 px-4 rounded-lg shadow-none border-slate-200 hover:bg-slate-50 hover:text-slate-900 gap-2 transition-all"
+
+                {/* Card footer */}
+                <div className="flex items-center gap-1.5 px-4 py-3 border-t border-slate-100">
+                  <ThemeButton
+                    className="h-8 px-6 text-[12px] font-medium shadow-none border-none rounded-md"
+                    onClick={() => {}}
                   >
                     Edit
-                  </Button>
-                  <CardMenu onDelete={() => setDeleteTarget(assessment)} />
+                  </ThemeButton>
+                  <button
+                    onClick={() => copyPreviewLink(a.id)}
+                    className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-[12px] font-medium border ${
+                      copiedId === a.id
+                        ? "bg-emerald-50 text-emerald-600 border-emerald-200"
+                        : "text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-slate-700"
+                    }`}
+                  >
+                    <HugeiconsIcon
+                      icon={
+                        copiedId === a.id ? CheckmarkCircle01Icon : Copy01Icon
+                      }
+                      className="size-3.5"
+                    />
+                    {copiedId === a.id ? "Copied!" : "Copy link"}
+                  </button>
+                  <button
+                    onClick={() => setDeleteTarget(a)}
+                    className="ml-auto inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-[12px] font-medium border border-red-200 text-red-400 hover:bg-red-50 hover:text-red-500"
+                  >
+                    <HugeiconsIcon icon={Delete02Icon} className="size-3.5" />
+                    Delete
+                  </button>
                 </div>
               </div>
             ))}

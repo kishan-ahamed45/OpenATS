@@ -1,14 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { Ref } from "react";
-import { useDrag, useDrop } from "react-dnd";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Search01Icon } from "@hugeicons/core-free-icons";
+import { useDrag, useDrop, useDragLayer } from "react-dnd";
+import { getEmptyImage } from "react-dnd-html5-backend";
+import { GripVertical } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 
 interface Candidate {
   id: string;
@@ -25,58 +23,171 @@ interface Stage {
 
 const CARD_TYPE = "PIPELINE_CARD";
 
-function DraggableCard({
-  candidate,
-  stageId,
-}: {
-  candidate: Candidate;
-  stageId: string;
-}) {
-  const [{ isDragging }, dragRef] = useDrag({
-    type: CARD_TYPE,
-    item: { id: candidate.id, fromStageId: stageId },
-    collect: (monitor) => ({ isDragging: monitor.isDragging() }),
-  });
+// ── Custom drag layer (angled floating card) ──────────────────────────────────
+function CustomDragLayer() {
+  const { isDragging, item, currentOffset } = useDragLayer((monitor) => ({
+    isDragging: monitor.isDragging(),
+    item: monitor.getItem() as { name: string; time: string } | null,
+    currentOffset: monitor.getSourceClientOffset(),
+  }));
+
+  if (!isDragging || !currentOffset || !item) return null;
 
   return (
     <div
-      ref={dragRef as unknown as Ref<HTMLDivElement>}
-      className={`bg-white border border-slate-200 px-3.5 py-2.5 rounded-lg space-y-0.5 transition-all group select-none ${
-        isDragging
-          ? "opacity-30 cursor-grabbing scale-[0.97]"
-          : "hover:border-[#355872]/30 cursor-grab"
-      }`}
+      style={{
+        position: "fixed",
+        pointerEvents: "none",
+        left: 0,
+        top: 0,
+        zIndex: 9999,
+        transform: `translate(${currentOffset.x}px, ${currentOffset.y}px)`,
+      }}
     >
-      <p className="font-semibold text-slate-800 text-[13px] leading-snug group-hover:text-[#355872] transition-colors">
-        {candidate.name}
-      </p>
-      <p className="text-slate-400 text-[10px] font-medium uppercase tracking-tight">
-        {candidate.time}
-      </p>
+      <div
+        style={{ transform: "rotate(3deg)" }}
+        className="bg-white border border-slate-300 shadow-xl px-3 py-2.5 rounded-lg flex items-center gap-2 w-[260px] opacity-95"
+      >
+        <GripVertical className="size-3.5 text-slate-300 shrink-0" />
+        <div className="space-y-0.5 min-w-0">
+          <p className="font-semibold text-[var(--theme-color)] text-[13px] leading-snug truncate">
+            {item.name}
+          </p>
+          <p className="text-slate-400 text-[10px] font-medium uppercase tracking-tight">
+            {item.time}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
 
+// ── Draggable card with hover-index drop target ───────────────────────────────
+function DraggableCard({
+  candidate,
+  stageId,
+  index,
+  onReorder,
+}: {
+  candidate: Candidate;
+  stageId: string;
+  index: number;
+  onReorder: (
+    fromStageId: string,
+    fromIndex: number,
+    toStageId: string,
+    toIndex: number,
+  ) => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+
+  const [{ isDragging }, dragRef, dragPreviewRef] = useDrag({
+    type: CARD_TYPE,
+    item: {
+      id: candidate.id,
+      name: candidate.name,
+      time: candidate.time,
+      fromStageId: stageId,
+      fromIndex: index,
+    },
+    collect: (monitor) => ({ isDragging: monitor.isDragging() }),
+  });
+
+  useEffect(() => {
+    dragPreviewRef(getEmptyImage(), { captureDraggingState: true });
+  }, [dragPreviewRef]);
+
+  const [{ isOver, isAbove }, dropRef] = useDrop<
+    { id: string; fromStageId: string; fromIndex: number },
+    void,
+    { isOver: boolean; isAbove: boolean }
+  >({
+    accept: CARD_TYPE,
+    hover(dragItem, monitor) {
+      if (!ref.current) return;
+      if (dragItem.id === candidate.id) return;
+      const hoverBoundingRect = ref.current.getBoundingClientRect();
+      const hoverMiddleY =
+        (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+      const clientOffset = monitor.getClientOffset();
+      if (!clientOffset) return;
+      const hoverClientY = clientOffset.y - hoverBoundingRect.top;
+      const toIndex = hoverClientY < hoverMiddleY ? index : index + 1;
+      onReorder(dragItem.fromStageId, dragItem.fromIndex, stageId, toIndex);
+      dragItem.fromStageId = stageId;
+      dragItem.fromIndex = toIndex > dragItem.fromIndex ? toIndex - 1 : toIndex;
+    },
+    collect: (monitor) => {
+      if (!ref.current || !monitor.isOver())
+        return { isOver: false, isAbove: false };
+      const hoverBoundingRect = ref.current.getBoundingClientRect();
+      const hoverMiddleY =
+        (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+      const clientOffset = monitor.getClientOffset();
+      const hoverClientY = clientOffset
+        ? clientOffset.y - hoverBoundingRect.top
+        : 0;
+      return { isOver: monitor.isOver(), isAbove: hoverClientY < hoverMiddleY };
+    },
+  });
+
+  dragRef(dropRef(ref));
+
+  return (
+    <div
+      ref={ref as unknown as Ref<HTMLDivElement>}
+      className={`bg-white px-3 py-2.5 rounded-lg flex items-center gap-2 group select-none transition-colors ${
+        isDragging
+          ? "border-2 border-dashed border-[var(--theme-color)] opacity-40 cursor-grabbing"
+          : "border border-slate-200 hover:border-[var(--theme-color)]/40 cursor-grab"
+      }`}
+    >
+      <GripVertical className="size-3.5 text-slate-300 shrink-0 group-hover:text-slate-400 transition-colors" />
+      <div className="space-y-0.5 min-w-0">
+        <p className="font-semibold text-slate-800 text-[13px] leading-snug group-hover:text-[var(--theme-color)] transition-colors truncate">
+          {candidate.name}
+        </p>
+        <p className="text-slate-400 text-[10px] font-medium uppercase tracking-tight">
+          {candidate.time}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ── Droppable column ──────────────────────────────────────────────────────────
 function DroppableColumn({
   stage,
-  onDrop,
+  onDropToStage,
+  onReorder,
 }: {
   stage: Stage;
-  onDrop: (cardId: string, fromStageId: string, toStageId: string) => void;
+  onDropToStage: (
+    cardId: string,
+    fromStageId: string,
+    toStageId: string,
+  ) => void;
+  onReorder: (
+    fromStageId: string,
+    fromIndex: number,
+    toStageId: string,
+    toIndex: number,
+  ) => void;
 }) {
   const [{ isOver, canDrop }, dropRef] = useDrop<
-    { id: string; fromStageId: string },
+    { id: string; fromStageId: string; fromIndex: number },
     void,
     { isOver: boolean; canDrop: boolean }
   >({
     accept: CARD_TYPE,
     drop: (item) => {
       if (item.fromStageId !== stage.id) {
-        onDrop(item.id, item.fromStageId, stage.id);
+        onDropToStage(item.id, item.fromStageId, stage.id);
       }
     },
     collect: (monitor) => ({
-      isOver: monitor.isOver(),
+      isOver: monitor.isOver({ shallow: true }),
       canDrop: monitor.canDrop(),
     }),
   });
@@ -93,37 +204,37 @@ function DroppableColumn({
         <h3 className="font-semibold text-slate-700 text-[15px]">
           {stage.title}
         </h3>
-        <span className="ml-auto text-[11px] font-bold text-slate-400 bg-white px-2 py-0.5 rounded-full border border-slate-100 uppercase tracking-tighter">
+        <span className="ml-auto text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-300 uppercase tracking-tighter">
           {stage.candidates.length} Cards
         </span>
       </div>
 
       <div
         ref={dropRef as unknown as Ref<HTMLDivElement>}
-        className={`flex-1 border rounded-xl p-3 space-y-4 overflow-y-auto custom-scrollbar-y transition-colors duration-150 ${
+        className={`flex-1 rounded-xl p-3 space-y-2 overflow-y-auto custom-scrollbar-y transition-colors duration-150 ${
           isActive
-            ? "bg-[#355872]/5 border-[#355872]/30 ring-2 ring-[#355872]/15"
-            : canDrop
-              ? "bg-slate-50 border-[#355872]/15"
-              : "bg-slate-50/60 border-slate-200"
+            ? "bg-[var(--theme-color)]/5 border-2 border-dashed border-[var(--theme-color)]/40"
+            : "bg-slate-50/60 border border-slate-200"
         }`}
       >
         {stage.candidates.length === 0 && (
           <div
             className={`h-20 flex items-center justify-center rounded-lg border-2 border-dashed text-sm font-medium transition-colors ${
               isActive
-                ? "border-[#355872]/40 text-[#355872]/60 bg-[#355872]/5"
+                ? "border-[var(--theme-color)]/40 text-[var(--theme-color)]/60 bg-[var(--theme-color)]/5"
                 : "border-slate-200 text-slate-300"
             }`}
           >
             {isActive ? "Drop here" : "No candidates"}
           </div>
         )}
-        {stage.candidates.map((candidate) => (
+        {stage.candidates.map((candidate, index) => (
           <DraggableCard
             key={candidate.id}
             candidate={candidate}
             stageId={stage.id}
+            index={index}
+            onReorder={onReorder}
           />
         ))}
       </div>
@@ -182,13 +293,50 @@ const INITIAL_STAGES: Stage[] = [
 
 export default function HiringPipelinePage() {
   const [stages, setStages] = useState<Stage[]>(INITIAL_STAGES);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const animFrameRef = useRef<number | null>(null);
 
-  const totalCandidates = stages.reduce(
-    (acc, s) => acc + s.candidates.length,
-    0,
-  );
+  const { isDragging } = useDragLayer((monitor) => ({
+    isDragging: monitor.isDragging(),
+  }));
 
-  const handleDrop = (
+  useEffect(() => {
+    if (!isDragging) {
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      return;
+    }
+
+    const EDGE = 120;
+    const SPEED = 12;
+
+    const onMouseMove = (e: MouseEvent) => {
+      const container = scrollRef.current;
+      if (!container) return;
+      const { left, right } = container.getBoundingClientRect();
+
+      const scroll = () => {
+        if (!isDragging) return;
+        if (e.clientX < left + EDGE) {
+          container.scrollLeft -= SPEED;
+        } else if (e.clientX > right - EDGE) {
+          container.scrollLeft += SPEED;
+        }
+        animFrameRef.current = requestAnimationFrame(scroll);
+      };
+
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = requestAnimationFrame(scroll);
+    };
+
+    window.addEventListener("mousemove", onMouseMove);
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    };
+  }, [isDragging]);
+
+  // Move between stages (drop on empty column area)
+  const handleDropToStage = (
     cardId: string,
     fromStageId: string,
     toStageId: string,
@@ -196,16 +344,55 @@ export default function HiringPipelinePage() {
     setStages((prev) => {
       const fromStage = prev.find((s) => s.id === fromStageId)!;
       const card = fromStage.candidates.find((c) => c.id === cardId)!;
-
       return prev.map((stage) => {
-        if (stage.id === fromStageId) {
+        if (stage.id === fromStageId)
           return {
             ...stage,
             candidates: stage.candidates.filter((c) => c.id !== cardId),
           };
-        }
-        if (stage.id === toStageId) {
+        if (stage.id === toStageId)
           return { ...stage, candidates: [...stage.candidates, card] };
+        return stage;
+      });
+    });
+  };
+
+  // Reorder within or across stages by index
+  const handleReorder = (
+    fromStageId: string,
+    fromIndex: number,
+    toStageId: string,
+    toIndex: number,
+  ) => {
+    setStages((prev) => {
+      const fromStage = prev.find((s) => s.id === fromStageId)!;
+      const card = fromStage.candidates[fromIndex];
+      if (!card) return prev;
+
+      if (fromStageId === toStageId) {
+        if (fromIndex === toIndex) return prev;
+        const newCandidates = [...fromStage.candidates];
+        newCandidates.splice(fromIndex, 1);
+        newCandidates.splice(
+          toIndex > fromIndex ? toIndex - 1 : toIndex,
+          0,
+          card,
+        );
+        return prev.map((s) =>
+          s.id === fromStageId ? { ...s, candidates: newCandidates } : s,
+        );
+      }
+
+      return prev.map((stage) => {
+        if (stage.id === fromStageId)
+          return {
+            ...stage,
+            candidates: stage.candidates.filter((_, i) => i !== fromIndex),
+          };
+        if (stage.id === toStageId) {
+          const newCandidates = [...stage.candidates];
+          newCandidates.splice(toIndex, 0, card);
+          return { ...stage, candidates: newCandidates };
         }
         return stage;
       });
@@ -214,59 +401,50 @@ export default function HiringPipelinePage() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-var(--header-height))] bg-white overflow-hidden w-full min-w-0">
-      <div className="px-8 pt-10 pb-6 shrink-0 w-full overflow-hidden border-b border-transparent">
-        <div className="flex items-center justify-between gap-4 max-w-full">
-          <div className="space-y-4 min-w-0">
-            <div className="flex items-center gap-4">
-              <h1 className="text-[32px] font-semibold text-slate-900 leading-none truncate">
-                Intern - Software Engineer
-              </h1>
-              <Badge className="bg-[#E6F4EA] text-[#1E8E3E] hover:bg-[#E6F4EA] border-none font-medium px-3 py-1 rounded-full text-xs shadow-none shrink-0">
-                Active Job
-              </Badge>
-            </div>
-            <div className="flex items-center text-sm font-medium text-slate-500 gap-2 truncate whitespace-nowrap opacity-80">
-              <span className="shrink-0">Full Time</span>
-              <span className="text-slate-300 shrink-0">-</span>
-              <span className="shrink-0">Development</span>
-              <span className="text-slate-300 shrink-0">-</span>
-              <span className="shrink-0 truncate">Colombo, Srilanka</span>
-              <span className="text-slate-300 shrink-0">-</span>
-              <span className="shrink-0 text-slate-400">
-                Posted On 18/02/26
-              </span>
+      <CustomDragLayer />
+
+      {/* Sticky header */}
+      <div className="sticky top-0 z-10 bg-white shrink-0 w-full">
+        <div className="px-8 pt-8 pb-6 overflow-hidden">
+          <div className="flex items-center justify-between gap-4 max-w-full">
+            <div className="space-y-4 min-w-0">
+              <div className="flex items-center gap-4">
+                <h1 className="text-[32px] font-semibold text-slate-900 leading-none truncate">
+                  Intern - Software Engineer
+                </h1>
+                <Badge className="bg-[#E6F4EA] text-[#1E8E3E] hover:bg-[#E6F4EA] border-none font-medium px-3 py-1 rounded-full text-xs shadow-none shrink-0">
+                  Active Job
+                </Badge>
+              </div>
+              <div className="flex items-center text-sm font-medium text-slate-500 gap-2 truncate whitespace-nowrap opacity-80">
+                <span className="shrink-0">Full Time</span>
+                <span className="text-slate-300 shrink-0">-</span>
+                <span className="shrink-0">Development</span>
+                <span className="text-slate-300 shrink-0">-</span>
+                <span className="shrink-0 truncate">Colombo, Srilanka</span>
+                <span className="text-slate-300 shrink-0">-</span>
+                <span className="shrink-0 text-slate-400">
+                  Posted On 18/02/26
+                </span>
+              </div>
             </div>
           </div>
         </div>
+        <div className="border-b border-slate-200" />
       </div>
 
-      <div className="border-y border-slate-100 bg-white shrink-0 w-full z-10">
-        <div className="px-8 py-4 flex items-center justify-between gap-6 overflow-hidden">
-          <h2 className="text-[20px] font-semibold text-slate-800 tracking-tight shrink-0">
-            {totalCandidates} Total Candidates
-          </h2>
-          <div className="flex items-center gap-3 shrink-0 min-w-0">
-            <div className="relative min-w-0">
-              <HugeiconsIcon
-                icon={Search01Icon}
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400 z-10"
-              />
-              <Input
-                placeholder="Search"
-                className="pl-11 h-10 w-[200px] sm:w-[260px] md:w-[320px] border-slate-200 rounded-lg text-sm bg-white focus:ring-1 focus:ring-slate-300 transition-all outline-none shadow-none"
-              />
-            </div>
-            <Button className="bg-[#355872] hover:bg-[#355872]/90 text-white rounded-lg h-10 px-6 font-medium shadow-none transition-transform active:scale-[0.98] whitespace-nowrap shrink-0">
-              <span>Add New Candidate</span>
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex-1 w-full min-w-0 overflow-x-auto overflow-y-auto bg-slate-50/10 pipeline-scroll-container">
+      <div
+        ref={scrollRef}
+        className="flex-1 w-full min-w-0 overflow-x-auto overflow-y-auto bg-slate-50/10 pipeline-scroll-container"
+      >
         <div className="flex min-h-full p-8 gap-5 w-max items-stretch">
           {stages.map((stage) => (
-            <DroppableColumn key={stage.id} stage={stage} onDrop={handleDrop} />
+            <DroppableColumn
+              key={stage.id}
+              stage={stage}
+              onDropToStage={handleDropToStage}
+              onReorder={handleReorder}
+            />
           ))}
         </div>
       </div>

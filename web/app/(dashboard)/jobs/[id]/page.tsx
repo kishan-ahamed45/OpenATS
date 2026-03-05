@@ -148,7 +148,7 @@ export default function JobDetailsPage() {
           <Link
             href={`/careers/${id}`}
             target="_blank"
-            className="flex items-center gap-2 text-[#355872] text-[15px] font-medium hover:underline cursor-pointer group w-fit"
+            className="flex items-center gap-2 text-[var(--theme-color)] text-[15px] font-medium hover:underline cursor-pointer group w-fit"
           >
             <HugeiconsIcon icon={Link01Icon} className="size-4" />
             <span>openats.org/careers/{id}</span>
@@ -165,7 +165,7 @@ export default function JobDetailsPage() {
             </span>
           </div>
           <Link href={`/jobs/${id}/pipeline`}>
-            <Button className="bg-[#355872] hover:bg-[#355872]/90 text-white rounded-lg h-10 px-7 font-medium shadow-none border-none gap-2 transition-all active:scale-[0.98]">
+            <Button className="bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white rounded-lg h-10 px-7 font-medium shadow-none border-none gap-2 transition-all active:scale-[0.98]">
               <span>Go To Hiring Pipeline</span>
               <HugeiconsIcon
                 icon={ArrowRight01Icon}
@@ -183,19 +183,19 @@ export default function JobDetailsPage() {
             <TabsList className="bg-transparent w-full justify-start rounded-none h-auto p-0 gap-3">
               <TabsTrigger
                 value="overview"
-                className="data-[state=active]:bg-transparent !shadow-none border border-slate-200 data-[state=active]:border-[#355872] rounded-lg px-6 h-[38px] text-slate-600 data-[state=active]:text-[#355872] font-medium text-[15px] transition-all hover:bg-slate-50 flex items-center justify-center"
+                className="data-[state=active]:bg-transparent !shadow-none border border-slate-200 data-[state=active]:border-[var(--theme-color)] rounded-lg px-6 h-[38px] text-slate-600 data-[state=active]:text-[var(--theme-color)] font-medium text-[15px] transition-all hover:bg-slate-50 flex items-center justify-center"
               >
                 Overview
               </TabsTrigger>
               <TabsTrigger
                 value="hiring-team"
-                className="data-[state=active]:bg-transparent !shadow-none border border-slate-200 data-[state=active]:border-[#355872] rounded-lg px-6 h-[38px] text-slate-600 data-[state=active]:text-[#355872] font-medium text-[15px] transition-all hover:bg-slate-50 flex items-center justify-center"
+                className="data-[state=active]:bg-transparent !shadow-none border border-slate-200 data-[state=active]:border-[var(--theme-color)] rounded-lg px-6 h-[38px] text-slate-600 data-[state=active]:text-[var(--theme-color)] font-medium text-[15px] transition-all hover:bg-slate-50 flex items-center justify-center"
               >
                 Hiring Team
               </TabsTrigger>
               <TabsTrigger
                 value="hiring-process"
-                className="data-[state=active]:bg-transparent !shadow-none border border-slate-200 data-[state=active]:border-[#355872] rounded-lg px-6 h-[38px] text-slate-600 data-[state=active]:text-[#355872] font-medium text-[15px] transition-all hover:bg-slate-50 flex items-center justify-center"
+                className="data-[state=active]:bg-transparent !shadow-none border border-slate-200 data-[state=active]:border-[var(--theme-color)] rounded-lg px-6 h-[38px] text-slate-600 data-[state=active]:text-[var(--theme-color)] font-medium text-[15px] transition-all hover:bg-slate-50 flex items-center justify-center"
               >
                 Hiring Process
               </TabsTrigger>
@@ -207,7 +207,7 @@ export default function JobDetailsPage() {
               </button>
               <TabsTrigger
                 value="custom-questions"
-                className="data-[state=active]:bg-transparent !shadow-none border border-slate-200 data-[state=active]:border-[#355872] rounded-lg px-6 h-[38px] text-slate-600 data-[state=active]:text-[#355872] font-medium text-[15px] transition-all hover:bg-slate-50 flex items-center justify-center"
+                className="data-[state=active]:bg-transparent !shadow-none border border-slate-200 data-[state=active]:border-[var(--theme-color)] rounded-lg px-6 h-[38px] text-slate-600 data-[state=active]:text-[var(--theme-color)] font-medium text-[15px] transition-all hover:bg-slate-50 flex items-center justify-center"
               >
                 Custom Questions
               </TabsTrigger>
@@ -275,7 +275,7 @@ export default function JobDetailsPage() {
                   <span className="text-slate-500 font-medium text-[15px]">
                     Hiring Manager
                   </span>
-                  <button className="flex items-center gap-2 text-[#355872] hover:underline font-medium text-[14px]">
+                  <button className="flex items-center gap-2 text-[var(--theme-color)] hover:underline font-medium text-[14px]">
                     <HugeiconsIcon
                       icon={PlusSignIcon}
                       className="size-3.5"
@@ -286,8 +286,8 @@ export default function JobDetailsPage() {
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <div className="size-11 rounded-full bg-[#355872] flex items-center justify-center text-white font-medium text-sm overflow-hidden">
-                  <div className="w-full h-full bg-[#355872]" />
+                <div className="size-11 rounded-full bg-[var(--theme-color)] flex items-center justify-center text-white font-medium text-sm overflow-hidden">
+                  <div className="w-full h-full bg-[var(--theme-color)]" />
                 </div>
                 <span className="text-slate-700 font-medium text-[15px]">
                   Chamal Senarathna
@@ -301,7 +301,7 @@ export default function JobDetailsPage() {
                   <span className="text-slate-500 font-medium text-[15px]">
                     Interviewer
                   </span>
-                  <button className="flex items-center gap-2 text-[#355872] hover:underline font-medium text-[14px]">
+                  <button className="flex items-center gap-2 text-[var(--theme-color)] hover:underline font-medium text-[14px]">
                     <HugeiconsIcon
                       icon={PlusSignIcon}
                       className="size-3.5"
@@ -312,8 +312,8 @@ export default function JobDetailsPage() {
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <div className="size-11 rounded-full bg-[#355872] flex items-center justify-center text-white font-medium text-sm overflow-hidden">
-                  <div className="w-full h-full bg-[#355872]" />
+                <div className="size-11 rounded-full bg-[var(--theme-color)] flex items-center justify-center text-white font-medium text-sm overflow-hidden">
+                  <div className="w-full h-full bg-[var(--theme-color)]" />
                 </div>
                 <span className="text-slate-700 font-medium text-[15px]">
                   Risikesan Jegatheesan
@@ -340,7 +340,7 @@ export default function JobDetailsPage() {
                   setNewStageName("");
                   setAddStageOpen(true);
                 }}
-                className="bg-[#355872] hover:bg-[#355872]/90 text-white rounded-lg h-10 px-4 font-medium shadow-none border-none gap-2 text-sm"
+                className="bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white rounded-lg h-10 px-4 font-medium shadow-none border-none gap-2 text-sm"
               >
                 <HugeiconsIcon
                   icon={PlusSignIcon}
@@ -368,7 +368,7 @@ export default function JobDetailsPage() {
                         isDragging
                           ? "opacity-40 border-slate-300"
                           : isOver
-                            ? "border-[#355872]/40 bg-[#355872]/5"
+                            ? "border-[var(--theme-color)]/40 bg-[var(--theme-color)]/5"
                             : "border-slate-200/70 hover:border-slate-300"
                       }`}
                     >
@@ -387,7 +387,7 @@ export default function JobDetailsPage() {
                           onClick={() =>
                             openConfigure({ id: stage.id, name: stage.name })
                           }
-                          className="text-[#355872]/60 hover:text-[#355872] transition-colors"
+                          className="text-[var(--theme-color)]/60 hover:text-[var(--theme-color)] transition-colors"
                           title="Configure Stage"
                         >
                           <HugeiconsIcon
@@ -395,7 +395,7 @@ export default function JobDetailsPage() {
                             className="size-[18px]"
                           />
                         </button>
-                        <button className="text-[#355872]/60 hover:text-[#355872] transition-colors">
+                        <button className="text-[var(--theme-color)]/60 hover:text-[var(--theme-color)] transition-colors">
                           <HugeiconsIcon
                             icon={PencilEdit01Icon}
                             className="size-[18px]"
@@ -430,7 +430,7 @@ export default function JobDetailsPage() {
             <div className="flex flex-col gap-6">
               <button
                 onClick={() => setIsAddingMode(true)}
-                className="flex items-center gap-2 text-[#355872] hover:underline font-medium text-[15px] w-fit"
+                className="flex items-center gap-2 text-[var(--theme-color)] hover:underline font-medium text-[15px] w-fit"
               >
                 <HugeiconsIcon
                   icon={PlusSignIcon}
@@ -457,7 +457,7 @@ export default function JobDetailsPage() {
                           isDragging
                             ? "opacity-40 border-slate-300"
                             : isOver
-                              ? "border-[#355872]/40 bg-[#355872]/5"
+                              ? "border-[var(--theme-color)]/40 bg-[var(--theme-color)]/5"
                               : "border-slate-200 hover:border-slate-300"
                         }`}
                       >
@@ -481,7 +481,7 @@ export default function JobDetailsPage() {
                           </span>
                         </div>
                         <div className="flex items-center gap-3">
-                          <button className="p-1.5 text-slate-400 hover:text-[#355872] transition-colors">
+                          <button className="p-1.5 text-slate-400 hover:text-[var(--theme-color)] transition-colors">
                             <HugeiconsIcon
                               icon={PencilEdit01Icon}
                               className="size-[18px]"
@@ -585,7 +585,7 @@ export default function JobDetailsPage() {
                             render={
                               <Button
                                 variant="outline"
-                                className="h-10 border-[#355872] text-[#355872] hover:bg-slate-50 font-medium px-4 shadow-none gap-2"
+                                className="h-10 border-[var(--theme-color)] text-[var(--theme-color)] hover:bg-slate-50 font-medium px-4 shadow-none gap-2"
                               />
                             }
                           >
@@ -626,7 +626,7 @@ export default function JobDetailsPage() {
                                       />
                                     </Button>
                                   </div>
-                                  <button className="text-[#355872] text-sm font-medium hover:underline flex items-center gap-1">
+                                  <button className="text-[var(--theme-color)] text-sm font-medium hover:underline flex items-center gap-1">
                                     <HugeiconsIcon
                                       icon={PlusSignIcon}
                                       className="size-3"
@@ -638,7 +638,7 @@ export default function JobDetailsPage() {
                               </div>
                             </div>
                             <DialogFooter>
-                              <Button className="bg-[#355872] hover:bg-[#355872]/90 text-white font-medium px-5">
+                              <Button className="bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white font-medium px-5">
                                 Save Logic
                               </Button>
                             </DialogFooter>
@@ -649,7 +649,7 @@ export default function JobDetailsPage() {
                       <div className="flex items-center gap-2 px-2">
                         <Checkbox
                           id="required"
-                          className="size-4 border-slate-300 data-[state=checked]:bg-[#355872] data-[state=checked]:border-[#355872]"
+                          className="size-4 border-slate-300 data-[state=checked]:bg-[var(--theme-color)] data-[state=checked]:border-[var(--theme-color)]"
                         />
                         <Label
                           htmlFor="required"
@@ -668,7 +668,7 @@ export default function JobDetailsPage() {
                           Cancel
                         </Button>
                         <Button
-                          className="h-10 px-6 bg-[#355872] hover:bg-[#355872]/90 text-white shadow-none rounded-lg font-medium"
+                          className="h-10 px-6 bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white shadow-none rounded-lg font-medium"
                           onClick={() => {
                             setIsAddingMode(false);
                           }}
@@ -682,7 +682,7 @@ export default function JobDetailsPage() {
               </div>
 
               <div className="pt-4">
-                <Button className="bg-[#355872] hover:bg-[#355872]/90 text-white rounded-lg h-10 px-6 font-medium shadow-none">
+                <Button className="bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white rounded-lg h-10 px-6 font-medium shadow-none">
                   Save Changes
                 </Button>
               </div>
@@ -708,16 +708,20 @@ export default function JobDetailsPage() {
               >
                 <div
                   className={`size-[17px] rounded-full border-2 flex items-center justify-center ${
-                    configType === t ? "border-[#355872]" : "border-slate-300"
+                    configType === t
+                      ? "border-[var(--theme-color)]"
+                      : "border-slate-300"
                   }`}
                 >
                   {configType === t && (
-                    <div className="size-2.5 rounded-full bg-[#355872]" />
+                    <div className="size-2.5 rounded-full bg-[var(--theme-color)]" />
                   )}
                 </div>
                 <span
                   className={`text-[15px] font-medium ${
-                    configType === t ? "text-[#355872]" : "text-slate-600"
+                    configType === t
+                      ? "text-[var(--theme-color)]"
+                      : "text-slate-600"
                   }`}
                 >
                   {t === "rejection"
@@ -821,7 +825,7 @@ export default function JobDetailsPage() {
             </Button>
             <Button
               onClick={() => setConfigOpen(false)}
-              className="h-10 px-6 bg-[#355872] hover:bg-[#355872]/90 text-white font-medium shadow-none rounded-md border-none"
+              className="h-10 px-6 bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white font-medium shadow-none rounded-md border-none"
             >
               Save
             </Button>
@@ -870,7 +874,7 @@ export default function JobDetailsPage() {
             <Button
               onClick={handleAddStage}
               disabled={!newStageName.trim()}
-              className="h-10 px-6 bg-[#355872] hover:bg-[#355872]/90 text-white font-medium shadow-none rounded-md border-none disabled:opacity-50"
+              className="h-10 px-6 bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white font-medium shadow-none rounded-md border-none disabled:opacity-50"
             >
               Add Stage
             </Button>
@@ -893,8 +897,8 @@ export default function JobDetailsPage() {
                 className="bg-slate-50/80 border border-slate-100 p-4 rounded-xl space-y-3 w-full shadow-none"
               >
                 <div className="flex items-center gap-3">
-                  <div className="size-8 rounded-full bg-[#355872] flex items-center justify-center text-white text-[10px] overflow-hidden">
-                    <div className="w-full h-full bg-[#355872]" />
+                  <div className="size-8 rounded-full bg-[var(--theme-color)] flex items-center justify-center text-white text-[10px] overflow-hidden">
+                    <div className="w-full h-full bg-[var(--theme-color)]" />
                   </div>
                   <div className="flex flex-col">
                     <span className="text-slate-900 font-semibold text-[13px] leading-tight">
@@ -905,7 +909,7 @@ export default function JobDetailsPage() {
                 </div>
                 <p className="text-slate-600 text-[13px] leading-relaxed">
                   {i === 2 && (
-                    <span className="text-[#355872] font-semibold mr-1">
+                    <span className="text-[var(--theme-color)] font-semibold mr-1">
                       @Risikesan
                     </span>
                   )}
@@ -920,10 +924,10 @@ export default function JobDetailsPage() {
             <div className="relative">
               <textarea
                 placeholder="Add a note... Type @ to mention team members"
-                className="w-full min-h-[100px] p-4 border border-slate-200 rounded-xl bg-white focus:ring-1 focus:ring-[#355872]/20 focus:border-[#355872] outline-none text-[14px] text-slate-700 transition-all resize-none shadow-none"
+                className="w-full min-h-[100px] p-4 border border-slate-200 rounded-xl bg-white focus:ring-1 focus:ring-[var(--theme-color)]/20 focus:border-[var(--theme-color)] outline-none text-[14px] text-slate-700 transition-all resize-none shadow-none"
               />
             </div>
-            <Button className="w-full bg-[#355872] hover:bg-[#355872]/90 text-white rounded-lg h-11 font-medium shadow-none gap-2">
+            <Button className="w-full bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white rounded-lg h-11 font-medium shadow-none gap-2">
               <HugeiconsIcon
                 icon={SentIcon}
                 className="size-4 rotate-[-45deg]"

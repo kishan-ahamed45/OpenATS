@@ -66,7 +66,7 @@ export default function CreateNewJobPage() {
             <Switch
               id="job-active"
               defaultChecked
-              className="data-[state=checked]:bg-green-500 scale-110"
+              className="data-checked:bg-[var(--theme-color)] scale-110"
             />
             <Label
               htmlFor="job-active"
@@ -79,7 +79,7 @@ export default function CreateNewJobPage() {
 
         <div className="space-y-8">
           <div className="space-y-3">
-            <Label className="text-sm font-semibold text-[var(--theme-color)]">
+            <Label className="text-sm font-semibold text-slate-700">
               Job Title
             </Label>
             <Input
@@ -252,7 +252,7 @@ export default function CreateNewJobPage() {
                     onCheckedChange={(checked) =>
                       setIsSalaryInfoIncluded(checked as boolean)
                     }
-                    className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500 size-4.5"
+                    className="data-checked:bg-[var(--theme-color)] data-checked:border-[var(--theme-color)] size-4.5"
                   />
                   <Label
                     htmlFor="salary-info"
@@ -378,7 +378,7 @@ export default function CreateNewJobPage() {
               Save Job
             </Button>
             <Link
-              href="jobs"
+              href="/jobs"
               className="flex items-center justify-center border border-slate-200 text-slate-600 rounded-lg h-10 px-6 font-medium hover:bg-slate-50 transition-colors"
             >
               Cancel

@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Notification03Icon } from "@hugeicons/core-free-icons";
 import {
@@ -12,25 +13,73 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+const SEGMENT_LABELS: Record<string, string> = {
+  "": "Dashboard",
+  assessments: "Assessments",
+  candidates: "Candidates",
+  jobs: "Manage Jobs",
+  offers: "Offers",
+  settings: "Settings",
+  new: "New",
+  pipeline: "Pipeline",
+  general: "General",
+  profile: "Profile",
+  theme: "Theme",
+  archive: "Archive",
+  templates: "Templates",
+};
+
+function labelFor(segment: string) {
+  return (
+    SEGMENT_LABELS[segment] ??
+    segment.charAt(0).toUpperCase() + segment.slice(1)
+  );
+}
+
 export function SiteHeader() {
+  const pathname = usePathname();
+
+  // Build crumbs from path segments
+  const segments = pathname.split("/").filter(Boolean);
+
+  // Each crumb: { label, href }
+  const crumbs = [
+    { label: "OpenATS", href: "/" },
+    ...segments.map((seg, i) => ({
+      label: labelFor(seg),
+      href: "/" + segments.slice(0, i + 1).join("/"),
+    })),
+  ];
+
   return (
     <header className="bg-white sticky top-0 z-50 flex w-full items-center border-b border-slate-100">
       <div className="flex h-(--header-height) w-full items-center justify-between px-6">
         <Breadcrumb>
           <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink className="text-slate-400 font-medium hover:text-slate-600 transition-colors">
-                Dashboard
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator className="text-slate-300">
-              <span className="text-lg font-light">&gt;</span>
-            </BreadcrumbSeparator>
-            <BreadcrumbItem>
-              <BreadcrumbPage className="text-slate-600 font-medium">
-                Page 01
-              </BreadcrumbPage>
-            </BreadcrumbItem>
+            {crumbs.map((crumb, i) => {
+              const isLast = i === crumbs.length - 1;
+              return (
+                <BreadcrumbItem key={crumb.href}>
+                  {!isLast ? (
+                    <>
+                      <BreadcrumbLink
+                        href={crumb.href}
+                        className="text-slate-400 font-medium hover:text-slate-600 transition-colors"
+                      >
+                        {crumb.label}
+                      </BreadcrumbLink>
+                      <BreadcrumbSeparator className="text-slate-300">
+                        <span className="text-lg font-light">&gt;</span>
+                      </BreadcrumbSeparator>
+                    </>
+                  ) : (
+                    <BreadcrumbPage className="text-slate-600 font-medium">
+                      {crumb.label}
+                    </BreadcrumbPage>
+                  )}
+                </BreadcrumbItem>
+              );
+            })}
           </BreadcrumbList>
         </Breadcrumb>
 

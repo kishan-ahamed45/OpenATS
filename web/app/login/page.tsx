@@ -93,7 +93,7 @@ export default function LoginPage() {
               >
                 By signing in, you agree to Asgardeo&apos;s{" "}
                 <a
-                  href="https://wso2.com/licenses/wso2-update/2020-v2"
+                  href="https://wso2.com/terms-of-use/"
                   target="_blank"
                   rel="noreferrer"
                   style={{ color: "#FF7300", textDecoration: "none" }}
@@ -102,7 +102,7 @@ export default function LoginPage() {
                 </a>{" "}
                 and{" "}
                 <a
-                  href="https://wso2.com/privacy-policy"
+                  href="https://wso2.com/privacy-policy/"
                   target="_blank"
                   rel="noreferrer"
                   style={{ color: "#FF7300", textDecoration: "none" }}
