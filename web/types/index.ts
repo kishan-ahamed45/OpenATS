@@ -79,3 +79,24 @@ export type ChatMessage = {
   senderName: string | null;
   senderAvatar: string | null;
 };
+
+export type Department = {
+  id: number;
+  name: string;
+  companyId: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type Company = {
+  id: number;
+  name: string;
+  email: string;
+  website: string | null;
+  phone: string | null;
+  address: string | null;
+  description: string | null;
+  logoUrl: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
