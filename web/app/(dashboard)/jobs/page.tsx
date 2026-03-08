@@ -5,8 +5,6 @@ import Link from "next/link";
 import {
   Search01Icon,
   PlusSignIcon,
-  ArrowLeft01Icon,
-  ArrowRight01Icon,
   MoreVerticalIcon,
   Archive01Icon,
 } from "@hugeicons/core-free-icons";
@@ -41,57 +39,20 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { archiveItem } from "@/lib/archive-store";
+import { useJobs } from "@/hooks/use-api";
+import type { Job } from "@/types";
 
-const INITIAL_JOBS = [
-  {
-    id: "j1",
-    name: "Software Engineer - Internship",
-    type: "Full Time",
-    department: "API Management",
-    location: "Kegalle, Srilanka",
-    createdAt: "14/02/2026",
-  },
-  {
-    id: "j2",
-    name: "Software Engineer - Internship",
-    type: "Full Time",
-    department: "API Management",
-    location: "Colombo, Srilanka",
-    createdAt: "14/02/2026",
-  },
-  {
-    id: "j3",
-    name: "Software Engineer - Internship",
-    type: "Full Time",
-    department: "API Management",
-    location: "Colombo, Srilanka",
-    createdAt: "14/02/2026",
-  },
-  {
-    id: "j4",
-    name: "Software Engineer - Internship",
-    type: "Full Time",
-    department: "API Management",
-    location: "Colombo, Srilanka",
-    createdAt: "14/02/2026",
-  },
-  {
-    id: "j5",
-    name: "Software Engineer - Internship",
-    type: "Full Time",
-    department: "API Management",
-    location: "Colombo, Srilanka",
-    createdAt: "14/02/2026",
-  },
-  {
-    id: "j6",
-    name: "Software Engineer - Internship",
-    type: "Full Time",
-    department: "API Management",
-    location: "Colombo, Srilanka",
-    createdAt: "14/02/2026",
-  },
-];
+const EMPLOYMENT_TYPE_LABELS: Record<Job["employmentType"], string> = {
+  full_time: "Full Time",
+  part_time: "Part Time",
+  contract: "Contract",
+  internship: "Internship",
+  freelance: "Freelance",
+};
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("en-GB");
+}
 
 function RowMenu({ onArchive }: { onArchive(): void }) {
   const [open, setOpen] = useState(false);
@@ -139,20 +100,18 @@ function RowMenu({ onArchive }: { onArchive(): void }) {
 }
 
 export default function ManageJobsPage() {
-  const [jobs, setJobs] = useState(INITIAL_JOBS);
-  const [archiveTarget, setArchiveTarget] = useState<
-    (typeof INITIAL_JOBS)[0] | null
-  >(null);
+  const { data, isLoading } = useJobs();
+  const jobs = data?.data ?? [];
+  const [archiveTarget, setArchiveTarget] = useState<Job | null>(null);
 
   const confirmArchive = () => {
     if (!archiveTarget) return;
     archiveItem({
-      id: archiveTarget.id,
+      id: String(archiveTarget.id),
       type: "job",
-      name: archiveTarget.name,
-      detail: archiveTarget.department,
+      name: archiveTarget.title,
+      detail: String(archiveTarget.departmentId),
     });
-    setJobs((prev) => prev.filter((j) => j.id !== archiveTarget.id));
     setArchiveTarget(null);
   };
 
@@ -237,40 +196,40 @@ export default function ManageJobsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {jobs.length === 0 ? (
+              {isLoading ? (
                 <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="h-32 text-center text-slate-400 text-sm"
-                  >
+                  <TableCell colSpan={6} className="h-32 text-center text-slate-400 text-sm">
+                    Loading jobs...
+                  </TableCell>
+                </TableRow>
+              ) : jobs.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="h-32 text-center text-slate-400 text-sm">
                     No jobs found.
                   </TableCell>
                 </TableRow>
               ) : (
                 jobs.map((job) => (
-                  <TableRow
-                    key={job.id}
-                    className="border-b border-slate-200 last:border-0 font-medium"
-                  >
+                  <TableRow key={job.id} className="border-b border-slate-200 last:border-0 font-medium">
                     <TableCell className="h-13 px-8 py-0">
                       <Link
                         href={`jobs/${job.id}`}
                         className="text-slate-700 font-medium hover:underline decoration-1 underline-offset-4 cursor-pointer"
                       >
-                        {job.name}
+                        {job.title}
                       </Link>
                     </TableCell>
                     <TableCell className="h-13 px-8 py-0 text-slate-600 font-normal">
-                      {job.type}
+                      {EMPLOYMENT_TYPE_LABELS[job.employmentType]}
                     </TableCell>
                     <TableCell className="h-13 px-8 py-0 text-slate-600 font-normal">
-                      {job.department}
+                      {job.departmentId}
                     </TableCell>
                     <TableCell className="h-13 px-8 py-0 text-slate-600 font-normal">
-                      {job.location}
+                      {job.location ?? "—"}
                     </TableCell>
                     <TableCell className="h-13 px-8 py-0 text-slate-600 font-normal">
-                      {job.createdAt}
+                      {formatDate(job.createdAt)}
                     </TableCell>
                     <TableCell className="h-13 px-4 py-0">
                       <RowMenu onArchive={() => setArchiveTarget(job)} />
@@ -283,7 +242,7 @@ export default function ManageJobsPage() {
 
           <div className="flex items-center justify-between px-8 py-3.5 border-t border-slate-200 bg-white">
             <span className="text-sm font-medium text-slate-400">
-              Showing 1-{jobs.length} of {jobs.length} results
+              {isLoading ? "Loading..." : `Showing 1-${jobs.length} of ${jobs.length} results`}
             </span>
             <div className="flex items-center gap-3">
               <Button
@@ -315,7 +274,7 @@ export default function ManageJobsPage() {
               Archive this job?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-[13px] text-slate-500 leading-relaxed">
-              <strong className="text-slate-700">{archiveTarget?.name}</strong>{" "}
+              <strong className="text-slate-700">{archiveTarget?.title}</strong>{" "}
               will be moved to the Archive. You can permanently delete it from
               Settings → Archive.
             </AlertDialogDescription>

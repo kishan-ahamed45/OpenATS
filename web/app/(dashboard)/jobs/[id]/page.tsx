@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Ref } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -17,9 +17,66 @@ import {
   ParagraphIcon,
   Tick02Icon,
   CircleIcon,
-  ToggleOnIcon,
   SentIcon,
 } from "@hugeicons/core-free-icons";
+import {
+  useJob,
+  usePipeline,
+  useCurrentUser,
+  useChatHistory,
+  useCreateStage,
+  useUpdateStage,
+  useDeleteStage,
+  useCustomQuestions,
+  useCreateQuestion,
+  useUpdateQuestion,
+  useDeleteQuestion,
+} from "@/hooks/use-api";
+import { useJobChat } from "@/hooks/use-job-chat";
+import type { PipelineStage, JobDetail, CustomQuestion } from "@/types";
+
+const STAGE_COLORS: Record<PipelineStage["stageType"], string> = {
+  none: "bg-slate-400",
+  source: "bg-blue-400",
+  assessment: "bg-purple-500",
+  interview: "bg-blue-500",
+  offer: "bg-green-500",
+  rejection: "bg-red-500",
+};
+
+const EMPLOYMENT_LABELS: Record<string, string> = {
+  full_time: "Full Time",
+  part_time: "Part Time",
+  contract: "Contract",
+  internship: "Internship",
+  freelance: "Freelance",
+};
+
+const STATUS_BADGE: Record<string, { label: string; bg: string; text: string }> = {
+  draft:     { label: "Draft",     bg: "bg-amber-50",   text: "text-amber-600" },
+  inactive:  { label: "Inactive",  bg: "bg-slate-100",  text: "text-slate-500" },
+  published: { label: "Active Job",bg: "bg-[#E6F4EA]",  text: "text-[#1E8E3E]" },
+  closed:    { label: "Closed",    bg: "bg-red-50",     text: "text-red-500"   },
+  archived:  { label: "Archived",  bg: "bg-slate-100",  text: "text-slate-500" },
+};
+
+function timeAgo(dateStr: string) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
+function formatSalary(job: JobDetail) {
+  if (!job.salaryType) return null;
+  const fmt = (n: string | null) => (n ? Number(n).toLocaleString() : "");
+  const freq = job.payFrequency ?? "";
+  if (job.salaryType === "fixed") return `${job.currency} ${fmt(job.salaryFixed)}/${freq}`;
+  return `${job.currency} ${fmt(job.salaryMin)}-${fmt(job.salaryMax)}/${freq}`;
+}
 import { useDragSort } from "@/hooks/use-drag-sort";
 
 import { Button } from "@/components/ui/button";
@@ -54,27 +111,100 @@ import {
 
 export default function JobDetailsPage() {
   const params = useParams();
-  const id = params.id;
-  const [questions, setQuestions] = useState([
-    {
-      id: 1,
-      text: "What Is Your Salary Expectation",
-      type: "short-answer",
-      required: true,
-    },
-  ]);
-  const [isAddingMode, setIsAddingMode] = useState(false);
-  const [newQuestionType, setNewQuestionType] = useState("short-answer");
+  const jobId = Number(params.id);
+
   const [isNotesOpen, setIsNotesOpen] = useState(false);
+  const [noteText, setNoteText] = useState("");
+
+  const { data: jobData, isLoading: jobLoading } = useJob(jobId);
+  const { data: pipelineData } = usePipeline(jobId);
+  const { data: meData } = useCurrentUser();
+  const { data: chatHistoryData } = useChatHistory(jobId, isNotesOpen);
+  const { liveMessages, sendMessage } = useJobChat(jobId, isNotesOpen);
+  const { data: customQuestionsData } = useCustomQuestions(jobId);
+
+  const createStageMutation = useCreateStage(jobId);
+  const updateStageMutation = useUpdateStage(jobId);
+  const deleteStageMutation = useDeleteStage(jobId);
+  const createQuestionMutation = useCreateQuestion(jobId);
+  const updateQuestionMutation = useUpdateQuestion(jobId);
+  const deleteQuestionMutation = useDeleteQuestion(jobId);
+
+  const job = jobData?.data;
+  const me = meData?.data;
+  const historyMessages = (chatHistoryData?.data ?? []).slice().reverse();
+  const allMessages = [...historyMessages, ...liveMessages];
+
+  const handleSendNote = () => {
+    if (!noteText.trim() || !me) return;
+    sendMessage(me.id, noteText.trim());
+    setNoteText("");
+  };
+
+  const [questions, setQuestions] = useState<CustomQuestion[]>([]);
+  const [isAddingMode, setIsAddingMode] = useState(false);
+  const [newQuestionType, setNewQuestionType] = useState<"short_answer" | "long_answer" | "checkbox" | "radio">("short_answer");
+  const [newQuestionText, setNewQuestionText] = useState("");
+  const [newQuestionRequired, setNewQuestionRequired] = useState(false);
+
+  useEffect(() => {
+    if (customQuestionsData?.data) {
+      setQuestions(customQuestionsData.data);
+    }
+  }, [customQuestionsData]);
+
+  // ── Inline edit state ────────────────────────────────────────────────────
+  const [editingStageId, setEditingStageId] = useState<number | null>(null);
+  const [editingStageName, setEditingStageName] = useState("");
+
+  const handleSaveStage = (stageId: number) => {
+    if (!editingStageName.trim()) return;
+    updateStageMutation.mutate(
+      { stageId, data: { name: editingStageName.trim() } },
+      { onSuccess: () => setEditingStageId(null) }
+    );
+  };
+
+  const [editingQuestionId, setEditingQuestionId] = useState<number | null>(null);
+  const [editQuestionText, setEditQuestionText] = useState("");
+  const [editQuestionType, setEditQuestionType] = useState<"short_answer" | "long_answer" | "checkbox" | "radio">("short_answer");
+  const [editQuestionRequired, setEditQuestionRequired] = useState(false);
+
+  const openEditQuestion = (q: CustomQuestion) => {
+    setEditingQuestionId(q.id);
+    setEditQuestionText(q.title);
+    setEditQuestionType(q.questionType);
+    setEditQuestionRequired(q.isRequired);
+  };
+
+  const handleSaveQuestion = (questionId: number) => {
+    if (!editQuestionText.trim()) return;
+    updateQuestionMutation.mutate(
+      {
+        questionId,
+        data: {
+          title: editQuestionText.trim(),
+          questionType: editQuestionType,
+          isRequired: editQuestionRequired,
+        },
+      },
+      { onSuccess: () => setEditingQuestionId(null) }
+    );
+  };
 
   // ── Hiring Process stage state ───────────────────────────────────────────
-  const [stages, setStages] = useState([
-    { id: 1, name: "Screening", color: "bg-green-500" },
-    { id: 2, name: "Applied", color: "bg-green-500" },
-    { id: 3, name: "Interview", color: "bg-blue-500" },
-    { id: 4, name: "Offer", color: "bg-green-500" },
-    { id: 5, name: "Rejected", color: "bg-red-500" },
-  ]);
+  const [stages, setStages] = useState<(PipelineStage & { color: string })[]>([]);
+
+  useEffect(() => {
+    if (pipelineData?.data) {
+      setStages(
+        pipelineData.data.map((s) => ({
+          ...s,
+          color: STAGE_COLORS[s.stageType] ?? "bg-slate-400",
+        }))
+      );
+    }
+  }, [pipelineData]);
 
   // Configure Stage dialog
   const [configOpen, setConfigOpen] = useState(false);
@@ -105,12 +235,15 @@ export default function JobDetailsPage() {
 
   const handleAddStage = () => {
     if (!newStageName.trim()) return;
-    setStages((prev) => [
-      ...prev,
-      { id: Date.now(), name: newStageName.trim(), color: "bg-green-500" },
-    ]);
-    setNewStageName("");
-    setAddStageOpen(false);
+    createStageMutation.mutate(
+      { name: newStageName.trim(), position: stages.length + 1, stageType: "none" },
+      {
+        onSuccess: () => {
+          setNewStageName("");
+          setAddStageOpen(false);
+        },
+      }
+    );
   };
 
   function moveItem<T>(list: T[], from: number, to: number): T[] {
@@ -126,32 +259,44 @@ export default function JobDetailsPage() {
         <div className="space-y-2.5 mb-6">
           <div className="flex items-center gap-4 cursor-default">
             <h1 className="text-[28px] font-medium text-slate-900 leading-none">
-              Intern - Software Engineer
+              {jobLoading ? "Loading..." : (job?.title ?? "Job Not Found")}
             </h1>
-            <Badge className="bg-[#E6F4EA] text-[#1E8E3E] hover:bg-[#E6F4EA] border-none font-medium px-3 py-1 rounded-full text-xs shadow-none">
-              Active Job
-            </Badge>
+            {job && STATUS_BADGE[job.status] && (
+              <Badge
+                className={`${STATUS_BADGE[job.status].bg} ${STATUS_BADGE[job.status].text} hover:opacity-90 border-none font-medium px-3 py-1 rounded-full text-xs shadow-none`}
+              >
+                {STATUS_BADGE[job.status].label}
+              </Badge>
+            )}
           </div>
 
-          <div className="flex items-center text-sm font-medium text-slate-500 gap-2 cursor-default">
-            <span>Full Time</span>
-            <span className="text-slate-300">-</span>
-            <span>Development</span>
-            <span className="text-slate-300">-</span>
-            <span>Colombo, Srilanka</span>
-            <span className="text-slate-300">-</span>
-            <span className="text-slate-600 font-semibold text-xs py-0.5 px-0.5">
-              USD 3000/4000
-            </span>
-          </div>
+          {job && (
+            <div className="flex items-center text-sm font-medium text-slate-500 gap-2 cursor-default">
+              <span>{EMPLOYMENT_LABELS[job.employmentType]}</span>
+              {job.location && (
+                <>
+                  <span className="text-slate-300">-</span>
+                  <span>{job.location}</span>
+                </>
+              )}
+              {formatSalary(job) && (
+                <>
+                  <span className="text-slate-300">-</span>
+                  <span className="text-slate-600 font-semibold text-xs">
+                    {formatSalary(job)}
+                  </span>
+                </>
+              )}
+            </div>
+          )}
 
           <Link
-            href={`/careers/${id}`}
+            href={`/careers/${jobId}`}
             target="_blank"
             className="flex items-center gap-2 text-[var(--theme-color)] text-[15px] font-medium hover:underline cursor-pointer group w-fit"
           >
             <HugeiconsIcon icon={Link01Icon} className="size-4" />
-            <span>openats.org/careers/{id}</span>
+            <span>openats.org/careers/{jobId}</span>
           </Link>
         </div>
 
@@ -164,7 +309,7 @@ export default function JobDetailsPage() {
               Candidates
             </span>
           </div>
-          <Link href={`/jobs/${id}/pipeline`}>
+          <Link href={`/jobs/${jobId}/pipeline`}>
             <Button className="bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white rounded-lg h-10 px-7 font-medium shadow-none border-none gap-2 transition-all active:scale-[0.98]">
               <span>Go To Hiring Pipeline</span>
               <HugeiconsIcon
@@ -218,51 +363,18 @@ export default function JobDetailsPage() {
         <div className="px-8 pb-20 w-full">
           <TabsContent
             value="overview"
-            className="pt-10 space-y-8 animate-in fade-in duration-300"
+            className="pt-10 animate-in fade-in duration-300 max-w-4xl"
           >
-            <p className="text-slate-500 leading-relaxed text-[15px] cursor-default max-w-4xl">
-              Surge Global Is A Digital Consultancy That Leverages Marketing,
-              Data, And Technology To Help Businesses Grow. As Sri Lanka's
-              Leading Digital Firm, We Employ The Best Content, Creative, Design
-              & Engineering Talent The Country Has To Offer.
-            </p>
-
-            <div className="space-y-4">
-              <h3 className="text-slate-500 font-medium text-[15px] cursor-default uppercase tracking-wide">
-                Responsibilities
-              </h3>
-              <ul className="space-y-3">
-                {[
-                  "Direct The Engineering Team In The Conception, Planning, And Delivery Of Software Solutions That Align With The Business's Strategic Objectives.",
-                  "Foster A Collaborative And Empowering Environment To Enhance Productivity, Innovation, And Teamwork.",
-                ].map((item, i) => (
-                  <li
-                    key={i}
-                    className="flex gap-4 text-slate-500 text-[15px] cursor-default"
-                  >
-                    <span className="text-slate-300 select-none mt-1.5">•</span>
-                    <span className="leading-relaxed">{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="space-y-4 cursor-default">
-              <h3 className="text-slate-500 font-medium text-[15px] uppercase tracking-wide">
-                Requirements
-              </h3>
-              <ul className="space-y-2">
-                {[
-                  "Bachelor's Or Master's Degree In Computer Science, Engineering, Or A Related Field.",
-                  "Strong Technical Background With Experience In Software Development And Web Technologies.",
-                ].map((item, i) => (
-                  <li key={i} className="flex gap-4 text-slate-500 text-[15px]">
-                    <span className="text-slate-300 select-none mt-1.5">•</span>
-                    <span className="leading-relaxed">{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {jobLoading ? (
+              <p className="text-slate-400 text-[15px]">Loading...</p>
+            ) : job?.description ? (
+              <div
+                className="text-slate-600 leading-relaxed text-[15px] [&_p]:mb-4 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_h2]:font-semibold [&_h2]:text-slate-800 [&_h2]:mb-2 [&_h3]:font-medium [&_h3]:text-slate-700 [&_h3]:mb-1"
+                dangerouslySetInnerHTML={{ __html: job.description }}
+              />
+            ) : (
+              <p className="text-slate-400 text-[15px]">No description provided.</p>
+            )}
           </TabsContent>
 
           <TabsContent
@@ -372,49 +484,82 @@ export default function JobDetailsPage() {
                             : "border-slate-200/70 hover:border-slate-300"
                       }`}
                     >
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
                         <HugeiconsIcon
                           icon={DragDropVerticalIcon}
-                          className="size-5 text-slate-300 group-hover:text-slate-400 cursor-grab active:cursor-grabbing"
+                          className="size-5 text-slate-300 group-hover:text-slate-400 cursor-grab active:cursor-grabbing shrink-0"
                         />
-                        <div className={`size-2 rounded-full ${stage.color}`} />
-                        <span className="text-slate-700 font-medium text-[15px]">
-                          {stage.name}
-                        </span>
+                        <div className={`size-2 rounded-full ${stage.color} shrink-0`} />
+                        {editingStageId === stage.id ? (
+                          <div className="flex items-center gap-2 flex-1">
+                            <Input
+                              autoFocus
+                              value={editingStageName}
+                              onChange={(e) => setEditingStageName(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleSaveStage(stage.id);
+                                if (e.key === "Escape") setEditingStageId(null);
+                              }}
+                              className="h-8 border-slate-200 shadow-none focus-visible:ring-1 focus-visible:ring-slate-300 text-[14px] w-48"
+                            />
+                            <button
+                              onClick={() => handleSaveStage(stage.id)}
+                              disabled={updateStageMutation.isPending}
+                              className="text-xs font-medium text-white bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] px-3 h-8 rounded-md disabled:opacity-50"
+                            >
+                              {updateStageMutation.isPending ? "Saving…" : "Save"}
+                            </button>
+                            <button
+                              onClick={() => setEditingStageId(null)}
+                              className="text-xs font-medium text-slate-500 hover:text-slate-700 px-3 h-8 rounded-md border border-slate-200"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-slate-700 font-medium text-[15px]">
+                            {stage.name}
+                          </span>
+                        )}
                       </div>
-                      <div className="flex items-center gap-4">
-                        <button
-                          onClick={() =>
-                            openConfigure({ id: stage.id, name: stage.name })
-                          }
-                          className="text-[var(--theme-color)]/60 hover:text-[var(--theme-color)] transition-colors"
-                          title="Configure Stage"
-                        >
-                          <HugeiconsIcon
-                            icon={Settings02Icon}
-                            className="size-[18px]"
-                          />
-                        </button>
-                        <button className="text-[var(--theme-color)]/60 hover:text-[var(--theme-color)] transition-colors">
-                          <HugeiconsIcon
-                            icon={PencilEdit01Icon}
-                            className="size-[18px]"
-                          />
-                        </button>
-                        <button
-                          onClick={() =>
-                            setStages((prev) =>
-                              prev.filter((s) => s.id !== stage.id),
-                            )
-                          }
-                          className="text-red-400/80 hover:text-red-500 transition-colors"
-                        >
-                          <HugeiconsIcon
-                            icon={Delete02Icon}
-                            className="size-[18px]"
-                          />
-                        </button>
-                      </div>
+                      {editingStageId !== stage.id && (
+                        <div className="flex items-center gap-4">
+                          <button
+                            onClick={() =>
+                              openConfigure({ id: stage.id, name: stage.name })
+                            }
+                            className="text-[var(--theme-color)]/60 hover:text-[var(--theme-color)] transition-colors"
+                            title="Configure Stage"
+                          >
+                            <HugeiconsIcon
+                              icon={Settings02Icon}
+                              className="size-[18px]"
+                            />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setEditingStageId(stage.id);
+                              setEditingStageName(stage.name);
+                            }}
+                            className="text-[var(--theme-color)]/60 hover:text-[var(--theme-color)] transition-colors"
+                          >
+                            <HugeiconsIcon
+                              icon={PencilEdit01Icon}
+                              className="size-[18px]"
+                            />
+                          </button>
+                          <button
+                            onClick={() => deleteStageMutation.mutate(stage.id)}
+                            disabled={deleteStageMutation.isPending}
+                            className="text-red-400/80 hover:text-red-500 transition-colors disabled:opacity-50"
+                          >
+                            <HugeiconsIcon
+                              icon={Delete02Icon}
+                              className="size-[18px]"
+                            />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   );
                 }
@@ -453,7 +598,7 @@ export default function JobDetailsPage() {
                     return (
                       <div
                         ref={ref as Ref<HTMLDivElement>}
-                        className={`group relative flex items-center justify-between p-4 border rounded-lg bg-white transition-all ${
+                        className={`group relative border rounded-lg bg-white transition-all ${
                           isDragging
                             ? "opacity-40 border-slate-300"
                             : isOver
@@ -461,52 +606,143 @@ export default function JobDetailsPage() {
                               : "border-slate-200 hover:border-slate-300"
                         }`}
                       >
-                        <div className="flex items-center gap-4">
-                          <div className="size-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-500 border border-slate-100">
-                            {q.type === "short-answer" && (
-                              <HugeiconsIcon
-                                icon={TextIcon}
-                                className="size-4"
+                        {editingQuestionId === q.id ? (
+                          <div className="p-3 space-y-4 animate-in fade-in duration-150">
+                            <div className="flex flex-wrap items-center gap-4">
+                              <Select
+                                value={editQuestionType}
+                                onValueChange={(val) =>
+                                  setEditQuestionType(val as "short_answer" | "long_answer" | "checkbox" | "radio")
+                                }
+                              >
+                                <SelectTrigger className="w-[180px] h-10 border-slate-200 bg-white shadow-none text-slate-600 focus:ring-1 focus:ring-slate-300">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="border-slate-200 shadow-md">
+                                  <SelectItem value="short_answer">
+                                    <div className="flex items-center gap-2">
+                                      <HugeiconsIcon icon={TextIcon} className="size-4" />
+                                      <span>Short Answer</span>
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="long_answer">
+                                    <div className="flex items-center gap-2">
+                                      <HugeiconsIcon icon={ParagraphIcon} className="size-4" />
+                                      <span>Long Answer</span>
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="checkbox">
+                                    <div className="flex items-center gap-2">
+                                      <HugeiconsIcon icon={Tick02Icon} className="size-4" />
+                                      <span>Checkbox</span>
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="radio">
+                                    <div className="flex items-center gap-2">
+                                      <HugeiconsIcon icon={CircleIcon} className="size-4" />
+                                      <span>Radio Button</span>
+                                    </div>
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Input
+                                autoFocus
+                                placeholder="Enter the question here"
+                                value={editQuestionText}
+                                onChange={(e) => setEditQuestionText(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") handleSaveQuestion(q.id);
+                                  if (e.key === "Escape") setEditingQuestionId(null);
+                                }}
+                                className="flex-1 h-10 border-slate-200 bg-white shadow-none focus-visible:ring-1 focus-visible:ring-slate-300 text-[15px]"
                               />
-                            )}
-                            {q.type === "long-answer" && (
-                              <HugeiconsIcon
-                                icon={ParagraphIcon}
-                                className="size-4"
-                              />
-                            )}
+                              <div className="flex items-center gap-2 px-2">
+                                <Checkbox
+                                  id={`edit-required-${q.id}`}
+                                  checked={editQuestionRequired}
+                                  onCheckedChange={(v) => setEditQuestionRequired(!!v)}
+                                  className="size-4 border-slate-300 data-[state=checked]:bg-[var(--theme-color)] data-[state=checked]:border-[var(--theme-color)]"
+                                />
+                                <Label
+                                  htmlFor={`edit-required-${q.id}`}
+                                  className="text-slate-600 font-medium text-[15px] cursor-pointer"
+                                >
+                                  Required
+                                </Label>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="outline"
+                                  onClick={() => setEditingQuestionId(null)}
+                                  className="h-10 px-6 border-slate-200 text-slate-600 hover:bg-slate-50 font-medium shadow-none"
+                                >
+                                  Cancel
+                                </Button>
+                                <Button
+                                  disabled={!editQuestionText.trim() || updateQuestionMutation.isPending}
+                                  onClick={() => handleSaveQuestion(q.id)}
+                                  className="h-10 px-6 bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white shadow-none rounded-lg font-medium disabled:opacity-50"
+                                >
+                                  {updateQuestionMutation.isPending ? "Saving…" : "Save Changes"}
+                                </Button>
+                              </div>
+                            </div>
                           </div>
-                          <span className="text-slate-700 font-medium text-[15px]">
-                            {q.text}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <button className="p-1.5 text-slate-400 hover:text-[var(--theme-color)] transition-colors">
-                            <HugeiconsIcon
-                              icon={PencilEdit01Icon}
-                              className="size-[18px]"
-                            />
-                          </button>
-                          <button
-                            onClick={() =>
-                              setQuestions(
-                                questions.filter((item) => item.id !== q.id),
-                              )
-                            }
-                            className="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
-                          >
-                            <HugeiconsIcon
-                              icon={Delete02Icon}
-                              className="size-[18px]"
-                            />
-                          </button>
-                          <button className="p-1.5 text-slate-300 cursor-grab active:cursor-grabbing">
-                            <HugeiconsIcon
-                              icon={DragDropVerticalIcon}
-                              className="size-[18px]"
-                            />
-                          </button>
-                        </div>
+                        ) : (
+                          <div className="flex items-center justify-between p-4">
+                            <div className="flex items-center gap-4">
+                              <div className="size-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-500 border border-slate-100">
+                                {q.questionType === "short_answer" && (
+                                  <HugeiconsIcon icon={TextIcon} className="size-4" />
+                                )}
+                                {q.questionType === "long_answer" && (
+                                  <HugeiconsIcon icon={ParagraphIcon} className="size-4" />
+                                )}
+                                {q.questionType === "checkbox" && (
+                                  <HugeiconsIcon icon={Tick02Icon} className="size-4" />
+                                )}
+                                {q.questionType === "radio" && (
+                                  <HugeiconsIcon icon={CircleIcon} className="size-4" />
+                                )}
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-slate-700 font-medium text-[15px]">
+                                  {q.title}
+                                </span>
+                                {q.isRequired && (
+                                  <span className="text-[11px] text-red-500 font-medium">Required</span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <button
+                                onClick={() => openEditQuestion(q)}
+                                className="p-1.5 text-slate-400 hover:text-[var(--theme-color)] transition-colors"
+                              >
+                                <HugeiconsIcon
+                                  icon={PencilEdit01Icon}
+                                  className="size-[18px]"
+                                />
+                              </button>
+                              <button
+                                onClick={() => deleteQuestionMutation.mutate(q.id)}
+                                disabled={deleteQuestionMutation.isPending}
+                                className="p-1.5 text-slate-400 hover:text-red-500 transition-colors disabled:opacity-50"
+                              >
+                                <HugeiconsIcon
+                                  icon={Delete02Icon}
+                                  className="size-[18px]"
+                                />
+                              </button>
+                              <button className="p-1.5 text-slate-300 cursor-grab active:cursor-grabbing">
+                                <HugeiconsIcon
+                                  icon={DragDropVerticalIcon}
+                                  className="size-[18px]"
+                                />
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   }
@@ -517,56 +753,37 @@ export default function JobDetailsPage() {
                   <div className="p-3 border border-slate-200 rounded-lg bg-white space-y-4 animate-in slide-in-from-top-2 duration-200">
                     <div className="flex flex-wrap items-center gap-4">
                       <Select
-                        defaultValue="short-answer"
-                        onValueChange={(val) => setNewQuestionType(val || "")}
+                        defaultValue="short_answer"
+                        onValueChange={(val) =>
+                          setNewQuestionType(val as "short_answer" | "long_answer" | "checkbox" | "radio")
+                        }
                       >
                         <SelectTrigger className="w-[180px] h-10 border-slate-200 bg-white shadow-none text-slate-600 focus:ring-1 focus:ring-slate-300">
                           <SelectValue placeholder="Question Type" />
                         </SelectTrigger>
                         <SelectContent className="border-slate-200 shadow-md">
-                          <SelectItem value="short-answer">
+                          <SelectItem value="short_answer">
                             <div className="flex items-center gap-2">
-                              <HugeiconsIcon
-                                icon={TextIcon}
-                                className="size-4"
-                              />
+                              <HugeiconsIcon icon={TextIcon} className="size-4" />
                               <span>Short Answer</span>
                             </div>
                           </SelectItem>
-                          <SelectItem value="long-answer">
+                          <SelectItem value="long_answer">
                             <div className="flex items-center gap-2">
-                              <HugeiconsIcon
-                                icon={ParagraphIcon}
-                                className="size-4"
-                              />
+                              <HugeiconsIcon icon={ParagraphIcon} className="size-4" />
                               <span>Long Answer</span>
                             </div>
                           </SelectItem>
                           <SelectItem value="checkbox">
                             <div className="flex items-center gap-2">
-                              <HugeiconsIcon
-                                icon={Tick02Icon}
-                                className="size-4"
-                              />
+                              <HugeiconsIcon icon={Tick02Icon} className="size-4" />
                               <span>Checkbox</span>
                             </div>
                           </SelectItem>
                           <SelectItem value="radio">
                             <div className="flex items-center gap-2">
-                              <HugeiconsIcon
-                                icon={CircleIcon}
-                                className="size-4"
-                              />
+                              <HugeiconsIcon icon={CircleIcon} className="size-4" />
                               <span>Radio Button</span>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="boolean">
-                            <div className="flex items-center gap-2">
-                              <HugeiconsIcon
-                                icon={ToggleOnIcon}
-                                className="size-4"
-                              />
-                              <span>Boolean</span>
                             </div>
                           </SelectItem>
                         </SelectContent>
@@ -574,6 +791,8 @@ export default function JobDetailsPage() {
 
                       <Input
                         placeholder="Enter the question here"
+                        value={newQuestionText}
+                        onChange={(e) => setNewQuestionText(e.target.value)}
                         className="flex-1 h-10 border-slate-200 bg-white shadow-none focus-visible:ring-1 focus-visible:ring-slate-300 text-[15px]"
                       />
 
@@ -649,6 +868,8 @@ export default function JobDetailsPage() {
                       <div className="flex items-center gap-2 px-2">
                         <Checkbox
                           id="required"
+                          checked={newQuestionRequired}
+                          onCheckedChange={(v) => setNewQuestionRequired(!!v)}
                           className="size-4 border-slate-300 data-[state=checked]:bg-[var(--theme-color)] data-[state=checked]:border-[var(--theme-color)]"
                         />
                         <Label
@@ -662,18 +883,39 @@ export default function JobDetailsPage() {
                       <div className="flex items-center gap-2">
                         <Button
                           variant="outline"
-                          onClick={() => setIsAddingMode(false)}
+                          onClick={() => {
+                            setIsAddingMode(false);
+                            setNewQuestionText("");
+                            setNewQuestionRequired(false);
+                          }}
                           className="h-10 px-6 border-slate-200 text-slate-600 hover:bg-slate-50 font-medium shadow-none"
                         >
                           Cancel
                         </Button>
                         <Button
-                          className="h-10 px-6 bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white shadow-none rounded-lg font-medium"
+                          disabled={!newQuestionText.trim() || createQuestionMutation.isPending}
+                          className="h-10 px-6 bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white shadow-none rounded-lg font-medium disabled:opacity-50"
                           onClick={() => {
-                            setIsAddingMode(false);
+                            if (!newQuestionText.trim()) return;
+                            createQuestionMutation.mutate(
+                              {
+                                title: newQuestionText.trim(),
+                                questionType: newQuestionType,
+                                isRequired: newQuestionRequired,
+                                position: questions.length + 1,
+                              },
+                              {
+                                onSuccess: () => {
+                                  setIsAddingMode(false);
+                                  setNewQuestionText("");
+                                  setNewQuestionRequired(false);
+                                  setNewQuestionType("short_answer");
+                                },
+                              }
+                            );
                           }}
                         >
-                          Add Question
+                          {createQuestionMutation.isPending ? "Adding..." : "Add Question"}
                         </Button>
                       </div>
                     </div>
@@ -891,43 +1133,59 @@ export default function JobDetailsPage() {
           </SheetHeader>
 
           <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-white">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="bg-slate-50/80 border border-slate-100 p-4 rounded-xl space-y-3 w-full shadow-none"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="size-8 rounded-full bg-[var(--theme-color)] flex items-center justify-center text-white text-[10px] overflow-hidden">
-                    <div className="w-full h-full bg-[var(--theme-color)]" />
+            {allMessages.length === 0 ? (
+              <p className="text-slate-400 text-[13px] text-center pt-8">
+                No notes yet. Be the first to add one.
+              </p>
+            ) : (
+              allMessages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className="bg-slate-50/80 border border-slate-100 p-4 rounded-xl space-y-3 w-full shadow-none"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="size-8 rounded-full bg-[var(--theme-color)] flex items-center justify-center text-white text-[11px] font-semibold overflow-hidden shrink-0">
+                      {msg.senderAvatar ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={msg.senderAvatar} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        (msg.senderName?.[0] ?? "?").toUpperCase()
+                      )}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-slate-900 font-semibold text-[13px] leading-tight">
+                        {msg.senderName ?? "Unknown"}
+                      </span>
+                      <span className="text-slate-400 text-[11px]">
+                        {timeAgo(msg.sentAt)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-slate-900 font-semibold text-[13px] leading-tight">
-                      Chamal Senarathna
-                    </span>
-                    <span className="text-slate-400 text-[11px]">2h ago</span>
-                  </div>
+                  <p className="text-slate-600 text-[13px] leading-relaxed">
+                    {msg.message}
+                  </p>
                 </div>
-                <p className="text-slate-600 text-[13px] leading-relaxed">
-                  {i === 2 && (
-                    <span className="text-[var(--theme-color)] font-semibold mr-1">
-                      @Risikesan
-                    </span>
-                  )}
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
-                  do eiusmod tempor incididunt ut labore et dolore
-                </p>
-              </div>
-            ))}
+              ))
+            )}
           </div>
 
           <div className="p-5 border-t border-slate-100 bg-white space-y-4">
             <div className="relative">
               <textarea
-                placeholder="Add a note... Type @ to mention team members"
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSendNote();
+                }}
+                placeholder="Add a note... (Ctrl+Enter to send)"
                 className="w-full min-h-[100px] p-4 border border-slate-200 rounded-xl bg-white focus:ring-1 focus:ring-[var(--theme-color)]/20 focus:border-[var(--theme-color)] outline-none text-[14px] text-slate-700 transition-all resize-none shadow-none"
               />
             </div>
-            <Button className="w-full bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white rounded-lg h-11 font-medium shadow-none gap-2">
+            <Button
+              onClick={handleSendNote}
+              disabled={!noteText.trim() || !me}
+              className="w-full bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white rounded-lg h-11 font-medium shadow-none gap-2 border-none disabled:opacity-50"
+            >
               <HugeiconsIcon
                 icon={SentIcon}
                 className="size-4 rotate-[-45deg]"
