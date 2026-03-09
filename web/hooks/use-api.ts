@@ -282,6 +282,41 @@ export function useAssessments() {
   });
 }
 
+export function useJobAssessments(jobId: number) {
+  return useQuery({
+    queryKey: ["jobs", jobId, "assessments"],
+    queryFn: () => serverFetch<{ data: any[] }>(`/jobs/${jobId}/assessments`),
+    enabled: !!jobId,
+  });
+}
+
+export function useAttachAssessment(jobId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { assessmentId: number; triggerStageId: number }) =>
+      serverFetch<{ data: any }>(`/jobs/${jobId}/assessments`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["jobs", jobId, "assessments"] });
+    },
+  });
+}
+
+export function useDetachAssessment(jobId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (attachmentId: number) =>
+      serverFetch<{ data: any }>(`/jobs/${jobId}/assessments/${attachmentId}`, {
+        method: "DELETE",
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["jobs", jobId, "assessments"] });
+    },
+  });
+}
+
 export function useAssessment(id: number) {
   return useQuery({
     queryKey: ["assessments", id],

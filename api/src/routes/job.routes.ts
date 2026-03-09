@@ -6,6 +6,9 @@ import {
   createJob,
   updateJob,
   deleteJob,
+  getAssessments,
+  attachAssessment,
+  detachAssessment,
 } from "../controllers/job.controller";
 import {
   getPipeline,
@@ -41,8 +44,12 @@ router.get("/:jobId/team", getHiringTeam);
 router.post("/:jobId/team", addTeamMember);
 router.delete("/:jobId/team/:userId", removeTeamMember);
 
+// assessments tab
+router.get("/:id/assessments", getAssessments);
+router.post("/:id/assessments", attachAssessment);
+router.delete("/:id/assessments/:attachmentId", detachAssessment);
+
 // custom question + assessment attachment
 router.use("/:jobId/questions", customQuestionRoutes);
-router.use("/:jobId", customQuestionRoutes);
 
 export default router;

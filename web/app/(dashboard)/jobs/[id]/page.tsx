@@ -18,6 +18,7 @@ import {
   Tick02Icon,
   CircleIcon,
   SentIcon,
+  Cancel01Icon,
 } from "@hugeicons/core-free-icons";
 import {
   useJob,
@@ -31,6 +32,10 @@ import {
   useCreateQuestion,
   useUpdateQuestion,
   useDeleteQuestion,
+  useAssessments,
+  useJobAssessments,
+  useAttachAssessment,
+  useDetachAssessment,
 } from "@/hooks/use-api";
 import { useJobChat } from "@/hooks/use-job-chat";
 import type { PipelineStage, JobDetail, CustomQuestion } from "@/types";
@@ -129,6 +134,14 @@ export default function JobDetailsPage() {
   const createQuestionMutation = useCreateQuestion(jobId);
   const updateQuestionMutation = useUpdateQuestion(jobId);
   const deleteQuestionMutation = useDeleteQuestion(jobId);
+
+  const { data: allAssessmentsData } = useAssessments();
+  const { data: jobAssessmentsData } = useJobAssessments(jobId);
+  const attachAssessmentMutation = useAttachAssessment(jobId);
+  const detachAssessmentMutation = useDetachAssessment(jobId);
+
+  const allAssessments = allAssessmentsData?.data ?? [];
+  const attachedAssessments = jobAssessmentsData?.data ?? [];
 
   const job = jobData?.data;
   const me = meData?.data;
@@ -232,6 +245,7 @@ export default function JobDetailsPage() {
 
   const [addStageOpen, setAddStageOpen] = useState(false);
   const [newStageName, setNewStageName] = useState("");
+  const [isAssessmentDialogOpen, setIsAssessmentDialogOpen] = useState(false);
 
   const handleAddStage = () => {
     if (!newStageName.trim()) return;
@@ -254,107 +268,119 @@ export default function JobDetailsPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col bg-white">
-      <div className="px-8 pt-10 pb-0 max-w-5xl w-full">
-        <div className="space-y-2.5 mb-6">
-          <div className="flex items-center gap-4 cursor-default">
-            <h1 className="text-[28px] font-medium text-slate-900 leading-none">
-              {jobLoading ? "Loading..." : (job?.title ?? "Job Not Found")}
-            </h1>
-            {job && STATUS_BADGE[job.status] && (
-              <Badge
-                className={`${STATUS_BADGE[job.status].bg} ${STATUS_BADGE[job.status].text} hover:opacity-90 border-none font-medium px-3 py-1 rounded-full text-xs shadow-none`}
-              >
-                {STATUS_BADGE[job.status].label}
-              </Badge>
-            )}
-          </div>
-
-          {job && (
-            <div className="flex items-center text-sm font-medium text-slate-500 gap-2 cursor-default">
-              <span>{EMPLOYMENT_LABELS[job.employmentType]}</span>
-              {job.location && (
-                <>
-                  <span className="text-slate-300">-</span>
-                  <span>{job.location}</span>
-                </>
-              )}
-              {formatSalary(job) && (
-                <>
-                  <span className="text-slate-300">-</span>
-                  <span className="text-slate-600 font-semibold text-xs">
-                    {formatSalary(job)}
-                  </span>
-                </>
+    <div className="flex flex-1 overflow-hidden bg-slate-50">
+      <div className="flex flex-1 flex-col bg-white overflow-y-auto relative">
+        <div className="px-8 pt-10 pb-0 max-w-full 2xl:max-w-[1600px] w-full mx-auto">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-8 mt-2">
+          {/* Left Column: Job Info */}
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center gap-4 cursor-default">
+              <h1 className="text-[32px] font-semibold text-slate-900 tracking-tight leading-none">
+                {jobLoading ? "Loading..." : (job?.title ?? "Job Not Found")}
+              </h1>
+              {job && STATUS_BADGE[job.status] && (
+                <Badge
+                  className={`${STATUS_BADGE[job.status].bg} ${STATUS_BADGE[job.status].text} hover:opacity-90 border-none font-semibold px-3 py-1 rounded-md text-[11px] shadow-none uppercase tracking-wider`}
+                >
+                  {STATUS_BADGE[job.status].label}
+                </Badge>
               )}
             </div>
-          )}
 
-          <Link
-            href={`/careers/${jobId}`}
-            target="_blank"
-            className="flex items-center gap-2 text-[var(--theme-color)] text-[15px] font-medium hover:underline cursor-pointer group w-fit"
-          >
-            <HugeiconsIcon icon={Link01Icon} className="size-4" />
-            <span>openats.org/careers/{jobId}</span>
-          </Link>
-        </div>
+            {job && (
+              <div className="flex flex-wrap items-center text-[15px] font-medium text-slate-500 gap-x-4 gap-y-2 cursor-default">
+                <span>{EMPLOYMENT_LABELS[job.employmentType]}</span>
+                {job.location && (
+                  <>
+                    <div className="w-1.5 h-1.5 rounded-full bg-slate-300"></div>
+                    <span>{job.location}</span>
+                  </>
+                )}
+                {formatSalary(job) && (
+                  <>
+                    <div className="w-1.5 h-1.5 rounded-full bg-slate-300"></div>
+                    <span className="text-slate-800 font-medium">
+                      {formatSalary(job)}
+                    </span>
+                  </>
+                )}
+              </div>
+            )}
 
-        <div className="flex items-center gap-8 py-2 mb-6">
-          <div className="flex items-baseline gap-2 cursor-default shrink-0">
-            <span className="text-2xl font-medium text-slate-900 leading-none">
-              0
-            </span>
-            <span className="text-slate-600 font-medium leading-none">
-              Candidates
-            </span>
+            <div className="pt-1 flex flex-wrap items-center gap-4">
+              <Link
+                href={`/careers/${jobId}`}
+                target="_blank"
+                className="inline-flex items-center gap-2 text-[var(--theme-color)] bg-[var(--theme-color)]/5 hover:bg-[var(--theme-color)]/10 px-3 py-1.5 rounded-md text-[14px] font-semibold transition-colors w-fit"
+              >
+                <HugeiconsIcon icon={Link01Icon} className="size-4" />
+                <span>openats.org/careers/{jobId}</span>
+              </Link>
+              
+              <div className="flex items-center gap-1.5 cursor-default px-3 py-1.5 rounded-md text-[14px] transition-colors">
+                <span className="font-semibold text-slate-900 leading-none">0</span>
+                <span className="text-slate-600 font-medium leading-none">Candidates</span>
+              </div>
+            </div>
           </div>
-          <Link href={`/jobs/${jobId}/pipeline`}>
-            <Button className="bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white rounded-lg h-10 px-7 font-medium shadow-none border-none gap-2 transition-all active:scale-[0.98]">
-              <span>Go To Hiring Pipeline</span>
-              <HugeiconsIcon
-                icon={ArrowRight01Icon}
-                className="size-4"
-                strokeWidth={3}
-              />
+
+          {/* Right Column: Actions */}
+          <div className="flex items-center gap-3 shrink-0 pt-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsNotesOpen(!isNotesOpen)}
+              className="border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg h-11 px-5 font-medium gap-2.5"
+            >
+              <HugeiconsIcon icon={ParagraphIcon} className="size-[18px]" strokeWidth={2} />
+              <span>Internal Notes</span>
             </Button>
-          </Link>
+            <Link href={`/jobs/${jobId}/pipeline`}>
+              <Button className="bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white rounded-lg h-11 px-7 font-medium border-none gap-2">
+                <span>Hiring Pipeline</span>
+                <HugeiconsIcon
+                  icon={ArrowRight01Icon}
+                  className="size-4"
+                  strokeWidth={3}
+                />
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
         <div className="w-full border-y border-slate-100 py-3 bg-white shadow-none">
-          <div className="px-8 max-w-5xl w-full">
+          <div className="px-8 max-w-full 2xl:max-w-[1600px] w-full mx-auto">
             <TabsList className="bg-transparent w-full justify-start rounded-none h-auto p-0 gap-3">
               <TabsTrigger
                 value="overview"
-                className="data-[state=active]:bg-transparent !shadow-none border border-slate-200 data-[state=active]:border-[var(--theme-color)] rounded-lg px-6 h-[38px] text-slate-600 data-[state=active]:text-[var(--theme-color)] font-medium text-[15px] transition-all hover:bg-slate-50 flex items-center justify-center"
+                className="data-[state=active]:bg-transparent !shadow-none border border-slate-200 data-[state=active]:border-[var(--theme-color)] rounded-lg px-6 h-[38px] text-slate-600 data-[state=active]:text-[var(--theme-color)] font-medium text-[15px] transition-all hover:bg-slate-50 flex-none flex items-center justify-center whitespace-nowrap"
               >
                 Overview
               </TabsTrigger>
               <TabsTrigger
                 value="hiring-team"
-                className="data-[state=active]:bg-transparent !shadow-none border border-slate-200 data-[state=active]:border-[var(--theme-color)] rounded-lg px-6 h-[38px] text-slate-600 data-[state=active]:text-[var(--theme-color)] font-medium text-[15px] transition-all hover:bg-slate-50 flex items-center justify-center"
+                className="data-[state=active]:bg-transparent !shadow-none border border-slate-200 data-[state=active]:border-[var(--theme-color)] rounded-lg px-6 h-[38px] text-slate-600 data-[state=active]:text-[var(--theme-color)] font-medium text-[15px] transition-all hover:bg-slate-50 flex-none flex items-center justify-center whitespace-nowrap"
               >
                 Hiring Team
               </TabsTrigger>
               <TabsTrigger
                 value="hiring-process"
-                className="data-[state=active]:bg-transparent !shadow-none border border-slate-200 data-[state=active]:border-[var(--theme-color)] rounded-lg px-6 h-[38px] text-slate-600 data-[state=active]:text-[var(--theme-color)] font-medium text-[15px] transition-all hover:bg-slate-50 flex items-center justify-center"
+                className="data-[state=active]:bg-transparent !shadow-none border border-slate-200 data-[state=active]:border-[var(--theme-color)] rounded-lg px-6 h-[38px] text-slate-600 data-[state=active]:text-[var(--theme-color)] font-medium text-[15px] transition-all hover:bg-slate-50 flex-none flex items-center justify-center whitespace-nowrap"
               >
                 Hiring Process
               </TabsTrigger>
-              <button
-                onClick={() => setIsNotesOpen(true)}
-                className="border border-slate-200 rounded-lg px-6 h-[38px] text-slate-600 font-medium text-[15px] transition-all hover:bg-slate-50 inline-flex items-center justify-center whitespace-nowrap"
-              >
-                Internal Notes
-              </button>
               <TabsTrigger
                 value="custom-questions"
-                className="data-[state=active]:bg-transparent !shadow-none border border-slate-200 data-[state=active]:border-[var(--theme-color)] rounded-lg px-6 h-[38px] text-slate-600 data-[state=active]:text-[var(--theme-color)] font-medium text-[15px] transition-all hover:bg-slate-50 flex items-center justify-center"
+                className="data-[state=active]:bg-transparent !shadow-none border border-slate-200 data-[state=active]:border-[var(--theme-color)] rounded-lg px-6 h-[38px] text-slate-600 data-[state=active]:text-[var(--theme-color)] font-medium text-[15px] transition-all hover:bg-slate-50 flex-none flex items-center justify-center whitespace-nowrap"
               >
                 Custom Questions
+              </TabsTrigger>
+              <TabsTrigger
+                value="assessments"
+                className="data-[state=active]:bg-transparent !shadow-none border border-slate-200 data-[state=active]:border-[var(--theme-color)] rounded-lg px-6 h-[38px] text-slate-600 data-[state=active]:text-[var(--theme-color)] font-medium text-[15px] transition-all hover:bg-slate-50 flex-none flex items-center justify-center whitespace-nowrap"
+              >
+                Assessments
               </TabsTrigger>
             </TabsList>
           </div>
@@ -930,6 +956,118 @@ export default function JobDetailsPage() {
               </div>
             </div>
           </TabsContent>
+
+          <TabsContent
+            value="assessments"
+            className="pt-10 space-y-6"
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-slate-900 font-semibold text-[17px]">
+                Pipeline Automated Assessments
+              </h3>
+
+              <Dialog open={isAssessmentDialogOpen} onOpenChange={setIsAssessmentDialogOpen}>
+                <DialogTrigger asChild>
+                   <Button className="bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white shadow-none rounded-lg h-10 px-5 text-sm font-medium gap-2 transition-all active:scale-[0.98]">
+                     <HugeiconsIcon icon={PlusSignIcon} className="size-4" strokeWidth={3} />
+                     Attach Assessment to Stage
+                   </Button>
+                </DialogTrigger>
+                <DialogContent className="!top-[18%] !translate-y-0 max-w-[640px] rounded-xl border-slate-200 shadow-xl p-8 duration-0 data-open:zoom-in-100 data-closed:zoom-out-100">
+                   <DialogHeader className="mb-3">
+                     <DialogTitle className="text-[20px] font-semibold text-slate-900">Configure Stage Attachment</DialogTitle>
+                     <DialogDescription className="text-slate-500 mt-2 text-[14px]">
+                       Select an assessment and the stage that will trigger it.
+                     </DialogDescription>
+                   </DialogHeader>
+                   <form 
+                     onSubmit={(e) => {
+                       e.preventDefault();
+                       const formData = new FormData(e.currentTarget);
+                       const assessmentId = Number(formData.get("assessmentId"));
+                       const triggerStageId = Number(formData.get("triggerStageId"));
+                       if(assessmentId && triggerStageId) {
+                         attachAssessmentMutation.mutate(
+                           { assessmentId, triggerStageId },
+                           { onSuccess: () => setIsAssessmentDialogOpen(false) }
+                         );
+                       }
+                     }}
+                     className="space-y-7 pt-2"
+                   >
+                     <div className="space-y-2.5">
+                        <Label className="text-[14px] font-semibold text-slate-700">Select The Assessment</Label>
+                        <Select name="assessmentId" required>
+                           <SelectTrigger className="w-full h-10! border-slate-200 shadow-none rounded-lg text-slate-500 focus:ring-0">
+                             <SelectValue placeholder="Choose assessment..." />
+                           </SelectTrigger>
+                           <SelectContent className="rounded-lg shadow-lg border-slate-200">
+                              {allAssessments.map(a => (
+                                 <SelectItem key={a.id} value={a.id.toString()}>{a.title}</SelectItem>
+                              ))}
+                           </SelectContent>
+                        </Select>
+                     </div>
+                     <div className="space-y-2.5">
+                        <Label className="text-[14px] font-semibold text-slate-700">Select The Triggering Stage</Label>
+                        <Select name="triggerStageId" required>
+                           <SelectTrigger className="w-full h-10! border-slate-200 shadow-none rounded-lg text-slate-500 focus:ring-0">
+                             <SelectValue placeholder="When candidate is moved into..." />
+                           </SelectTrigger>
+                           <SelectContent className="rounded-lg shadow-lg border-slate-200">
+                              {stages.map(s => (
+                                 <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>
+                              ))}
+                           </SelectContent>
+                        </Select>
+                     </div>
+                     <div className="pt-6 flex justify-end">
+                       <Button type="submit" disabled={attachAssessmentMutation.isPending} className="h-10 px-8 bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white font-medium shadow-sm rounded-lg border-none">
+                         {attachAssessmentMutation.isPending ? "Attaching..." : "Confirm & Attach"}
+                       </Button>
+                     </div>
+                   </form>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            <div className="pt-2">
+              {attachedAssessments.length > 0 ? (
+                 <div className="space-y-3">
+                   {attachedAssessments.map((attachment) => {
+                     const stageFound = stages.find((s) => s.id === attachment.triggerStageId);
+                     const assessmentFound = allAssessments.find((a) => a.id === attachment.assessmentId);
+                     return (
+                        <div key={attachment.id} className="flex justify-between items-center p-5 border border-slate-200 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow">
+                           <div className="flex flex-col space-y-1.5">
+                              <span className="text-slate-800 font-semibold text-[16px] flex items-center gap-3">
+                                {assessmentFound?.title || 'Unknown Assessment'} 
+                                <Badge variant="secondary" className="bg-[var(--theme-color)]/10 text-[var(--theme-color)] px-2.5 py-0.5 rounded-full text-xs font-semibold shadow-none border-none">Trigger Stage: {stageFound?.name || 'Unknown Stage'}</Badge>
+                              </span>
+                              <span className="text-slate-500 text-[14px]">Test Duration: {assessmentFound?.timeLimit || 0} mins</span>
+                           </div>
+                           <Button 
+                             onClick={() => detachAssessmentMutation.mutate(attachment.id)}
+                             disabled={detachAssessmentMutation.isPending}
+                             variant="outline" 
+                             className="h-9 px-4 border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600 shadow-none text-[13px] font-medium rounded-lg"
+                           >
+                             Remove Trigger
+                           </Button>
+                        </div>
+                     );
+                   })}
+                 </div>
+              ) : (
+                <div className="py-12 flex flex-col items-center justify-center w-full">
+                   <p className="text-slate-500 text-[14px] mb-4 text-center">No assessments have been attached to this pipeline yet.</p>
+                   <Button onClick={() => setIsAssessmentDialogOpen(true)} variant="outline" className="h-9 px-5 text-[13px] font-medium rounded-lg text-slate-700 shadow-none border-slate-200 hover:bg-slate-50">
+                     Attach an Assessment
+                   </Button>
+                </div>
+              )}
+            </div>
+          </TabsContent>
         </div>
       </Tabs>
 
@@ -1124,15 +1262,23 @@ export default function JobDetailsPage() {
         </DialogContent>
       </Dialog>
 
-      <Sheet open={isNotesOpen} onOpenChange={setIsNotesOpen}>
-        <SheetContent className="w-full sm:max-w-[540px] p-0 flex flex-col border-l border-slate-200 shadow-none">
-          <SheetHeader className="p-5 border-b border-slate-100 bg-white">
-            <SheetTitle className="text-lg font-semibold text-slate-900">
-              Internal Notes
-            </SheetTitle>
-          </SheetHeader>
+      </div>
 
-          <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-white">
+      {isNotesOpen && (
+        <div className="w-[450px] shrink-0 border-l border-slate-200 flex flex-col bg-white shadow-[-8px_0_24px_rgba(0,0,0,0.02)] z-10 relative">
+          <div className="p-5 border-b border-slate-100 bg-white flex items-center justify-between shrink-0">
+            <h3 className="text-lg font-semibold text-slate-900">
+              Internal Notes
+            </h3>
+            <button
+               onClick={() => setIsNotesOpen(false)}
+               className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-full transition-colors"
+            >
+              <HugeiconsIcon icon={Cancel01Icon} className="size-[20px]" />
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-white scroll-smooth relative">
             {allMessages.length === 0 ? (
               <p className="text-slate-400 text-[13px] text-center pt-8">
                 No notes yet. Be the first to add one.
@@ -1167,9 +1313,11 @@ export default function JobDetailsPage() {
                 </div>
               ))
             )}
+            {/* spacer to ensure input box at bottom doesn't hide text */}
+            <div className="h-4 w-full"></div>
           </div>
 
-          <div className="p-5 border-t border-slate-100 bg-white space-y-4">
+          <div className="p-5 border-t border-slate-100 bg-white space-y-4 shrink-0">
             <div className="relative">
               <textarea
                 value={noteText}
@@ -1184,7 +1332,7 @@ export default function JobDetailsPage() {
             <Button
               onClick={handleSendNote}
               disabled={!noteText.trim() || !me}
-              className="w-full bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white rounded-lg h-11 font-medium shadow-none gap-2 border-none disabled:opacity-50"
+              className="w-full bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white rounded-lg h-11 font-medium shadow-none gap-2 border-none disabled:opacity-50 transition-all active:scale-[0.98]"
             >
               <HugeiconsIcon
                 icon={SentIcon}
@@ -1193,8 +1341,8 @@ export default function JobDetailsPage() {
               <span>Add Note</span>
             </Button>
           </div>
-        </SheetContent>
-      </Sheet>
+        </div>
+      )}
     </div>
   );
 }
