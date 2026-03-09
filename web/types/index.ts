@@ -100,3 +100,36 @@ export type Company = {
   createdAt: string;
   updatedAt: string;
 }
+
+export type AssessmentOption = {
+  id: number;
+  questionId: number;
+  label: string;
+  isCorrect: boolean;
+  position: number;
+}
+
+export type AssessmentQuestion = {
+  id: number;
+  assessmentId: number;
+  title: string;
+  description: string;
+  questionType: "short_answer" | "multiple_choice";
+  points: number;
+  position: number;
+  createdAt: string;
+  updatedAt: string;
+  options?: AssessmentOption[];
+}
+
+export type Assessment = {
+  id: number;
+  title: string;
+  description: string | null;
+  timeLimit: number;
+  passScore: number;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  questions?: AssessmentQuestion[];
+}

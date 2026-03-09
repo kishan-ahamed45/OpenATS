@@ -2,7 +2,10 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { serverFetch } from "@/lib/auth-action";
-import type { Job, JobDetail, PipelineStage, CurrentUser, ChatMessage, CustomQuestion, Company, Department } from "@/types";
+import type {
+  Job, JobDetail, PipelineStage, CurrentUser, ChatMessage,
+  CustomQuestion, Company, Department, Assessment, AssessmentQuestion
+} from "@/types";
 
 export function useJobs() {
   return useQuery({
@@ -266,6 +269,130 @@ export function useDeleteJob() {
       serverFetch<{ data: Job }>(`/jobs/${jobId}`, { method: "DELETE" }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
+    },
+  });
+}
+
+// assessments
+
+export function useAssessments() {
+  return useQuery({
+    queryKey: ["assessments"],
+    queryFn: () => serverFetch<{ data: Assessment[] }>("/assessments"),
+  });
+}
+
+export function useAssessment(id: number) {
+  return useQuery({
+    queryKey: ["assessments", id],
+    queryFn: () => serverFetch<{ data: Assessment[] }>(`/assessments/${id}`),
+    enabled: !!id,
+  });
+}
+
+export function useCreateAssessment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      title: string;
+      description: string | null;
+      timeLimit: number;
+      passScore: number;
+      createdBy?: number;
+      questions?: any[];
+    }) =>
+      serverFetch<{ data: Assessment }>("/assessments", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["assessments"] });
+    },
+  });
+}
+
+export function useUpdateAssessment(assessmentId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Partial<Assessment>) =>
+      serverFetch<{ data: Assessment }>(`/assessments/${assessmentId}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["assessments"] });
+      queryClient.invalidateQueries({ queryKey: ["assessments", assessmentId] });
+    },
+  });
+}
+export function useDeleteAssessment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (assessmentId: number) =>
+      serverFetch<{ data: Assessment }>(`/assessments/${assessmentId}`, {
+        method: "DELETE",
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["assessments"] });
+    },
+  });
+}
+
+export function useCreateAssessmentQuestion(assessmentId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      title: string;
+      description?: string | null;
+      questionType: "short_answer" | "multiple_choice";
+      points?: number;
+      position: number;
+      options?: { label: string; isCorrect?: boolean; position: number }[];
+    }) =>
+      serverFetch<{ data: AssessmentQuestion }>(`/assessments/${assessmentId}/questions`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["assessments", assessmentId] });
+    },
+  });
+}
+export function useUpdateAssessmentQuestion(assessmentId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      questionId,
+      data,
+    }: {
+      questionId: number;
+      data: {
+        title?: string;
+        description?: string | null;
+        questionType?: "short_answer" | "multiple_choice";
+        points?: number;
+        position?: number;
+        options?: { label: string; isCorrect?: boolean; position: number }[];
+      };
+    }) =>
+      serverFetch<{ data: AssessmentQuestion }>(`/assessments/${assessmentId}/questions/${questionId}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["assessments", assessmentId] });
+    },
+  });
+}
+export function useDeleteAssessmentQuestion(assessmentId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (questionId: number) =>
+      serverFetch<{ data: AssessmentQuestion }>(`/assessments/${assessmentId}/questions/${questionId}`, {
+        method: "DELETE",
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["assessments", assessmentId] });
     },
   });
 }
