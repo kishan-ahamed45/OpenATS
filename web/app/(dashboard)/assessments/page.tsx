@@ -12,6 +12,9 @@ import {
   QuestionIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { Loader2 } from "lucide-react";
+import { useAssessments, useDeleteAssessment } from "@/hooks/use-api";
+import type { Assessment } from "@/types";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,76 +37,16 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const INITIAL_ASSESSMENTS = [
-  {
-    id: "a1",
-    title: "Frontend Developer L01",
-    status: "Active",
-    difficulty: "Easy",
-    questions: 10,
-    duration: 120,
-  },
-  {
-    id: "a2",
-    title: "Backend Engineer Assessment",
-    status: "Active",
-    difficulty: "Medium",
-    questions: 15,
-    duration: 90,
-  },
-  {
-    id: "a3",
-    title: "UI/UX Designer Challenge",
-    status: "Inactive",
-    difficulty: "Easy",
-    questions: 8,
-    duration: 60,
-  },
-  {
-    id: "a4",
-    title: "DevOps Engineer – Level 2",
-    status: "Active",
-    difficulty: "Hard",
-    questions: 20,
-    duration: 180,
-  },
-  {
-    id: "a5",
-    title: "Data Analyst Screening",
-    status: "Active",
-    difficulty: "Medium",
-    questions: 12,
-    duration: 75,
-  },
-  {
-    id: "a6",
-    title: "Mobile Developer L01",
-    status: "Inactive",
-    difficulty: "Easy",
-    questions: 10,
-    duration: 120,
-  },
-];
-
-const STATUS_STYLES: Record<string, string> = {
-  Active: "bg-emerald-50 text-emerald-700",
-  Inactive: "bg-slate-100 text-slate-500",
-};
-
-const DIFFICULTY_STYLES: Record<string, string> = {
-  Easy: "bg-blue-50 text-blue-600",
-  Medium: "bg-amber-50 text-amber-600",
-  Hard: "bg-red-50 text-red-600",
-};
-
 export default function AssessmentsPage() {
-  const [assessments, setAssessments] = useState(INITIAL_ASSESSMENTS);
-  const [deleteTarget, setDeleteTarget] = useState<
-    (typeof INITIAL_ASSESSMENTS)[0] | null
-  >(null);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const { data, isLoading } = useAssessments();
+  const deleteAssessment = useDeleteAssessment();
+  const assessments = data?.data ?? [];
+  
+  const [deleteTarget, setDeleteTarget] = useState<Assessment | null>(null);
+  const [copiedId, setCopiedId] = useState<number | null>(null);
 
-  const copyPreviewLink = (id: string) => {
+  const copyPreviewLink = (id: number) => {
+    // In actual implementation this would be the invite link
     const url = `${window.location.origin}/assessment/${id}`;
     navigator.clipboard.writeText(url).then(() => {
       setCopiedId(id);
@@ -113,8 +56,15 @@ export default function AssessmentsPage() {
 
   const confirmDelete = () => {
     if (!deleteTarget) return;
-    setAssessments((prev) => prev.filter((a) => a.id !== deleteTarget.id));
-    setDeleteTarget(null);
+    deleteAssessment.mutate(deleteTarget.id, {
+      onSuccess: () => {
+        setDeleteTarget(null);
+      },
+      onError: (error: any) => {
+        alert(error.message || "Failed to delete assessment");
+        setDeleteTarget(null);
+      }
+    });
   };
 
   return (
@@ -176,7 +126,12 @@ export default function AssessmentsPage() {
       </div>
 
       <div className="px-8 py-6">
-        {assessments.length === 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center h-48 text-slate-400 text-sm gap-2">
+            <Loader2 className="size-4 animate-spin text-slate-400" />
+            Loading assessments...
+          </div>
+        ) : assessments.length === 0 ? (
           <div className="flex items-center justify-center h-48 text-slate-400 text-sm">
             No assessments found.
           </div>
@@ -200,14 +155,9 @@ export default function AssessmentsPage() {
                   {/* Badges + stats in one row */}
                   <div className="flex items-center gap-2">
                     <span
-                      className={`inline-flex items-center text-[12px] font-medium px-2.5 py-1 rounded-md ${STATUS_STYLES[a.status] ?? "bg-slate-100 text-slate-500"}`}
+                      className={`inline-flex items-center text-[12px] font-medium px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700`}
                     >
-                      {a.status}
-                    </span>
-                    <span
-                      className={`inline-flex items-center text-[12px] font-medium px-2.5 py-1 rounded-md ${DIFFICULTY_STYLES[a.difficulty] ?? "bg-slate-100 text-slate-500"}`}
-                    >
-                      {a.difficulty}
+                      Active
                     </span>
                     <span className="ml-auto flex items-center gap-3">
                       <span className="flex items-center gap-1 text-[12px] text-slate-400">
@@ -215,11 +165,11 @@ export default function AssessmentsPage() {
                           icon={QuestionIcon}
                           className="size-3.5"
                         />
-                        {a.questions}
+                        {a.questions?.length || 0}
                       </span>
                       <span className="flex items-center gap-1 text-[12px] text-slate-400">
                         <HugeiconsIcon icon={Time01Icon} className="size-3.5" />
-                        {a.duration}m
+                        {a.timeLimit}m
                       </span>
                     </span>
                   </div>
@@ -228,10 +178,13 @@ export default function AssessmentsPage() {
                 {/* Card footer */}
                 <div className="flex items-center gap-1.5 px-4 py-3 border-t border-slate-100">
                   <ThemeButton
+                    asChild
+                    href={`/assessments/${a.id}`}
                     className="h-8 px-6 text-[12px] font-medium shadow-none border-none rounded-md"
-                    onClick={() => {}}
                   >
-                    Edit
+                    <Link href={`/assessments/${a.id}`}>
+                      Edit
+                    </Link>
                   </ThemeButton>
                   <button
                     onClick={() => copyPreviewLink(a.id)}
@@ -282,10 +235,15 @@ export default function AssessmentsPage() {
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              onClick={confirmDelete}
-              className="h-9 px-5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-[13px] font-medium shadow-none border-none"
+              onClick={(e) => {
+                e.preventDefault();
+                confirmDelete();
+              }}
+              disabled={deleteAssessment.isPending}
+              className="h-9 px-5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-[13px] font-medium shadow-none border-none disabled:opacity-70"
             >
-              Delete
+              {deleteAssessment.isPending && <Loader2 className="size-3.5 mr-1.5 animate-spin" />}
+              {deleteAssessment.isPending ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

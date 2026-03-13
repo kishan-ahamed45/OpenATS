@@ -1,7 +1,7 @@
 import { Server, Socket } from "socket.io";
 import { Server as HttpServer } from "http";
 import { db } from "../db";
-import { jobChatMessages, candidateChatMessages } from "../db/schema";
+import { jobChatMessages, candidateChatMessages, users } from "../db/schema";
 import { eq } from "drizzle-orm";
 
 export class SocketService {
@@ -52,8 +52,17 @@ export class SocketService {
             })
             .returning();
 
-          // broadcast to the job room
-          this.io?.to(`job_${data.jobId}`).emit("new_job_message", newMessage);
+          const [sender] = await db
+            .select({ firstName: users.firstName, avatarUrl: users.avatarUrl })
+            .from(users)
+            .where(eq(users.id, data.senderId))
+            .limit(1);
+
+          this.io?.to(`job_${data.jobId}`).emit("new_job_message", {
+            ...newMessage,
+            senderName: sender?.firstName ?? null,
+            senderAvatar: sender?.avatarUrl ?? null,
+          });
         } catch (error) {
           console.error("Error saving job message:", error);
         }

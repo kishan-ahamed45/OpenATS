@@ -6,7 +6,8 @@ import {
   pipelineStageTemplates,
   jobPipelineStages,
   jobHiringTeam,
-} from "../db";
+  jobAssessmentAttachments,
+} from "../db/schema";
 
 export type CreateJobInput = {
   title: string;
@@ -228,5 +229,37 @@ export const jobService = {
   async delete(id: number) {
     const [deleted] = await db.delete(jobs).where(eq(jobs.id, id)).returning();
     return deleted ?? null;
+  },
+
+  async getAssessments(jobId: number) {
+    return db
+      .select({
+        id: jobAssessmentAttachments.id,
+        assessmentId: jobAssessmentAttachments.assessmentId,
+        triggerStageId: jobAssessmentAttachments.triggerStageId,
+        createdAt: jobAssessmentAttachments.createdAt,
+      })
+      .from(jobAssessmentAttachments)
+      .where(eq(jobAssessmentAttachments.jobId, jobId));
+  },
+
+  async attachAssessment(input: { jobId: number; assessmentId: number; triggerStageId: number }) {
+    const [attached] = await db
+      .insert(jobAssessmentAttachments)
+      .values({
+        jobId: input.jobId,
+        assessmentId: input.assessmentId,
+        triggerStageId: input.triggerStageId,
+      })
+      .returning();
+    return attached;
+  },
+
+  async detachAssessment(attachmentId: number) {
+    const [detached] = await db
+      .delete(jobAssessmentAttachments)
+      .where(eq(jobAssessmentAttachments.id, attachmentId))
+      .returning();
+    return detached;
   },
 };

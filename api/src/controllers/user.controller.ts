@@ -15,6 +15,10 @@ const updateUserSchema = z.object({
 });
 
 
+export const getCurrentUser = async (req: Request, res: Response) => {
+  res.status(200).json({ data: req.user });
+};
+
 export const getAllUsers = async (req: Request, res: Response) => {
   try {
     const result = await userService.getAll();

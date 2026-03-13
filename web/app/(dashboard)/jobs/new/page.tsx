@@ -1,13 +1,11 @@
 "use client";
 
 import { useState, KeyboardEvent } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  PlusSignIcon,
   Cancel01Icon,
-  Tick01Icon,
-  ArrowLeft01Icon,
   TextBoldIcon,
   TextItalicIcon,
   TextUnderlineIcon,
@@ -17,7 +15,7 @@ import {
   ListViewIcon,
   Sorting05Icon,
 } from "@hugeicons/core-free-icons";
-
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,13 +29,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+import { useCreateJob, useDepartments } from "@/hooks/use-api";
 
 export default function CreateNewJobPage() {
+  const router = useRouter();
+  const { data: deptData } = useDepartments();
+  const createJob = useCreateJob();
+  const departments = deptData?.data ?? [];
+
+  const [departmentId, setDepartmentId] = useState<number | null>(null);
   const [isSalaryInfoIncluded, setIsSalaryInfoIncluded] = useState(true);
   const [salaryType, setSalaryType] = useState<"range" | "fixed">("range");
-  const [skills, setSkills] = useState(["Java EE", "API DEV", "Choreo"]);
+  const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState("");
+  const [title, setTitle] = useState("");
+  const [employmentType, setEmploymentType] = useState<string | null>(null);
+  const [location, setLocation] = useState("");
+  const [description, setDescription] = useState("");
+  const [currency, setCurrency] = useState("USD");
+  const [payFrequency, setPayFrequency] = useState("yearly");
+  const [salaryMin, setSalaryMin] = useState("");
+  const [salaryMax, setSalaryMax] = useState("");
+  const [salaryFixed, setSalaryFixed] = useState("");
+  const [isActive, setIsActive] = useState(true);
 
   const handleAddSkill = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && skillInput.trim()) {
@@ -53,6 +67,36 @@ export default function CreateNewJobPage() {
     setSkills(skills.filter((s) => s !== skillToRemove));
   };
 
+  const handleSubmit = () => {
+    if (!title.trim() || !departmentId || !employmentType) return;
+
+    const salaryPayload = (() => {
+      if (!isSalaryInfoIncluded) return {};
+      if (salaryType === "fixed" && salaryFixed) {
+        return { salaryType: "fixed" as const, currency, payFrequency, salaryFixed: Number(salaryFixed) };
+      }
+      if (salaryType === "range" && salaryMin && salaryMax) {
+        return { salaryType: "range" as const, currency, payFrequency, salaryMin: Number(salaryMin), salaryMax: Number(salaryMax) };
+      }
+      return {};
+    })();
+
+    createJob.mutate(
+      {
+        title: title.trim(),
+        departmentId,
+        employmentType,
+        location: location || undefined,
+        description: description || undefined,
+        skills: skills.length > 0 ? skills : undefined,
+        ...salaryPayload,
+      },
+      {
+        onSuccess: (res) => router.push(`/jobs/${res.data.id}`),
+      }
+    );
+  };
+
   return (
     <div className="flex flex-1 flex-col bg-white">
       <div className="px-14 py-10 pb-20 max-w-5xl">
@@ -66,6 +110,8 @@ export default function CreateNewJobPage() {
             <Switch
               id="job-active"
               defaultChecked
+              checked={isActive}
+              onCheckedChange={setIsActive}
               className="data-checked:bg-[var(--theme-color)] scale-110"
             />
             <Label
@@ -83,8 +129,10 @@ export default function CreateNewJobPage() {
               Job Title
             </Label>
             <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
               placeholder="Senior Software Engineer - Backend"
-              className="h-10! border-slate-200 shadow-none rounded-lg focus-visible:ring-0 focus-visible:border-slate-300 placeholder:text-slate-300"
+              className="h-10! border-slate-200 shadow-none rounded-lg placeholder:text-slate-300"
             />
           </div>
 
@@ -94,13 +142,16 @@ export default function CreateNewJobPage() {
               <Label className="text-sm font-semibold text-slate-700">
                 Department
               </Label>
-              <Select>
-                <SelectTrigger className="h-10! border-slate-200 shadow-none rounded-lg text-slate-500 focus:ring-0">
+              <Select onValueChange={(val) => setDepartmentId(Number(val))}>
+                <SelectTrigger className="w-full h-10! border-slate-200 shadow-none rounded-lg text-slate-500 focus:ring-0">
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent className="rounded-lg shadow-lg border-slate-200">
-                  <SelectItem value="eng">Engineering</SelectItem>
-                  <SelectItem value="api">API Management</SelectItem>
+                  {departments.map((dept) => (
+                    <SelectItem key={dept.id} value={String(dept.id)}>
+                      {dept.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -108,15 +159,16 @@ export default function CreateNewJobPage() {
               <Label className="text-sm font-semibold text-slate-700">
                 Employement Type
               </Label>
-              <Select>
-                <SelectTrigger className="h-10! border-slate-200 shadow-none rounded-lg text-slate-500 focus:ring-0">
+              <Select onValueChange={setEmploymentType}>
+                <SelectTrigger className="w-full h-10! border-slate-200 shadow-none rounded-lg text-slate-500 focus:ring-0">
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent className="rounded-lg shadow-lg border-slate-200">
-                  <SelectItem value="fulltime">Full Time</SelectItem>
+                  <SelectItem value="full_time">Full Time</SelectItem>
+                  <SelectItem value="part_time">Part Time</SelectItem>
                   <SelectItem value="contract">Contract</SelectItem>
                   <SelectItem value="internship">Internship</SelectItem>
-                </SelectContent>
+                  <SelectItem value="freelance">Freelance</SelectItem>                </SelectContent>
               </Select>
             </div>
           </div>
@@ -126,7 +178,7 @@ export default function CreateNewJobPage() {
             <Label className="text-sm font-semibold text-slate-700">
               Skills
             </Label>
-            <div className="min-h-10 p-1.5 flex flex-wrap gap-2 border border-slate-200 rounded-lg bg-white focus-within:border-slate-300 transition-colors">
+            <div className="min-h-10 p-1.5 flex flex-wrap gap-2 border border-slate-200 rounded-lg bg-white focus-within:border-[var(--theme-color)] transition-[border-color] duration-200">
               {skills.map((skill) => (
                 <div
                   key={skill}
@@ -160,8 +212,10 @@ export default function CreateNewJobPage() {
               Location
             </Label>
             <Input
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
               placeholder="Search"
-              className="h-10! border-slate-200 shadow-none rounded-lg focus-visible:ring-0 focus-visible:border-slate-300"
+              className="h-10! border-slate-200 shadow-none rounded-lg"
             />
           </div>
 
@@ -232,6 +286,8 @@ export default function CreateNewJobPage() {
                 </Button>
               </div>
               <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
                 className="w-full min-h-[160px] p-4 text-sm focus:outline-none placeholder:text-slate-300"
                 placeholder="Type here..."
               />
@@ -305,14 +361,14 @@ export default function CreateNewJobPage() {
                       <Label className="text-sm font-semibold text-slate-700">
                         Currency
                       </Label>
-                      <Select>
-                        <SelectTrigger className="h-10! border-slate-200 shadow-none rounded-lg text-slate-500 focus:ring-0">
+                      <Select value={currency} onValueChange={setCurrency}>
+                        <SelectTrigger className="w-full h-10! border-slate-200 shadow-none rounded-lg text-slate-500 focus:ring-0">
                           <SelectValue placeholder="USD" />
                         </SelectTrigger>
                         <SelectContent className="rounded-lg shadow-lg border-slate-200">
-                          <SelectItem value="usd">USD</SelectItem>
-                          <SelectItem value="eur">EUR</SelectItem>
-                          <SelectItem value="lkr">LKR</SelectItem>
+                          <SelectItem value="USD">USD</SelectItem>
+                          <SelectItem value="EUR">EUR</SelectItem>
+                          <SelectItem value="LKR">LKR</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -320,14 +376,14 @@ export default function CreateNewJobPage() {
                       <Label className="text-sm font-semibold text-slate-700">
                         Paid Every
                       </Label>
-                      <Select>
-                        <SelectTrigger className="h-10! border-slate-200 shadow-none rounded-lg text-slate-500 focus:ring-0">
+                      <Select value={payFrequency} onValueChange={setPayFrequency}>
+                        <SelectTrigger className="w-full h-10! border-slate-200 shadow-none rounded-lg text-slate-500 focus:ring-0">
                           <SelectValue placeholder="Month" />
                         </SelectTrigger>
                         <SelectContent className="rounded-lg shadow-lg border-slate-200">
-                          <SelectItem value="month">Month</SelectItem>
-                          <SelectItem value="year">Year</SelectItem>
-                          <SelectItem value="hour">Hour</SelectItem>
+                          <SelectItem value="hourly">Hourly</SelectItem>
+                          <SelectItem value="monthly">Monthly</SelectItem>
+                          <SelectItem value="yearly">Yearly</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -340,6 +396,8 @@ export default function CreateNewJobPage() {
                           Minimum Salary
                         </Label>
                         <Input
+                          value={salaryMin}
+                          onChange={(e) => setSalaryMin(e.target.value)}
                           placeholder="e.g. 50,000"
                           className="h-10! border-slate-200 shadow-none rounded-lg"
                         />
@@ -349,6 +407,8 @@ export default function CreateNewJobPage() {
                           Maximum Salary
                         </Label>
                         <Input
+                          value={salaryMax}
+                          onChange={(e) => setSalaryMax(e.target.value)}
                           placeholder="e.g. 80,000"
                           className="h-10! border-slate-200 shadow-none rounded-lg"
                         />
@@ -360,6 +420,8 @@ export default function CreateNewJobPage() {
                         Enter Fixed Salary
                       </Label>
                       <Input
+                        value={salaryFixed}
+                        onChange={(e) => setSalaryFixed(e.target.value)}
                         placeholder="e.g. 75,000"
                         className="h-10! border-slate-200 shadow-none rounded-lg"
                       />
@@ -372,10 +434,13 @@ export default function CreateNewJobPage() {
 
           <div className="pt-10 flex items-center gap-4">
             <Button
-              className="text-white cursor-pointer rounded-lg h-10 px-6 font-medium shadow-none border-none"
+              onClick={handleSubmit}
+              className="text-white cursor-pointer rounded-lg h-10 px-10 min-w-[140px] font-medium shadow-none border-none"
               style={{ backgroundColor: "var(--theme-color)" }}
+              disabled={!title || !departmentId || !employmentType || createJob.isPending}
             >
-              Save Job
+              {createJob.isPending && <Loader2 className="w-4 h-4 animate-spin mr-1" />}
+              {createJob.isPending ? "Saving…" : "Save Job"}
             </Button>
             <Link
               href="/jobs"

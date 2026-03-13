@@ -233,3 +233,65 @@ export const deleteJob = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Failed to delete job" });
   }
 };
+
+export const getAssessments = async (req: Request, res: Response) => {
+  try {
+    const jobId = parseInt((req.params.id ?? "").toString());
+    if (isNaN(jobId)) {
+      res.status(400).json({ error: "Invalid job ID" });
+      return;
+    }
+    const result = await jobService.getAssessments(jobId);
+    res.status(200).json({ data: result });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch job assessments" });
+  }
+};
+
+export const attachAssessment = async (req: Request, res: Response) => {
+  try {
+    const jobId = parseInt((req.params.id ?? "").toString());
+    if (isNaN(jobId)) {
+      res.status(400).json({ error: "Invalid job ID" });
+      return;
+    }
+
+    const { assessmentId, triggerStageId } = req.body;
+    if (!assessmentId || !triggerStageId) {
+      res.status(400).json({ error: "assessmentId and triggerStageId are required" });
+      return;
+    }
+
+    const result = await jobService.attachAssessment({
+      jobId,
+      assessmentId: parseInt(assessmentId),
+      triggerStageId: parseInt(triggerStageId),
+    });
+
+    res.status(201).json({ data: result });
+  } catch (error: any) {
+    if (error?.code === "23505") { // Unique constraint violation
+      res.status(409).json({ error: "An assessment is already attached to this stage for this job" });
+      return;
+    }
+    res.status(500).json({ error: "Failed to attach assessment" });
+  }
+};
+
+export const detachAssessment = async (req: Request, res: Response) => {
+  try {
+    const attachmentId = parseInt((req.params.attachmentId ?? "").toString());
+    if (isNaN(attachmentId)) {
+      res.status(400).json({ error: "Invalid attachment ID" });
+      return;
+    }
+    const result = await jobService.detachAssessment(attachmentId);
+    if (!result) {
+      res.status(404).json({ error: "Attachment not found" });
+      return;
+    }
+    res.status(200).json({ data: result });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to detach assessment" });
+  }
+};

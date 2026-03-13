@@ -1,33 +1,56 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import type { Ref } from "react";
+import { useParams } from "next/navigation";
 import { useDrag, useDrop, useDragLayer } from "react-dnd";
 import { getEmptyImage } from "react-dnd-html5-backend";
 import { GripVertical } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { CandidateSidePanel } from "@/components/candidate-side-panel";
+import {
+  useJob,
+  usePipeline,
+  useCandidates,
+  useMoveCandidateStage,
+} from "@/hooks/use-api";
+import type { Candidate, PipelineStage } from "@/types";
 
-interface Candidate {
-  id: string;
-  name: string;
-  time: string;
-}
+const STAGE_COLORS: Record<PipelineStage["stageType"], string> = {
+  none: "#94a3b8",
+  source: "#60a5fa",
+  assessment: "#a78bfa",
+  interview: "#3b82f6",
+  offer: "#22c55e",
+  rejection: "#ef4444",
+};
 
-interface Stage {
-  id: string;
-  title: string;
-  color: string;
-  candidates: Candidate[];
-}
+const EMPLOYMENT_LABELS: Record<string, string> = {
+  full_time: "Full Time",
+  part_time: "Part Time",
+  contract: "Contract",
+  internship: "Internship",
+  freelance: "Freelance",
+};
 
 const CARD_TYPE = "PIPELINE_CARD";
 
-// ── Custom drag layer (angled floating card) ──────────────────────────────────
+function timeAgo(dateStr: string) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
 function CustomDragLayer() {
   const { isDragging, item, currentOffset } = useDragLayer((monitor) => ({
     isDragging: monitor.isDragging(),
-    item: monitor.getItem() as { name: string; time: string } | null,
+    item: monitor.getItem() as { name: string; appliedAt: string } | null,
     currentOffset: monitor.getSourceClientOffset(),
   }));
 
@@ -54,7 +77,7 @@ function CustomDragLayer() {
             {item.name}
           </p>
           <p className="text-slate-400 text-[10px] font-medium uppercase tracking-tight">
-            {item.time}
+            {item.appliedAt}
           </p>
         </div>
       </div>
@@ -62,32 +85,34 @@ function CustomDragLayer() {
   );
 }
 
-// ── Draggable card with hover-index drop target ───────────────────────────────
 function DraggableCard({
   candidate,
   stageId,
   index,
   onReorder,
+  onClick,
 }: {
   candidate: Candidate;
-  stageId: string;
+  stageId: number;
   index: number;
   onReorder: (
-    fromStageId: string,
+    fromStageId: number,
     fromIndex: number,
-    toStageId: string,
+    toStageId: number,
     toIndex: number,
   ) => void;
+  onClick: (id: number) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const previewRef = useRef<HTMLDivElement>(null);
+  const name = `${candidate.firstName} ${candidate.lastName}`;
+  const appliedAtLabel = timeAgo(candidate.appliedAt);
 
   const [{ isDragging }, dragRef, dragPreviewRef] = useDrag({
     type: CARD_TYPE,
     item: {
       id: candidate.id,
-      name: candidate.name,
-      time: candidate.time,
+      name,
+      appliedAt: appliedAtLabel,
       fromStageId: stageId,
       fromIndex: index,
     },
@@ -98,37 +123,24 @@ function DraggableCard({
     dragPreviewRef(getEmptyImage(), { captureDraggingState: true });
   }, [dragPreviewRef]);
 
-  const [{ isOver, isAbove }, dropRef] = useDrop<
-    { id: string; fromStageId: string; fromIndex: number },
-    void,
-    { isOver: boolean; isAbove: boolean }
-  >({
+  const [, dropRef] = useDrop<{
+    id: number;
+    fromStageId: number;
+    fromIndex: number;
+  }>({
     accept: CARD_TYPE,
     hover(dragItem, monitor) {
-      if (!ref.current) return;
-      if (dragItem.id === candidate.id) return;
-      const hoverBoundingRect = ref.current.getBoundingClientRect();
-      const hoverMiddleY =
-        (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+      if (!ref.current || dragItem.id === candidate.id) return;
+      const { bottom, top } = ref.current.getBoundingClientRect();
+      const hoverMiddleY = (bottom - top) / 2;
       const clientOffset = monitor.getClientOffset();
       if (!clientOffset) return;
-      const hoverClientY = clientOffset.y - hoverBoundingRect.top;
+      const hoverClientY = clientOffset.y - top;
       const toIndex = hoverClientY < hoverMiddleY ? index : index + 1;
       onReorder(dragItem.fromStageId, dragItem.fromIndex, stageId, toIndex);
       dragItem.fromStageId = stageId;
-      dragItem.fromIndex = toIndex > dragItem.fromIndex ? toIndex - 1 : toIndex;
-    },
-    collect: (monitor) => {
-      if (!ref.current || !monitor.isOver())
-        return { isOver: false, isAbove: false };
-      const hoverBoundingRect = ref.current.getBoundingClientRect();
-      const hoverMiddleY =
-        (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-      const clientOffset = monitor.getClientOffset();
-      const hoverClientY = clientOffset
-        ? clientOffset.y - hoverBoundingRect.top
-        : 0;
-      return { isOver: monitor.isOver(), isAbove: hoverClientY < hoverMiddleY };
+      dragItem.fromIndex =
+        toIndex > dragItem.fromIndex ? toIndex - 1 : toIndex;
     },
   });
 
@@ -137,46 +149,50 @@ function DraggableCard({
   return (
     <div
       ref={ref as unknown as Ref<HTMLDivElement>}
+      onClick={() => !isDragging && onClick(candidate.id)}
       className={`bg-white px-3 py-2.5 rounded-lg flex items-center gap-2 group select-none transition-colors ${
         isDragging
           ? "border-2 border-dashed border-[var(--theme-color)] opacity-40 cursor-grabbing"
-          : "border border-slate-200 hover:border-[var(--theme-color)]/40 cursor-grab"
+          : "border border-slate-200 hover:border-[var(--theme-color)]/40 cursor-pointer"
       }`}
     >
-      <GripVertical className="size-3.5 text-slate-300 shrink-0 group-hover:text-slate-400 transition-colors" />
+      <GripVertical className="size-3.5 text-slate-300 shrink-0 group-hover:text-slate-400 transition-colors cursor-grab" />
       <div className="space-y-0.5 min-w-0">
         <p className="font-semibold text-slate-800 text-[13px] leading-snug group-hover:text-[var(--theme-color)] transition-colors truncate">
-          {candidate.name}
+          {name}
         </p>
         <p className="text-slate-400 text-[10px] font-medium uppercase tracking-tight">
-          {candidate.time}
+          {appliedAtLabel}
         </p>
       </div>
     </div>
   );
 }
 
-// ── Droppable column ──────────────────────────────────────────────────────────
 function DroppableColumn({
   stage,
+  candidates,
   onDropToStage,
   onReorder,
+  onCardClick,
 }: {
-  stage: Stage;
+  stage: PipelineStage & { color: string };
+  candidates: Candidate[];
   onDropToStage: (
-    cardId: string,
-    fromStageId: string,
-    toStageId: string,
+    candidateId: number,
+    fromStageId: number,
+    toStageId: number,
   ) => void;
   onReorder: (
-    fromStageId: string,
+    fromStageId: number,
     fromIndex: number,
-    toStageId: string,
+    toStageId: number,
     toIndex: number,
   ) => void;
+  onCardClick: (id: number) => void;
 }) {
   const [{ isOver, canDrop }, dropRef] = useDrop<
-    { id: string; fromStageId: string; fromIndex: number },
+    { id: number; fromStageId: number; fromIndex: number },
     void,
     { isOver: boolean; canDrop: boolean }
   >({
@@ -202,10 +218,10 @@ function DroppableColumn({
           style={{ backgroundColor: stage.color }}
         />
         <h3 className="font-semibold text-slate-700 text-[15px]">
-          {stage.title}
+          {stage.name}
         </h3>
         <span className="ml-auto text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-300 uppercase tracking-tighter">
-          {stage.candidates.length} Cards
+          {candidates.length} Cards
         </span>
       </div>
 
@@ -217,7 +233,7 @@ function DroppableColumn({
             : "bg-slate-50/60 border border-slate-200"
         }`}
       >
-        {stage.candidates.length === 0 && (
+        {candidates.length === 0 && (
           <div
             className={`h-20 flex items-center justify-center rounded-lg border-2 border-dashed text-sm font-medium transition-colors ${
               isActive
@@ -228,13 +244,14 @@ function DroppableColumn({
             {isActive ? "Drop here" : "No candidates"}
           </div>
         )}
-        {stage.candidates.map((candidate, index) => (
+        {candidates.map((c, index) => (
           <DraggableCard
-            key={candidate.id}
-            candidate={candidate}
+            key={c.id}
+            candidate={c}
             stageId={stage.id}
             index={index}
             onReorder={onReorder}
+            onClick={onCardClick}
           />
         ))}
       </div>
@@ -242,60 +259,109 @@ function DroppableColumn({
   );
 }
 
-const INITIAL_STAGES: Stage[] = [
-  {
-    id: "screening",
-    title: "Screening",
-    color: "#4CAF50",
-    candidates: [
-      { id: "c1", name: "Chamal Senarathna", time: "32 minutes ago" },
-      { id: "c2", name: "Lex Fridman", time: "45 minutes ago" },
-      { id: "c3", name: "Nuwan Perera", time: "1 hour ago" },
-      { id: "c4", name: "Sithum Jayasinghe", time: "2 hours ago" },
-    ],
-  },
-  {
-    id: "qualified",
-    title: "Qualified",
-    color: "#FF9800",
-    candidates: [
-      { id: "c5", name: "Risikeesan J.", time: "45 minutes ago" },
-      { id: "c6", name: "Kishan Ahamed", time: "45 minutes ago" },
-    ],
-  },
-  {
-    id: "interviews",
-    title: "Interviews",
-    color: "#2196F3",
-    candidates: [
-      { id: "c7", name: "Chamal Senarathna", time: "32 minutes ago" },
-    ],
-  },
-  {
-    id: "offer",
-    title: "Offer",
-    color: "#4CAF50",
-    candidates: [{ id: "c8", name: "Bhanuka H.", time: "45 minutes ago" }],
-  },
-  {
-    id: "hired",
-    title: "Hired",
-    color: "#10B981",
-    candidates: [{ id: "c9", name: "John Doe", time: "1 hour ago" }],
-  },
-  {
-    id: "rejected",
-    title: "Rejected",
-    color: "#EF4444",
-    candidates: [{ id: "c10", name: "Jane Smith", time: "2 hours ago" }],
-  },
-];
-
 export default function HiringPipelinePage() {
-  const [stages, setStages] = useState<Stage[]>(INITIAL_STAGES);
+  const params = useParams();
+  const jobId = Number(params.id);
+
+  const { data: jobData } = useJob(jobId);
+  const { data: pipelineData } = usePipeline(jobId);
+  const { data: candidatesData, refetch } = useCandidates(jobId);
+  const moveStageMutation = useMoveCandidateStage();
+
+  const job = jobData?.data;
+  const pipelineStages = pipelineData?.data ?? [];
+
+  // Detail sheet state
+  const [selectedCandidateId, setSelectedCandidateId] = useState<number | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+
+  // Local copy for optimistic drag-drop updates
+  const [localCandidates, setLocalCandidates] = useState<Candidate[]>([]);
+
+  useEffect(() => {
+    if (candidatesData?.data) {
+      setLocalCandidates(candidatesData.data);
+    }
+  }, [candidatesData]);
+
+  // Group by currentStageId
+  const candidatesByStage = useMemo(
+    () =>
+      localCandidates.reduce(
+        (acc, c) => {
+          const key = c.currentStageId ?? -1;
+          acc[key] = [...(acc[key] ?? []), c];
+          return acc;
+        },
+        {} as Record<number, Candidate[]>,
+      ),
+    [localCandidates],
+  );
+
+  const stages = pipelineStages.map((s) => ({
+    ...s,
+    color: STAGE_COLORS[s.stageType] ?? "#94a3b8",
+  }));
+
+  // Move between columns — optimistic update + API
+  const handleDropToStage = (
+    candidateId: number,
+    fromStageId: number,
+    toStageId: number,
+  ) => {
+    setLocalCandidates((prev) =>
+      prev.map((c) =>
+        c.id === candidateId ? { ...c, currentStageId: toStageId } : c,
+      ),
+    );
+    moveStageMutation.mutate(
+      { id: candidateId, newStageId: toStageId },
+      { onError: () => refetch() },
+    );
+  };
+
+  // Reorder within / across columns (local visual only)
+  const handleReorder = (
+    fromStageId: number,
+    fromIndex: number,
+    toStageId: number,
+    toIndex: number,
+  ) => {
+    setLocalCandidates((prev) => {
+      const fromList = (candidatesByStage[fromStageId] ?? []).slice();
+      const card = fromList[fromIndex];
+      if (!card) return prev;
+
+      if (fromStageId === toStageId) {
+        if (fromIndex === toIndex) return prev;
+        const newList = [...fromList];
+        newList.splice(fromIndex, 1);
+        newList.splice(
+          toIndex > fromIndex ? toIndex - 1 : toIndex,
+          0,
+          card,
+        );
+        return prev
+          .filter((c) => c.currentStageId !== fromStageId)
+          .concat(newList);
+      }
+
+      const toList = (candidatesByStage[toStageId] ?? []).slice();
+      toList.splice(toIndex, 0, { ...card, currentStageId: toStageId });
+      return prev
+        .filter(
+          (c) =>
+            c.currentStageId !== fromStageId &&
+            c.currentStageId !== toStageId,
+        )
+        .concat(fromList.filter((_, i) => i !== fromIndex))
+        .concat(toList);
+    });
+  };
+
+  // Edge-scroll when dragging near left/right
   const scrollRef = useRef<HTMLDivElement>(null);
   const animFrameRef = useRef<number | null>(null);
-
   const { isDragging } = useDragLayer((monitor) => ({
     isDragging: monitor.isDragging(),
   }));
@@ -305,29 +371,21 @@ export default function HiringPipelinePage() {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
       return;
     }
-
     const EDGE = 120;
     const SPEED = 12;
-
     const onMouseMove = (e: MouseEvent) => {
       const container = scrollRef.current;
       if (!container) return;
       const { left, right } = container.getBoundingClientRect();
-
       const scroll = () => {
         if (!isDragging) return;
-        if (e.clientX < left + EDGE) {
-          container.scrollLeft -= SPEED;
-        } else if (e.clientX > right - EDGE) {
-          container.scrollLeft += SPEED;
-        }
+        if (e.clientX < left + EDGE) container.scrollLeft -= SPEED;
+        else if (e.clientX > right - EDGE) container.scrollLeft += SPEED;
         animFrameRef.current = requestAnimationFrame(scroll);
       };
-
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
       animFrameRef.current = requestAnimationFrame(scroll);
     };
-
     window.addEventListener("mousemove", onMouseMove);
     return () => {
       window.removeEventListener("mousemove", onMouseMove);
@@ -335,119 +393,145 @@ export default function HiringPipelinePage() {
     };
   }, [isDragging]);
 
-  // Move between stages (drop on empty column area)
-  const handleDropToStage = (
-    cardId: string,
-    fromStageId: string,
-    toStageId: string,
-  ) => {
-    setStages((prev) => {
-      const fromStage = prev.find((s) => s.id === fromStageId)!;
-      const card = fromStage.candidates.find((c) => c.id === cardId)!;
-      return prev.map((stage) => {
-        if (stage.id === fromStageId)
-          return {
-            ...stage,
-            candidates: stage.candidates.filter((c) => c.id !== cardId),
-          };
-        if (stage.id === toStageId)
-          return { ...stage, candidates: [...stage.candidates, card] };
-        return stage;
-      });
-    });
-  };
-
-  // Reorder within or across stages by index
-  const handleReorder = (
-    fromStageId: string,
-    fromIndex: number,
-    toStageId: string,
-    toIndex: number,
-  ) => {
-    setStages((prev) => {
-      const fromStage = prev.find((s) => s.id === fromStageId)!;
-      const card = fromStage.candidates[fromIndex];
-      if (!card) return prev;
-
-      if (fromStageId === toStageId) {
-        if (fromIndex === toIndex) return prev;
-        const newCandidates = [...fromStage.candidates];
-        newCandidates.splice(fromIndex, 1);
-        newCandidates.splice(
-          toIndex > fromIndex ? toIndex - 1 : toIndex,
-          0,
-          card,
-        );
-        return prev.map((s) =>
-          s.id === fromStageId ? { ...s, candidates: newCandidates } : s,
-        );
-      }
-
-      return prev.map((stage) => {
-        if (stage.id === fromStageId)
-          return {
-            ...stage,
-            candidates: stage.candidates.filter((_, i) => i !== fromIndex),
-          };
-        if (stage.id === toStageId) {
-          const newCandidates = [...stage.candidates];
-          newCandidates.splice(toIndex, 0, card);
-          return { ...stage, candidates: newCandidates };
-        }
-        return stage;
-      });
-    });
-  };
-
   return (
     <div className="flex flex-col h-[calc(100vh-var(--header-height))] bg-white overflow-hidden w-full min-w-0">
       <CustomDragLayer />
 
-      {/* Sticky header */}
+      {/* Header */}
       <div className="sticky top-0 z-10 bg-white shrink-0 w-full">
         <div className="px-8 pt-8 pb-6 overflow-hidden">
           <div className="flex items-center justify-between gap-4 max-w-full">
             <div className="space-y-4 min-w-0">
               <div className="flex items-center gap-4">
                 <h1 className="text-[32px] font-semibold text-slate-900 leading-none truncate">
-                  Intern - Software Engineer
+                  {job?.title ?? "Loading..."}
                 </h1>
-                <Badge className="bg-[#E6F4EA] text-[#1E8E3E] hover:bg-[#E6F4EA] border-none font-medium px-3 py-1 rounded-full text-xs shadow-none shrink-0">
-                  Active Job
-                </Badge>
+                {job && (
+                  <Badge className="bg-[#E6F4EA] text-[#1E8E3E] hover:bg-[#E6F4EA] border-none font-medium px-3 py-1 rounded-full text-xs shadow-none shrink-0">
+                    {job.status === "published" ? "Active Job" : job.status}
+                  </Badge>
+                )}
               </div>
-              <div className="flex items-center text-sm font-medium text-slate-500 gap-2 truncate whitespace-nowrap opacity-80">
-                <span className="shrink-0">Full Time</span>
-                <span className="text-slate-300 shrink-0">-</span>
-                <span className="shrink-0">Development</span>
-                <span className="text-slate-300 shrink-0">-</span>
-                <span className="shrink-0 truncate">Colombo, Srilanka</span>
-                <span className="text-slate-300 shrink-0">-</span>
-                <span className="shrink-0 text-slate-400">
-                  Posted On 18/02/26
-                </span>
-              </div>
+              {job && (
+                <div className="flex items-center text-sm font-medium text-slate-500 gap-2 truncate whitespace-nowrap opacity-80">
+                  <span className="shrink-0">
+                    {EMPLOYMENT_LABELS[job.employmentType] ?? job.employmentType}
+                  </span>
+                  {job.location && (
+                    <>
+                      <span className="text-slate-300 shrink-0">-</span>
+                      <span className="shrink-0 truncate">{job.location}</span>
+                    </>
+                  )}
+                  <span className="text-slate-300 shrink-0">-</span>
+                  <span className="shrink-0 text-slate-400">
+                    {localCandidates.length} candidate
+                    {localCandidates.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
         <div className="border-b border-slate-200" />
       </div>
 
+      {/* Kanban board */}
       <div
         ref={scrollRef}
         className="flex-1 w-full min-w-0 overflow-x-auto overflow-y-auto bg-slate-50/10 pipeline-scroll-container"
       >
-        <div className="flex min-h-full p-8 gap-5 w-max items-stretch">
-          {stages.map((stage) => (
-            <DroppableColumn
-              key={stage.id}
-              stage={stage}
-              onDropToStage={handleDropToStage}
-              onReorder={handleReorder}
-            />
-          ))}
-        </div>
+        {stages.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-slate-400 text-sm">
+              No pipeline stages defined for this job yet.
+            </p>
+          </div>
+        ) : (
+          <div className="flex min-h-full p-8 gap-5 w-max items-stretch">
+            {stages.map((stage) => (
+              <DroppableColumn
+                key={stage.id}
+                stage={stage}
+                candidates={candidatesByStage[stage.id] ?? []}
+                onDropToStage={handleDropToStage}
+                onReorder={handleReorder}
+                onCardClick={(id) => {
+                  setSelectedCandidateId(id);
+                  setIsDetailOpen(true);
+                }}
+              />
+            ))}
+          </div>
+        )}
       </div>
+
+      {/* Candidate detail sheet */}
+      <Sheet open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+        <SheetContent
+          showCloseButton={true}
+          className="w-[98vw] sm:max-w-[98vw] p-0 flex flex-row gap-0 border-l border-slate-200 shadow-none overflow-hidden bg-white"
+        >
+          {selectedCandidateId && (() => {
+            const c = localCandidates.find((x) => x.id === selectedCandidateId);
+            if (!c) return null;
+            return (
+              <>
+                {/* Left — candidate info + CV */}
+                <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+                  <div className="px-6 lg:px-8 py-4 lg:py-5 border-b border-slate-100 shrink-0 bg-white">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 min-w-0">
+                      <h2 className="text-lg font-semibold text-slate-900 tracking-tight">
+                        {c.firstName} {c.lastName}
+                      </h2>
+                      {c.stageName && (
+                        <Badge className="bg-slate-100 text-slate-600 hover:bg-slate-100 border-none shadow-none font-medium px-2 py-0.5 rounded-full text-[11px] uppercase tracking-wider whitespace-nowrap">
+                          {c.stageName}
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-slate-500 text-[13px] mt-0.5">
+                      {job?.title ?? ""}
+                      <span className="mx-1.5 opacity-30">•</span>
+                      Applied {timeAgo(c.appliedAt)}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-x-5 gap-y-1 mt-1.5">
+                      <span className="flex items-center gap-1.5 text-slate-500 text-[12px] font-medium">
+                        {c.email}
+                      </span>
+                      {c.phone && (
+                        <span className="flex items-center gap-1.5 text-slate-500 text-[12px] font-medium">
+                          {c.phone}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex-1 overflow-hidden">
+                    {c.resumeUrl ? (
+                      <iframe
+                        src={`${c.resumeUrl}#toolbar=0&navpanes=0&scrollbar=0`}
+                        title="Resume"
+                        className="w-full h-full border-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-slate-400">
+                        <svg className="size-10 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <p className="text-[13px] font-medium">No resume uploaded</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right — tabbed detail panel */}
+                <CandidateSidePanel candidateId={selectedCandidateId} />
+              </>
+            );
+          })()}
+        </SheetContent>
+      </Sheet>
 
       <style jsx global>{`
         .pipeline-scroll-container {

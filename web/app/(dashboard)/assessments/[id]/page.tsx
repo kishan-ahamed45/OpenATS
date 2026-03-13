@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, use, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useCreateAssessment } from "@/hooks/use-api";
+import { useAssessment, useUpdateAssessment } from "@/hooks/use-api";
 import type { Ref } from "react";
 import Link from "next/link";
 import {
@@ -82,17 +82,65 @@ const inputCls =
 const textareaCls =
   "w-full px-3.5 py-3 text-sm bg-white border border-slate-200 rounded-lg shadow-none placeholder:text-slate-400 focus:outline-none focus:border-slate-400 resize-none transition-colors";
 
-export default function CreateAssessmentPage() {
+export default function EditAssessmentPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
-  const createAssessment = useCreateAssessment();
+  const unwrappedParams = use(params);
+  const assessmentId = parseInt(unwrappedParams.id, 10);
+  
+  const { data: assessmentData, isLoading } = useAssessment(assessmentId);
+  const updateAssessment = useUpdateAssessment(assessmentId);
+  
   const [isActive, setIsActive] = useState(true);
   const [metaOpen, setMetaOpen] = useState(false);
   const [assessmentTitle, setAssessmentTitle] = useState("");
   const [assessmentDesc, setAssessmentDesc] = useState("");
   const [timeLimit, setTimeLimit] = useState("120");
   const [totalPoints, setTotalPoints] = useState("100");
-  const [questions, setQuestions] = useState<Question[]>(() => [makeQuestion(0)]);
-  const [selectedQ, setSelectedQ] = useState<number>(() => questions[0]?.uid || 11);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [selectedQ, setSelectedQ] = useState<number>(0);
+  
+  useEffect(() => {
+    if (assessmentData?.data) {
+      // NOTE: useAssessment expects an `Assessment` object but right now the hook types say Assessment[] inside useAssessment hook type manually. Let's cast assuming it's one.
+      const data: any = Array.isArray(assessmentData.data) ? assessmentData.data[0] || assessmentData.data : assessmentData.data;
+      if (!data) return;
+
+      setAssessmentTitle(data.title || "");
+      setAssessmentDesc(data.description || "");
+      setTimeLimit(String(data.timeLimit || 120));
+      setTotalPoints(String(data.passScore || 50));
+      
+      if (data.questions && data.questions.length > 0) {
+        const loadedQuestions: Question[] = data.questions.map((dbQ: any, idx: number) => {
+          let type: QuestionType = "Multiple Choice";
+          if (dbQ.questionType === "short_answer") type = "Short Answer";
+          
+          return {
+            uid: dbQ.id || ++idCounter,
+            title: dbQ.title || "",
+            description: dbQ.description || "",
+            type,
+            points: String(dbQ.points || 1),
+            options: dbQ.options 
+                ? dbQ.options.map((opt: any) => ({
+                    id: opt.id || ++idCounter,
+                    text: opt.label,
+                    isCorrect: opt.isCorrect
+                  })) 
+                : [],
+            shortAnswerKey: "" // Would need DB logic to store this explicitly if required
+          };
+        });
+        
+        setQuestions(loadedQuestions);
+        setSelectedQ(loadedQuestions[0]?.uid || 0);
+      } else {
+         const emptyQ = makeQuestion(0);
+         setQuestions([emptyQ]);
+         setSelectedQ(emptyQ.uid);
+      }
+    }
+  }, [assessmentData]);
 
   const handleSave = () => {
     if (!assessmentTitle.trim()) {
@@ -100,40 +148,20 @@ export default function CreateAssessmentPage() {
     }
 
     try {
-      const formattedQuestions = questions.map((q, idx) => {
-        const isMultipleChoice = q.type !== "Short Answer";
-
-        return {
-          title: q.title || `Question ${idx + 1}`,
-          description: q.description || null,
-          questionType: isMultipleChoice ? "multiple_choice" : "short_answer",
-          points: parseInt(q.points) || 1,
-          position: idx + 1,
-          options: isMultipleChoice
-            ? q.options.map((opt, oIdx) => ({
-              label: opt.text || `Option ${oIdx + 1}`,
-              isCorrect: opt.isCorrect,
-              position: oIdx + 1,
-            }))
-            : undefined,
-        };
-      });
-
       const payload = {
         title: assessmentTitle,
         description: assessmentDesc || null,
         timeLimit: parseInt(timeLimit) || 120,
         passScore: parseInt(totalPoints) || 50,
-        questions: formattedQuestions,
       };
 
-      createAssessment.mutate(payload, {
+      updateAssessment.mutate(payload, {
         onSuccess: () => {
-          alert("Assessment successfully created!");
+          alert("Assessment successfully updated!");
           router.push("/assessments");
         },
         onError: (error: any) => {
-          alert(error.message || "Failed to create assessment");
+          alert(error.message || "Failed to update assessment");
         }
       });
 
@@ -141,6 +169,14 @@ export default function CreateAssessmentPage() {
       alert(error.message || "Failed to format assessment data");
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-1 items-center justify-center bg-white h-full">
+         <Loader2 className="size-6 animate-spin text-slate-400" />
+      </div>
+    );
+  }
 
 
   function moveItem<T>(list: T[], from: number, to: number): T[] {
@@ -258,7 +294,7 @@ export default function CreateAssessmentPage() {
       <div className="px-8 py-5 border-b border-slate-100 flex items-center justify-between shrink-0 gap-4">
         <div className="flex items-center gap-5 min-w-0">
           <h1 className="text-[22px] font-semibold text-slate-900 leading-none whitespace-nowrap">
-            Create New Assessment
+            Edit Assessment
           </h1>
           <div className="flex items-center gap-2.5">
             <Switch
@@ -277,10 +313,10 @@ export default function CreateAssessmentPage() {
             className="text-white cursor-pointer rounded-lg h-10 px-6 font-medium shadow-none border-none transition-all active:scale-[0.98] disabled:opacity-70 gap-2"
             style={{ backgroundColor: "var(--theme-color)" }}
             onClick={handleSave}
-            disabled={createAssessment.isPending}
+            disabled={updateAssessment.isPending}
           >
-            {createAssessment.isPending && <Loader2 className="size-4 animate-spin mr-1" />}
-            {createAssessment.isPending ? "Saving..." : "Save Assessment"}
+            {updateAssessment.isPending && <Loader2 className="size-4 animate-spin mr-1" />}
+            {updateAssessment.isPending ? "Updating..." : "Update Assessment"}
           </Button>
           <Link href="/assessments">
             <Button
