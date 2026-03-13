@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, FormEvent } from "react";
+import { useRef, useState, useEffect, FormEvent } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -82,6 +82,12 @@ export default function JobApplicationPage() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [answers, setAnswers] = useState<Record<number, Answer>>({});
 
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [resumeUploading, setResumeUploading] = useState(false);
+  const [resumeUrl, setResumeUrl] = useState<string | null>(null);
+  const [resumeError, setResumeError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -117,6 +123,32 @@ export default function JobApplicationPage() {
   const setRadio = (qId: number, optId: number) =>
     setAnswers((prev) => ({ ...prev, [qId]: { optionIds: [optId] } }));
 
+  const handleResumeChange = async (file: File) => {
+    setResumeFile(file);
+    setResumeError(null);
+    setResumeUrl(null);
+    setResumeUploading(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch(`${API_BASE}/public/upload/resume`, {
+        method: "POST",
+        body: form,
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as { error?: string }).error ?? "Upload failed");
+      }
+      const data = (await res.json()) as { data: { url: string } };
+      setResumeUrl(data.data.url);
+    } catch (e: unknown) {
+      setResumeError(e instanceof Error ? e.message : "Upload failed");
+      setResumeFile(null);
+    } finally {
+      setResumeUploading(false);
+    }
+  };
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitting(true);
@@ -142,6 +174,7 @@ export default function JobApplicationPage() {
           lastName,
           email,
           phone: phoneNumber ? `${phoneCode} ${phoneNumber}` : undefined,
+          resumeUrl: resumeUrl ?? undefined,
           customAnswers,
         }),
       });
@@ -317,12 +350,57 @@ export default function JobApplicationPage() {
                 Resume / CV
                 <span className="text-slate-400 font-normal text-xs">(Optional)</span>
               </Label>
-              <div className="h-[120px] w-full rounded-xl border border-dashed border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors flex flex-col items-center justify-center gap-2 cursor-pointer text-slate-400 group">
-                <HugeiconsIcon icon={CloudUploadIcon} className="size-6 group-hover:text-slate-500 transition-colors" />
-                <span className="text-[13px] font-medium group-hover:text-slate-600 text-slate-500">
-                  Click or drag file to upload your resume
-                </span>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.doc,.docx"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleResumeChange(file);
+                }}
+              />
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => fileInputRef.current?.click()}
+                onKeyDown={(e) => e.key === "Enter" && fileInputRef.current?.click()}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const file = e.dataTransfer.files?.[0];
+                  if (file) handleResumeChange(file);
+                }}
+                className="h-[120px] w-full rounded-xl border border-dashed border-slate-200 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 transition-colors flex flex-col items-center justify-center gap-2 cursor-pointer text-slate-400 group select-none"
+              >
+                {resumeUploading ? (
+                  <>
+                    <div className="size-5 border-2 border-slate-300 border-t-[#F97316] rounded-full animate-spin" />
+                    <span className="text-[13px] font-medium text-slate-500">Uploading…</span>
+                  </>
+                ) : resumeUrl ? (
+                  <>
+                    <svg className="size-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-[13px] font-medium text-green-600 max-w-[260px] truncate px-4 text-center">
+                      {resumeFile?.name}
+                    </span>
+                    <span className="text-[12px] text-slate-400">Click to replace</span>
+                  </>
+                ) : (
+                  <>
+                    <HugeiconsIcon icon={CloudUploadIcon} className="size-6 group-hover:text-slate-500 transition-colors" />
+                    <span className="text-[13px] font-medium group-hover:text-slate-600 text-slate-500">
+                      Click or drag to upload your resume
+                    </span>
+                    <span className="text-[11px] text-slate-400">PDF, DOC, DOCX · max 10 MB</span>
+                  </>
+                )}
               </div>
+              {resumeError && (
+                <p className="text-red-500 text-[12px]">{resumeError}</p>
+              )}
             </div>
 
             {/* Custom questions */}
@@ -417,10 +495,10 @@ export default function JobApplicationPage() {
             <div className="pt-4">
               <Button
                 type="submit"
-                disabled={submitting}
+                disabled={submitting || resumeUploading}
                 className="bg-[#F97316] hover:bg-[#EA580C] text-white px-10 h-12 rounded-[6px] shadow-none font-medium text-[15px] min-w-[180px] disabled:opacity-60"
               >
-                {submitting ? "Submitting…" : "Submit Application"}
+                {submitting ? "Submitting…" : resumeUploading ? "Uploading resume…" : "Submit Application"}
               </Button>
             </div>
           </form>

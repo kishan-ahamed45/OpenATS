@@ -24,7 +24,7 @@ import { cleanObject as clean } from "../utils/object.utils";
 export interface CustomAnswerInput {
   questionId: number;
   answerText?: string | null | undefined;
-  optionIds?: number[] | undefined; 
+  optionIds?: number[] | undefined;
 }
 
 export interface CandidateApplyInput {
@@ -117,8 +117,12 @@ export const candidateService = {
     });
   },
 
-  async getAll(jobId: number, filters: CandidateFilters = {}) {
-    const conditions = [eq(candidates.jobId, jobId)];
+  async getAll(jobId: number | undefined, filters: CandidateFilters = {}) {
+    const conditions = [];
+
+    if (jobId) {
+      conditions.push(eq(candidates.jobId, jobId));
+    }
 
     if (filters.stageId) {
       conditions.push(eq(candidates.currentStageId, filters.stageId));
@@ -127,9 +131,24 @@ export const candidateService = {
 
 
     return db
-      .select()
+      .select({
+        id: candidates.id,
+        firstName: candidates.firstName,
+        lastName: candidates.lastName,
+        email: candidates.email,
+        phone: candidates.phone,
+        resumeUrl: candidates.resumeUrl,
+        jobId: candidates.jobId,
+        currentStageId: candidates.currentStageId,
+        appliedAt: candidates.appliedAt,
+        updatedAt: candidates.updatedAt,
+        stageName: jobPipelineStages.name,
+        jobTitle: jobs.title,
+      })
       .from(candidates)
-      .where(and(...conditions))
+      .leftJoin(jobPipelineStages, eq(candidates.currentStageId, jobPipelineStages.id))
+      .leftJoin(jobs, eq(candidates.jobId, jobs.id))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
       .orderBy(desc(candidates.appliedAt));
   },
 
@@ -240,11 +259,11 @@ export const candidateService = {
 
           if (job.salaryType === "range" && job.salaryMin && job.salaryMax) {
             salary = (Number(job.salaryMin) + Number(job.salaryMax)) / 2;
-            blockAutoSend = true; 
+            blockAutoSend = true;
           } else if (job.salaryType === "fixed" && job.salaryFixed) {
             salary = Number(job.salaryFixed);
           } else if (!job.salaryType) {
-            blockAutoSend = true; 
+            blockAutoSend = true;
           }
 
           const mode =

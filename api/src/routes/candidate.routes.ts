@@ -11,6 +11,7 @@ const router: Router = Router();
 
 router.post("/jobs/:jobId/apply", applyForJob);
 
+router.get("/", getCandidates);
 router.get("/jobs/:jobId", getCandidates);
 router.get("/:id", getCandidateById);
 router.put("/:id/stage", moveCandidateStage);

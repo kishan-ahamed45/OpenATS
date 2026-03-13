@@ -133,3 +133,54 @@ export type Assessment = {
   updatedAt: string;
   questions?: AssessmentQuestion[];
 }
+
+export type Candidate = {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string | null;
+  resumeUrl: string | null;
+  jobId: number;
+  currentStageId: number | null;
+  appliedAt: string;
+  updatedAt: string;
+  stageName: string | null;
+  jobTitle: string | null;
+
+}
+
+export type CandidateDetail = Candidate & {
+  answers: {
+    id: number;
+    candidateId: number;
+    questionId: number;
+    answerText: string | null;
+    createdAt: string;
+  }[];
+  selections: {
+    id: number;
+    candidateId: number;
+    questionId: number;
+    optionId: number;
+    createdAt: string;
+  }[];
+  history: {
+    id: number;
+    candidateId: number;
+    stageId: number;
+    movedBy: number | null;
+    movedAt: string;
+  }[];
+  offer: {
+    id: number;
+    status: string;
+    salary: string | null;
+    currency: string | null;
+    payFrequency: string | null;
+    startDate: string | null;
+    expiryDate: string | null;
+    sentAt: string | null;
+    renderedHtml: string | null;
+  } | null;
+};

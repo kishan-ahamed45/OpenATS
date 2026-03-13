@@ -64,8 +64,10 @@ export const applyForJob = async (req: Request, res: Response) => {
 
 export const getCandidates = async (req: Request, res: Response) => {
   try {
-    const jobId = parseInt((req.params.jobId ?? "").toString());
-    if (isNaN(jobId)) {
+    const jobIdParam = req.params.jobId;
+    const jobId = jobIdParam ? parseInt(String(jobIdParam)) : undefined;
+
+    if (jobIdParam && isNaN(jobId!)) {
       res.status(400).json({ error: "Invalid job ID" });
       return;
     }

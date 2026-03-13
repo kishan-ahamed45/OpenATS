@@ -1,17 +1,23 @@
 import { Router } from "express";
+import multer from "multer";
 import { getJobById } from "../controllers/job.controller";
 import { getCustomQuestions } from "../controllers/custom-question.controller";
 import { applyForJob } from "../controllers/candidate.controller";
+import { uploadFile } from "../controllers/upload.controller";
 
 const router: Router = Router();
 
-// Public job detail — used by the careers/apply page
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+});
+
 router.get("/jobs/:id", getJobById);
 
-// Public custom questions for the application form
 router.get("/jobs/:jobId/questions", getCustomQuestions);
 
-// Public application submission
 router.post("/jobs/:jobId/apply", applyForJob);
+
+router.post("/upload/resume", upload.single("file"), uploadFile);
 
 export default router;

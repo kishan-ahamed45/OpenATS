@@ -4,7 +4,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { serverFetch } from "@/lib/auth-action";
 import type {
   Job, JobDetail, PipelineStage, CurrentUser, ChatMessage,
-  CustomQuestion, Company, Department, Assessment, AssessmentQuestion
+  CustomQuestion, Company, Department, Assessment, AssessmentQuestion,
+  Candidate, CandidateDetail,
 } from "@/types";
 
 export function useJobs() {
@@ -428,6 +429,82 @@ export function useDeleteAssessmentQuestion(assessmentId: number) {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["assessments", assessmentId] });
+    },
+  });
+}
+
+export function useUpdateOffer() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      offerId,
+      data,
+    }: {
+      offerId: number;
+      data: {
+        salary?: number | null;
+        currency?: string | null;
+        payFrequency?: "hourly" | "daily" | "weekly" | "monthly" | "yearly" | null;
+        startDate?: string | null;
+        expiryDate?: string | null;
+        status?: "draft" | "sent" | "pending" | "accepted" | "declined" | "withdrawn";
+      };
+    }) =>
+      serverFetch<{ data: unknown }>(`/offers/${offerId}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["candidates"] });
+    },
+  });
+}
+
+export function useCandidates(jobId?: number, filters?: { stageId?: number; search?: string }) {
+  const params = new URLSearchParams();
+  if (filters?.stageId) params.set("stageId", String(filters.stageId));
+  if (filters?.search) params.set("search", filters.search);
+  const query = params.toString() ? `?${params.toString()}` : "";
+
+  const path = jobId ? `/candidates/jobs/${jobId}${query}` : `/candidates${query}`;
+
+  return useQuery({
+    queryKey: ["candidates", jobId ?? "all", filters],
+    queryFn: () => serverFetch<{ data: Candidate[] }>(path),
+  });
+}
+
+export function useCandidate(id: number) {
+  return useQuery({
+    queryKey: ["candidates", id],
+    queryFn: () => serverFetch<{ data: CandidateDetail }>(`/candidates/${id}`),
+    enabled: !!id,
+  });
+}
+
+export function useMoveCandidateStage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, newStageId }: { id: number; newStageId: number }) =>
+      serverFetch<{ data: Candidate }>(`/candidates/${id}/stage`, {
+        method: "PUT",
+        body: JSON.stringify({ newStageId }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["candidates"] });
+    },
+  });
+}
+
+export function useDeleteCandidate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) =>
+      serverFetch<{ data: Candidate }>(`/candidates/${id}`, {
+        method: "DELETE",
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["candidates"] });
     },
   });
 }
