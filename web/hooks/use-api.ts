@@ -286,7 +286,10 @@ export function useAssessments() {
 export function useJobAssessments(jobId: number) {
   return useQuery({
     queryKey: ["jobs", jobId, "assessments"],
-    queryFn: () => serverFetch<{ data: any[] }>(`/jobs/${jobId}/assessments`),
+    queryFn: () =>
+      serverFetch<{
+        data: { id: number; assessmentId: number; triggerStageId: number; createdAt: string }[];
+      }>(`/jobs/${jobId}/assessments`),
     enabled: !!jobId,
   });
 }
@@ -321,7 +324,7 @@ export function useDetachAssessment(jobId: number) {
 export function useAssessment(id: number) {
   return useQuery({
     queryKey: ["assessments", id],
-    queryFn: () => serverFetch<{ data: Assessment[] }>(`/assessments/${id}`),
+    queryFn: () => serverFetch<{ data: Assessment & { questions: (AssessmentQuestion & { options: { id: number; label: string; isCorrect: boolean; position: number }[] })[] } }>(`/assessments/${id}`),
     enabled: !!id,
   });
 }
@@ -493,6 +496,46 @@ export function useMoveCandidateStage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["candidates"] });
     },
+  });
+}
+
+export function useCandidateAssessments(candidateId: number) {
+  return useQuery({
+    queryKey: ["candidate-assessments", candidateId],
+    queryFn: () =>
+      serverFetch<{
+        data: {
+          id: number;
+          assessmentId: number;
+          assessmentTitle: string;
+          token: string;
+          status: string;
+          scorePercentage: number | null;
+          passed: boolean | null;
+          startedAt: string | null;
+          completedAt: string | null;
+          expiresAt: string;
+        }[];
+      }>(`/assessment-execution/candidate/${candidateId}`),
+    enabled: !!candidateId,
+  });
+}
+
+export function useInviteToAssessment() {
+  return useMutation({
+    mutationFn: ({
+      candidateId,
+      assessmentId,
+      expiryDays = 7,
+    }: {
+      candidateId: number;
+      assessmentId: number;
+      expiryDays?: number;
+    }) =>
+      serverFetch<{ data: { token: string } }>(`/assessment-execution/invite`, {
+        method: "POST",
+        body: JSON.stringify({ candidateId, assessmentId, expiryDays }),
+      }),
   });
 }
 

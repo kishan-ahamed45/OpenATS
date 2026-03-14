@@ -10,14 +10,22 @@ import {
   CheckmarkCircle01Icon,
   Time01Icon,
   QuestionIcon,
+  UserAdd01Icon,
+  LinkSquare01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Loader2 } from "lucide-react";
-import { useAssessments, useDeleteAssessment } from "@/hooks/use-api";
+import {
+  useAssessments,
+  useDeleteAssessment,
+  useCandidates,
+  useInviteToAssessment,
+} from "@/hooks/use-api";
 import type { Assessment } from "@/types";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { ThemeButton } from "@/components/theme-button";
 import {
   Select,
@@ -36,34 +44,66 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function AssessmentsPage() {
   const { data, isLoading } = useAssessments();
   const deleteAssessment = useDeleteAssessment();
   const assessments = data?.data ?? [];
-  
-  const [deleteTarget, setDeleteTarget] = useState<Assessment | null>(null);
-  const [copiedId, setCopiedId] = useState<number | null>(null);
 
-  const copyPreviewLink = (id: number) => {
-    // In actual implementation this would be the invite link
-    const url = `${window.location.origin}/assessment/${id}`;
-    navigator.clipboard.writeText(url).then(() => {
-      setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 2000);
+  const [deleteTarget, setDeleteTarget] = useState<Assessment | null>(null);
+
+  // Invite dialog state
+  const [inviteTarget, setInviteTarget] = useState<Assessment | null>(null);
+  const [selectedCandidateId, setSelectedCandidateId] = useState<string>("");
+  const [generatedLink, setGeneratedLink] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const { data: candidatesData } = useCandidates();
+  const candidates = candidatesData?.data ?? [];
+  const inviteMutation = useInviteToAssessment();
+
+  const openInviteDialog = (a: Assessment) => {
+    setInviteTarget(a);
+    setSelectedCandidateId("");
+    setGeneratedLink(null);
+    setCopied(false);
+  };
+
+  const handleGenerateLink = () => {
+    if (!inviteTarget || !selectedCandidateId) return;
+    inviteMutation.mutate(
+      { candidateId: Number(selectedCandidateId), assessmentId: inviteTarget.id },
+      {
+        onSuccess: (res) => {
+          const url = `${window.location.origin}/assessment/${res.data.token}`;
+          setGeneratedLink(url);
+        },
+      },
+    );
+  };
+
+  const copyLink = () => {
+    if (!generatedLink) return;
+    navigator.clipboard.writeText(generatedLink).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     });
   };
 
   const confirmDelete = () => {
     if (!deleteTarget) return;
     deleteAssessment.mutate(deleteTarget.id, {
-      onSuccess: () => {
-        setDeleteTarget(null);
-      },
+      onSuccess: () => setDeleteTarget(null),
       onError: (error: any) => {
         alert(error.message || "Failed to delete assessment");
         setDeleteTarget(null);
-      }
+      },
     });
   };
 
@@ -180,27 +220,16 @@ export default function AssessmentsPage() {
                   <ThemeButton
                     asChild
                     href={`/assessments/${a.id}`}
-                    className="h-8 px-6 text-[12px] font-medium shadow-none border-none rounded-md"
+                    className="h-8 px-5 text-[12px] font-medium shadow-none border-none rounded-md"
                   >
-                    <Link href={`/assessments/${a.id}`}>
-                      Edit
-                    </Link>
+                    <Link href={`/assessments/${a.id}`}>Edit</Link>
                   </ThemeButton>
                   <button
-                    onClick={() => copyPreviewLink(a.id)}
-                    className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-[12px] font-medium border ${
-                      copiedId === a.id
-                        ? "bg-emerald-50 text-emerald-600 border-emerald-200"
-                        : "text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-slate-700"
-                    }`}
+                    onClick={() => openInviteDialog(a)}
+                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-[12px] font-medium border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700"
                   >
-                    <HugeiconsIcon
-                      icon={
-                        copiedId === a.id ? CheckmarkCircle01Icon : Copy01Icon
-                      }
-                      className="size-3.5"
-                    />
-                    {copiedId === a.id ? "Copied!" : "Copy link"}
+                    <HugeiconsIcon icon={UserAdd01Icon} className="size-3.5" />
+                    Invite
                   </button>
                   <button
                     onClick={() => setDeleteTarget(a)}
@@ -215,6 +244,99 @@ export default function AssessmentsPage() {
           </div>
         )}
       </div>
+
+      {/* Invite dialog */}
+      <Dialog open={!!inviteTarget} onOpenChange={(o) => !o && setInviteTarget(null)}>
+        <DialogContent className="max-w-md rounded-xl border-slate-200 shadow-lg p-6">
+          <DialogHeader>
+            <DialogTitle className="text-[17px] font-semibold text-slate-900">
+              Invite Candidate
+            </DialogTitle>
+            <p className="text-[13px] text-slate-500 mt-1">
+              Generates a unique assessment link for the selected candidate.
+            </p>
+          </DialogHeader>
+
+          <div className="space-y-4 mt-2">
+            <div className="space-y-1.5">
+              <Label className="text-[12px] font-semibold text-slate-400 uppercase tracking-wide">
+                Assessment
+              </Label>
+              <p className="text-[14px] font-medium text-slate-700">{inviteTarget?.title}</p>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-[12px] font-semibold text-slate-400 uppercase tracking-wide">
+                Select Candidate
+              </Label>
+              <Select value={selectedCandidateId} onValueChange={setSelectedCandidateId}>
+                <SelectTrigger className="h-10 border-slate-200 shadow-none text-[13px] focus:ring-0 w-full">
+                  <SelectValue placeholder="Choose a candidate…" />
+                </SelectTrigger>
+                <SelectContent className="rounded-lg shadow-lg border-slate-200">
+                  {candidates.map((c) => (
+                    <SelectItem key={c.id} value={String(c.id)} className="text-[13px]">
+                      {c.firstName} {c.lastName}
+                      {c.jobTitle ? ` — ${c.jobTitle}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {!generatedLink ? (
+              <Button
+                onClick={handleGenerateLink}
+                disabled={!selectedCandidateId || inviteMutation.isPending}
+                className="w-full h-10 bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white shadow-none border-none rounded-lg text-[13px] font-medium gap-2"
+              >
+                {inviteMutation.isPending ? (
+                  <><Loader2 className="size-3.5 animate-spin" />Generating…</>
+                ) : (
+                  "Generate Link"
+                )}
+              </Button>
+            ) : (
+              <div className="space-y-2">
+                <Label className="text-[12px] font-semibold text-slate-400 uppercase tracking-wide">
+                  Assessment Link
+                </Label>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-[12px] text-slate-600 truncate font-mono">
+                    {generatedLink}
+                  </div>
+                  <button
+                    onClick={copyLink}
+                    className={`shrink-0 h-9 px-3 rounded-lg text-[12px] font-medium border inline-flex items-center gap-1.5 ${
+                      copied
+                        ? "bg-emerald-50 text-emerald-600 border-emerald-200"
+                        : "border-slate-200 text-slate-500 hover:bg-slate-50"
+                    }`}
+                  >
+                    <HugeiconsIcon icon={copied ? CheckmarkCircle01Icon : Copy01Icon} className="size-3.5" />
+                    {copied ? "Copied!" : "Copy"}
+                  </button>
+                </div>
+                <a
+                  href={generatedLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 text-[12px] text-[var(--theme-color)] font-medium hover:underline"
+                >
+                  <HugeiconsIcon icon={LinkSquare01Icon} className="size-3.5" />
+                  Open in new tab
+                </a>
+              </div>
+            )}
+
+            {inviteMutation.isError && (
+              <p className="text-red-500 text-[12px]">
+                {(inviteMutation.error as Error).message ?? "Failed to generate invite."}
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog
         open={!!deleteTarget}
