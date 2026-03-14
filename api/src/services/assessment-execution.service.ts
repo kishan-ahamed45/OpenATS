@@ -233,7 +233,8 @@ export const assessmentExecutionService = {
       let totalPossiblePoints = 0;
 
       for (const question of questions) {
-        totalPossiblePoints += question.points;
+        const questionPoints = Number(question.points);
+        totalPossiblePoints += questionPoints;
 
         const [candidateAnswer] = await tx
           .select()
@@ -244,7 +245,7 @@ export const assessmentExecutionService = {
 
         let pointsEarned = 0;
 
-        if (question.questionType === "multiple_choice") {
+        if (question.questionType === "multiple_choice" || question.questionType === "radio" || question.questionType === "checkbox") {
           const correctOptions = await tx
             .select()
             .from(assessmentQuestionOptions)
@@ -259,7 +260,7 @@ export const assessmentExecutionService = {
           const candidateOptionIds = candidateSelections.map((s) => s.optionId).sort();
 
           const isCorrect = JSON.stringify(correctOptionIds) === JSON.stringify(candidateOptionIds);
-          if (isCorrect) pointsEarned = question.points;
+          if (isCorrect) pointsEarned = questionPoints;
         } else {
           pointsEarned = 0;
         }
@@ -273,7 +274,7 @@ export const assessmentExecutionService = {
       }
 
       const scorePercentage = totalPossiblePoints > 0 ? (totalScoreRaw / totalPossiblePoints) * 100 : 0;
-      const passed = scorePercentage >= (assessment.passScore ?? 0);
+      const passed = scorePercentage >= Number(assessment.passScore ?? 0);
 
       const [completed] = await tx
         .update(candidateAssessmentAttempts)

@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { useCandidate, usePipeline, useUpdateOffer } from "@/hooks/use-api";
+import { useCandidate, usePipeline, useUpdateOffer, useCandidateAssessments } from "@/hooks/use-api";
 
 function timeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -39,11 +39,11 @@ function formatDate(dateStr: string | null) {
 }
 
 const OFFER_STATUS_STYLES: Record<string, { bg: string; text: string }> = {
-  draft:     { bg: "bg-amber-50",  text: "text-amber-600"  },
-  sent:      { bg: "bg-blue-50",   text: "text-blue-600"   },
-  accepted:  { bg: "bg-green-50",  text: "text-green-600"  },
-  declined:  { bg: "bg-red-50",    text: "text-red-500"    },
-  withdrawn: { bg: "bg-slate-100", text: "text-slate-500"  },
+  draft: { bg: "bg-amber-50", text: "text-amber-600" },
+  sent: { bg: "bg-blue-50", text: "text-blue-600" },
+  accepted: { bg: "bg-green-50", text: "text-green-600" },
+  declined: { bg: "bg-red-50", text: "text-red-500" },
+  withdrawn: { bg: "bg-slate-100", text: "text-slate-500" },
 };
 
 interface CandidateSidePanelProps {
@@ -55,6 +55,7 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
   const candidate = data?.data;
 
   const { data: pipelineData } = usePipeline(candidate?.jobId ?? 0);
+  const { data: assessmentsData } = useCandidateAssessments(candidateId);
   const stageMap = useMemo(
     () => Object.fromEntries((pipelineData?.data ?? []).map((s) => [s.id, s.name])),
     [pipelineData],
@@ -127,11 +128,11 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
     : null;
 
   const TABS = [
-    { value: "answers", label: "Answers"      },
+    { value: "answers", label: "Answers" },
     { value: "history", label: "Stage History" },
-    { value: "offer",   label: "Offer"         },
-    { value: "email",   label: "Send Email"    },
-    { value: "scores",  label: "Assessments"   },
+    { value: "offer", label: "Offer" },
+    { value: "email", label: "Send Email" },
+    { value: "scores", label: "Assessments" },
   ];
 
   const triggerBase =
@@ -217,11 +218,10 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
                 {candidate.history.map((h, i) => (
                   <div key={h.id} className="relative">
                     <div
-                      className={`absolute -left-6 top-1 size-3.5 rounded-full border-2 border-white ring-2 ${
-                        i === candidate.history.length - 1
+                      className={`absolute -left-6 top-1 size-3.5 rounded-full border-2 border-white ring-2 ${i === candidate.history.length - 1
                           ? "bg-[var(--theme-color)] ring-[var(--theme-color)]/30"
                           : "bg-slate-300 ring-slate-200"
-                      }`}
+                        }`}
                     />
                     <div className="flex items-start justify-between gap-2">
                       <span className="text-[14px] font-semibold text-slate-800">
@@ -394,9 +394,9 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
                       ? `${offer.currency ?? ""} ${Number(offer.salary).toLocaleString()}${offer.payFrequency ? ` / ${offer.payFrequency}` : ""}`.trim()
                       : "—",
                   },
-                  { label: "Start Date",  value: formatDate(offer.startDate)  },
+                  { label: "Start Date", value: formatDate(offer.startDate) },
                   { label: "Expiry Date", value: formatDate(offer.expiryDate) },
-                  { label: "Sent At",     value: offer.sentAt ? timeAgo(offer.sentAt) : "Not sent yet" },
+                  { label: "Sent At", value: offer.sentAt ? timeAgo(offer.sentAt) : "Not sent yet" },
                 ].map(({ label, value }) => (
                   <div key={label} className="flex items-center justify-between px-4 py-3 gap-4">
                     <span className="text-[13px] text-slate-500 font-medium shrink-0">{label}</span>
@@ -464,15 +464,111 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
         </TabsContent>
 
         <TabsContent value="scores" className="flex-1 overflow-y-auto p-5 outline-none min-h-0">
-          <div className="flex flex-col items-center justify-center h-full gap-3 text-center py-12">
-            <div className="size-12 rounded-full bg-slate-100 flex items-center justify-center">
-              <span className="text-2xl">📊</span>
-            </div>
-            <p className="text-slate-500 font-medium text-[14px]">No assessments yet</p>
-            <p className="text-slate-400 text-[13px] max-w-[220px] leading-relaxed">
-              Assessment scores will appear here once the candidate completes an assessment.
-            </p>
-          </div>
+          {(() => {
+            const attempts = assessmentsData?.data ?? [];
+            if (!assessmentsData) {
+              return <p className="text-slate-400 text-sm italic">Loading…</p>;
+            }
+            if (attempts.length === 0) {
+              return (
+                <div className="flex flex-col items-center justify-center h-full gap-3 text-center py-12">
+                  <div className="size-12 rounded-full bg-slate-100 flex items-center justify-center">
+                    <span className="text-2xl">📊</span>
+                  </div>
+                  <p className="text-slate-500 font-medium text-[14px]">No assessments yet</p>
+                  <p className="text-slate-400 text-[13px] max-w-[220px] leading-relaxed">
+                    Assessment results will appear here once the candidate completes an assessment.
+                  </p>
+                </div>
+              );
+            }
+            return (
+              <div className="space-y-3">
+                {attempts.map((a) => {
+                  const statusStyles: Record<string, { bg: string; text: string; label: string }> = {
+                    pending: { bg: "bg-amber-50", text: "text-amber-600", label: "Pending" },
+                    started: { bg: "bg-blue-50", text: "text-blue-600", label: "In Progress" },
+                    completed: { bg: "bg-green-50", text: "text-green-700", label: "Completed" },
+                    expired: { bg: "bg-slate-100", text: "text-slate-500", label: "Expired" },
+                  };
+                  const s = statusStyles[a.status] ?? statusStyles.pending;
+                  const score = a.scorePercentage != null ? Math.round(Number(a.scorePercentage)) : null;
+                  const passColor = a.passed ? "text-green-600" : "text-red-500";
+
+                  return (
+                    <div key={a.id} className="rounded-xl border border-slate-200 overflow-hidden">
+                      {/* Header */}
+                      <div className="flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-100">
+                        <p className="text-[13px] font-semibold text-slate-800 truncate pr-3">
+                          {a.assessmentTitle}
+                        </p>
+                        <span className={`shrink-0 text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide ${s.bg} ${s.text}`}>
+                          {s.label}
+                        </span>
+                      </div>
+
+                      {/* Body */}
+                      <div className="divide-y divide-slate-100">
+                        {score != null && (
+                          <div className="px-4 py-3 flex items-center justify-between gap-4">
+                            <span className="text-[12px] text-slate-500 font-medium">Score</span>
+                            <div className="flex items-center gap-2">
+                              <div className="w-28 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full ${score >= 50 ? "bg-green-500" : "bg-red-400"}`}
+                                  style={{ width: `${score}%` }}
+                                />
+                              </div>
+                              <span className={`text-[13px] font-bold ${passColor}`}>
+                                {score}%
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                        {a.passed != null && (
+                          <div className="px-4 py-3 flex items-center justify-between gap-4">
+                            <span className="text-[12px] text-slate-500 font-medium">Result</span>
+                            <span className={`text-[13px] font-semibold ${passColor}`}>
+                              {a.passed ? "Passed ✓" : "Not Passed ✗"}
+                            </span>
+                          </div>
+                        )}
+                        {a.completedAt && (
+                          <div className="px-4 py-3 flex items-center justify-between gap-4">
+                            <span className="text-[12px] text-slate-500 font-medium">Completed</span>
+                            <span className="text-[13px] text-slate-700 font-medium">
+                              {formatDate(a.completedAt)}
+                            </span>
+                          </div>
+                        )}
+                        {a.status === "pending" && (
+                          <div className="px-4 py-3 flex items-center justify-between gap-4">
+                            <span className="text-[12px] text-slate-500 font-medium">Link expires</span>
+                            <span className="text-[13px] text-slate-700 font-medium">
+                              {formatDate(a.expiresAt)}
+                            </span>
+                          </div>
+                        )}
+                        {(a.status === "pending" || a.status === "started") && (
+                          <div className="px-4 py-3">
+                            <button
+                              onClick={() => {
+                                const url = `${window.location.origin}/assessment/${a.token}`;
+                                navigator.clipboard.writeText(url);
+                              }}
+                              className="text-[12px] text-[var(--theme-color)] font-medium hover:underline"
+                            >
+                              Copy assessment link
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </TabsContent>
       </Tabs>
     </div>

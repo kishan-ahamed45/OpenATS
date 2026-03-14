@@ -1,8 +1,14 @@
 "use client";
 
-import { useState, use, useEffect } from "react";
+import { useState, use, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useAssessment, useUpdateAssessment } from "@/hooks/use-api";
+import {
+  useAssessment,
+  useUpdateAssessment,
+  useCreateAssessmentQuestion,
+  useUpdateAssessmentQuestion,
+  useDeleteAssessmentQuestion,
+} from "@/hooks/use-api";
 import type { Ref } from "react";
 import Link from "next/link";
 import {
@@ -41,6 +47,7 @@ interface AnswerOption {
 
 interface Question {
   uid: number;
+  dbId?: number;
   title: string;
   description: string;
   type: QuestionType;
@@ -49,7 +56,7 @@ interface Question {
   shortAnswerKey: string;
 }
 
-let idCounter = 10;
+let idCounter = 100;
 
 const makeOption = (text: string): AnswerOption => ({
   id: ++idCounter,
@@ -57,12 +64,13 @@ const makeOption = (text: string): AnswerOption => ({
   isCorrect: false,
 });
 
-const makeQuestion = (idx: number): Question => ({
+const makeQuestion = (): Question => ({
   uid: ++idCounter,
+  dbId: undefined,
   title: "",
   description: "",
   type: "Multiple Choice",
-  points: "",
+  points: "5",
   options: [
     makeOption("Option 1"),
     makeOption("Option 2"),
@@ -76,6 +84,13 @@ const TRUE_FALSE_OPTIONS: AnswerOption[] = [
   { id: -2, text: "False", isCorrect: false },
 ];
 
+const VALID_POINTS = ["5", "10", "15", "20"];
+
+function normalizePoints(raw: string | number | null | undefined): string {
+  const n = Math.round(Number(raw ?? 5));
+  return VALID_POINTS.includes(String(n)) ? String(n) : "5";
+}
+
 const inputCls =
   "h-11 bg-white border-slate-200 rounded-lg shadow-none text-sm placeholder:text-slate-400 focus-visible:ring-0 focus-visible:border-slate-400 transition-colors";
 
@@ -86,10 +101,14 @@ export default function EditAssessmentPage({ params }: { params: Promise<{ id: s
   const router = useRouter();
   const unwrappedParams = use(params);
   const assessmentId = parseInt(unwrappedParams.id, 10);
-  
+
   const { data: assessmentData, isLoading } = useAssessment(assessmentId);
   const updateAssessment = useUpdateAssessment(assessmentId);
-  
+  const createQuestionMutation = useCreateAssessmentQuestion(assessmentId);
+  const updateQuestionMutation = useUpdateAssessmentQuestion(assessmentId);
+  const deleteQuestionMutation = useDeleteAssessmentQuestion(assessmentId);
+
+  const [isSaving, setIsSaving] = useState(false);
   const [isActive, setIsActive] = useState(true);
   const [metaOpen, setMetaOpen] = useState(false);
   const [assessmentTitle, setAssessmentTitle] = useState("");
@@ -98,86 +117,128 @@ export default function EditAssessmentPage({ params }: { params: Promise<{ id: s
   const [totalPoints, setTotalPoints] = useState("100");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [selectedQ, setSelectedQ] = useState<number>(0);
-  
-  useEffect(() => {
-    if (assessmentData?.data) {
-      // NOTE: useAssessment expects an `Assessment` object but right now the hook types say Assessment[] inside useAssessment hook type manually. Let's cast assuming it's one.
-      const data: any = Array.isArray(assessmentData.data) ? assessmentData.data[0] || assessmentData.data : assessmentData.data;
-      if (!data) return;
+  const originalDbIds = useRef<number[]>([]);
+  // Prevent cache-invalidation refetches from resetting the user's in-progress edits.
+  const hasInitialized = useRef(false);
 
-      setAssessmentTitle(data.title || "");
-      setAssessmentDesc(data.description || "");
-      setTimeLimit(String(data.timeLimit || 120));
-      setTotalPoints(String(data.passScore || 50));
-      
-      if (data.questions && data.questions.length > 0) {
-        const loadedQuestions: Question[] = data.questions.map((dbQ: any, idx: number) => {
-          let type: QuestionType = "Multiple Choice";
-          if (dbQ.questionType === "short_answer") type = "Short Answer";
-          
-          return {
-            uid: dbQ.id || ++idCounter,
-            title: dbQ.title || "",
-            description: dbQ.description || "",
-            type,
-            points: String(dbQ.points || 1),
-            options: dbQ.options 
-                ? dbQ.options.map((opt: any) => ({
-                    id: opt.id || ++idCounter,
-                    text: opt.label,
-                    isCorrect: opt.isCorrect
-                  })) 
-                : [],
-            shortAnswerKey: "" // Would need DB logic to store this explicitly if required
-          };
-        });
-        
-        setQuestions(loadedQuestions);
-        setSelectedQ(loadedQuestions[0]?.uid || 0);
-      } else {
-         const emptyQ = makeQuestion(0);
-         setQuestions([emptyQ]);
-         setSelectedQ(emptyQ.uid);
-      }
+  useEffect(() => {
+    if (hasInitialized.current) return;
+    const data = assessmentData?.data;
+    if (!data) return;
+    hasInitialized.current = true;
+
+    setAssessmentTitle(data.title ?? "");
+    setAssessmentDesc(data.description ?? "");
+    setTimeLimit(String(data.timeLimit ?? 120));
+    setTotalPoints(String(data.passScore ?? 50));
+
+    if (data.questions && data.questions.length > 0) {
+      const loaded: Question[] = data.questions.map((dbQ) => {
+        let type: QuestionType = "Multiple Choice";
+        if (dbQ.questionType === "short_answer") {
+          type = "Short Answer";
+        } else if (
+          dbQ.options?.length === 2 &&
+          dbQ.options[0]?.label === "True" &&
+          dbQ.options[1]?.label === "False"
+        ) {
+          type = "True/False";
+        }
+
+        return {
+          uid: ++idCounter,
+          dbId: dbQ.id,
+          title: dbQ.title ?? "",
+          description: dbQ.description ?? "",
+          type,
+          points: normalizePoints(dbQ.points),
+          options: dbQ.options?.map((opt) => ({
+            id: opt.id ?? ++idCounter,
+            text: opt.label,
+            isCorrect: opt.isCorrect,
+          })) ?? [],
+          shortAnswerKey: "",
+        };
+      });
+
+      originalDbIds.current = loaded.map((q) => q.dbId!);
+      setQuestions(loaded);
+      setSelectedQ(loaded[0]?.uid ?? 0);
+    } else {
+      const empty = makeQuestion();
+      originalDbIds.current = [];
+      setQuestions([empty]);
+      setSelectedQ(empty.uid);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [assessmentData]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!assessmentTitle.trim()) {
-      return alert("Assessment title is required.");
+      alert("Assessment title is required.");
+      return;
     }
 
+    // Snapshot current state immediately — cache invalidations triggered by
+    // mutateAsync calls below will cause refetches that would otherwise reset
+    // `questions` via the useEffect before all saves complete.
+    const savedQuestions = questions;
+
+    setIsSaving(true);
     try {
-      const payload = {
+      await updateAssessment.mutateAsync({
         title: assessmentTitle,
         description: assessmentDesc || null,
         timeLimit: parseInt(timeLimit) || 120,
         passScore: parseInt(totalPoints) || 50,
-      };
+      } as any);
 
-      updateAssessment.mutate(payload, {
-        onSuccess: () => {
-          alert("Assessment successfully updated!");
-          router.push("/assessments");
-        },
-        onError: (error: any) => {
-          alert(error.message || "Failed to update assessment");
+      const currentDbIds = new Set(savedQuestions.filter((q) => q.dbId).map((q) => q.dbId!));
+      const toDelete = originalDbIds.current.filter((id) => !currentDbIds.has(id));
+
+      for (const dbId of toDelete) {
+        await deleteQuestionMutation.mutateAsync(dbId);
+      }
+
+      for (const [idx, q] of savedQuestions.entries()) {
+        const isMultipleChoice = q.type !== "Short Answer";
+        const questionData = {
+          title: q.title || `Question ${idx + 1}`,
+          description: q.description || null,
+          questionType: (isMultipleChoice ? "multiple_choice" : "short_answer") as "multiple_choice" | "short_answer",
+          points: parseInt(q.points) || 5,
+          position: idx + 1,
+          options: isMultipleChoice
+            ? q.options.map((opt, oIdx) => ({
+                label: opt.text || `Option ${oIdx + 1}`,
+                isCorrect: opt.isCorrect,
+                position: oIdx + 1,
+              }))
+            : undefined,
+        };
+
+        if (q.dbId) {
+          await updateQuestionMutation.mutateAsync({ questionId: q.dbId, data: questionData });
+        } else {
+          await createQuestionMutation.mutateAsync(questionData);
         }
-      });
+      }
 
+      router.push("/assessments");
     } catch (error: any) {
-      alert(error.message || "Failed to format assessment data");
+      alert(error.message || "Failed to update assessment");
+    } finally {
+      setIsSaving(false);
     }
   };
 
   if (isLoading) {
     return (
       <div className="flex flex-1 items-center justify-center bg-white h-full">
-         <Loader2 className="size-6 animate-spin text-slate-400" />
+        <Loader2 className="size-6 animate-spin text-slate-400" />
       </div>
     );
   }
-
 
   function moveItem<T>(list: T[], from: number, to: number): T[] {
     const copy = [...list];
@@ -187,18 +248,18 @@ export default function EditAssessmentPage({ params }: { params: Promise<{ id: s
   }
 
   const addQuestion = () => {
-    const q = makeQuestion(questions.length);
+    const q = makeQuestion();
     setQuestions((prev) => [...prev, q]);
     setSelectedQ(q.uid);
   };
 
   const removeQuestion = (qId: number) => {
-    if (questions.length === 1) return; // keep at least one
+    if (questions.length === 1) return;
     setQuestions((prev) => prev.filter((q) => q.uid !== qId));
     if (selectedQ === qId) {
-       const idx = questions.findIndex(q => q.uid === qId);
-       const nextQ = questions[idx - 1] || questions[idx + 1];
-       if (nextQ) setSelectedQ(nextQ.uid);
+      const idx = questions.findIndex((q) => q.uid === qId);
+      const nextQ = questions[idx - 1] || questions[idx + 1];
+      if (nextQ) setSelectedQ(nextQ.uid);
     }
   };
 
@@ -216,7 +277,6 @@ export default function EditAssessmentPage({ params }: { params: Promise<{ id: s
         if (type === "True/False") {
           options = TRUE_FALSE_OPTIONS.map((o) => ({ ...o }));
         } else if (q.type === "True/False") {
-          // switching away from T/F — restore defaults
           options = [
             makeOption("Option 1"),
             makeOption("Option 2"),
@@ -233,12 +293,12 @@ export default function EditAssessmentPage({ params }: { params: Promise<{ id: s
       prev.map((q) =>
         q.uid === qId
           ? {
-            ...q,
-            options: [
-              ...q.options,
-              makeOption(`Option ${q.options.length + 1}`),
-            ],
-          }
+              ...q,
+              options: [
+                ...q.options,
+                makeOption(`Option ${q.options.length + 1}`),
+              ],
+            }
           : q,
       ),
     );
@@ -259,11 +319,11 @@ export default function EditAssessmentPage({ params }: { params: Promise<{ id: s
       prev.map((q) =>
         q.uid === qId
           ? {
-            ...q,
-            options: q.options.map((o) =>
-              o.id === optId ? { ...o, text } : o,
-            ),
-          }
+              ...q,
+              options: q.options.map((o) =>
+                o.id === optId ? { ...o, text } : o,
+              ),
+            }
           : q,
       ),
     );
@@ -283,10 +343,8 @@ export default function EditAssessmentPage({ params }: { params: Promise<{ id: s
   };
 
   const currentQ = questions.find((q) => q.uid === selectedQ) || questions[0];
-
   const isTrueFalse = currentQ?.type === "True/False";
   const isShortAnswer = currentQ?.type === "Short Answer";
-
   const correctLabel = currentQ?.options.find((o) => o.isCorrect)?.text ?? null;
 
   return (
@@ -313,10 +371,10 @@ export default function EditAssessmentPage({ params }: { params: Promise<{ id: s
             className="text-white cursor-pointer rounded-lg h-10 px-6 font-medium shadow-none border-none transition-all active:scale-[0.98] disabled:opacity-70 gap-2"
             style={{ backgroundColor: "var(--theme-color)" }}
             onClick={handleSave}
-            disabled={updateAssessment.isPending}
+            disabled={isSaving}
           >
-            {updateAssessment.isPending && <Loader2 className="size-4 animate-spin mr-1" />}
-            {updateAssessment.isPending ? "Updating..." : "Update Assessment"}
+            {isSaving && <Loader2 className="size-4 animate-spin mr-1" />}
+            {isSaving ? "Updating..." : "Update Assessment"}
           </Button>
           <Link href="/assessments">
             <Button
@@ -382,7 +440,7 @@ export default function EditAssessmentPage({ params }: { params: Promise<{ id: s
               </div>
               <div>
                 <Label className="text-[13px] font-medium text-slate-600 mb-1.5 block">
-                  Total Points
+                  Pass Score (%)
                 </Label>
                 <Input
                   value={totalPoints}
@@ -434,14 +492,15 @@ export default function EditAssessmentPage({ params }: { params: Promise<{ id: s
                 return (
                   <div
                     ref={ref as Ref<HTMLDivElement>}
-                    className={`w-full text-left rounded-lg px-3.5 py-3 flex items-center gap-3 transition-all border cursor-pointer group ${isDragging
-                      ? "opacity-40 border-transparent bg-slate-100"
-                      : isOver
-                        ? "border-[var(--theme-color)]/30 bg-[var(--theme-color)]/5"
-                        : selectedQ === q.uid
-                          ? "bg-[var(--theme-color)]/5 border-[var(--theme-color)]/20"
-                          : "bg-slate-50 border-transparent text-slate-600 hover:bg-slate-100"
-                      }`}
+                    className={`w-full text-left rounded-lg px-3.5 py-3 flex items-center gap-3 transition-all border cursor-pointer group ${
+                      isDragging
+                        ? "opacity-40 border-transparent bg-slate-100"
+                        : isOver
+                          ? "border-[var(--theme-color)]/30 bg-[var(--theme-color)]/5"
+                          : selectedQ === q.uid
+                            ? "bg-[var(--theme-color)]/5 border-[var(--theme-color)]/20"
+                            : "bg-slate-50 border-transparent text-slate-600 hover:bg-slate-100"
+                    }`}
                     onClick={() => setSelectedQ(q.uid)}
                   >
                     <HugeiconsIcon
@@ -469,7 +528,7 @@ export default function EditAssessmentPage({ params }: { params: Promise<{ id: s
                         e.stopPropagation();
                         removeQuestion(q.uid);
                       }}
-                      className={`text-slate-400 hover:text-red-500 transition-opacity p-1 -mr-1 shrink-0 ${questions.length === 1 ? 'opacity-0 cursor-not-allowed' : 'opacity-0 group-hover:opacity-100'}`}
+                      className={`text-slate-400 hover:text-red-500 transition-opacity p-1 -mr-1 shrink-0 ${questions.length === 1 ? "opacity-0 cursor-not-allowed" : "opacity-0 group-hover:opacity-100"}`}
                       disabled={questions.length === 1}
                       title="Delete question"
                     >
@@ -566,7 +625,7 @@ export default function EditAssessmentPage({ params }: { params: Promise<{ id: s
                   <Select
                     value={currentQ.points}
                     onValueChange={(val) =>
-                      updateQuestion(selectedQ, { points: val || "" })
+                      updateQuestion(selectedQ, { points: val || "5" })
                     }
                   >
                     <SelectTrigger className="h-11 bg-white border-slate-200 rounded-lg shadow-none text-sm focus:ring-0 focus:border-slate-400 transition-colors">
@@ -611,8 +670,8 @@ export default function EditAssessmentPage({ params }: { params: Promise<{ id: s
                     Answer Options
                   </h3>
                   <span className="text-[11px] text-slate-400">
-                    Click {isTrueFalse ? "True or False" : "the circle"} to mark
-                    correct answer
+                    Click {isTrueFalse ? "True or False" : "the circle"} to
+                    mark correct answer
                   </span>
                 </div>
 
@@ -620,10 +679,11 @@ export default function EditAssessmentPage({ params }: { params: Promise<{ id: s
                   {currentQ.options.map((opt) => (
                     <div
                       key={opt.id}
-                      className={`flex items-center gap-3 border rounded-lg px-4 py-3 transition-all ${opt.isCorrect
-                        ? "border-emerald-300 bg-emerald-50/40"
-                        : "border-slate-200 bg-white"
-                        }`}
+                      className={`flex items-center gap-3 border rounded-lg px-4 py-3 transition-all ${
+                        opt.isCorrect
+                          ? "border-emerald-300 bg-emerald-50/40"
+                          : "border-slate-200 bg-white"
+                      }`}
                     >
                       <button
                         onClick={() => toggleCorrect(selectedQ, opt.id)}
@@ -647,10 +707,11 @@ export default function EditAssessmentPage({ params }: { params: Promise<{ id: s
                           updateOptionText(selectedQ, opt.id, e.target.value)
                         }
                         disabled={isTrueFalse}
-                        className={`flex-1 text-sm bg-transparent outline-none placeholder:text-slate-400 ${opt.isCorrect
-                          ? "text-emerald-700 font-medium"
-                          : "text-slate-700"
-                          } disabled:cursor-default`}
+                        className={`flex-1 text-sm bg-transparent outline-none placeholder:text-slate-400 ${
+                          opt.isCorrect
+                            ? "text-emerald-700 font-medium"
+                            : "text-slate-700"
+                        } disabled:cursor-default`}
                       />
 
                       {opt.isCorrect && (

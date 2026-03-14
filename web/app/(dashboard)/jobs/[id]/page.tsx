@@ -107,6 +107,16 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Sheet,
   SheetContent,
   SheetHeader,
@@ -246,6 +256,7 @@ export default function JobDetailsPage() {
   const [addStageOpen, setAddStageOpen] = useState(false);
   const [newStageName, setNewStageName] = useState("");
   const [isAssessmentDialogOpen, setIsAssessmentDialogOpen] = useState(false);
+  const [detachTarget, setDetachTarget] = useState<number | null>(null);
 
   const handleAddStage = () => {
     if (!newStageName.trim()) return;
@@ -957,116 +968,161 @@ export default function JobDetailsPage() {
             </div>
           </TabsContent>
 
-          <TabsContent
-            value="assessments"
-            className="pt-10 space-y-6"
-          >
+          <TabsContent value="assessments" className="pt-8 space-y-5">
             <div className="flex items-center justify-between">
-              <h3 className="text-slate-900 font-semibold text-[17px]">
-                Pipeline Automated Assessments
-              </h3>
-
+              <div>
+                <p className="text-[18px] font-semibold text-slate-900">Automated Assessments</p>
+                <p className="text-[13px] text-slate-400 mt-1">Sent automatically when a candidate reaches the trigger stage.</p>
+              </div>
               <Dialog open={isAssessmentDialogOpen} onOpenChange={setIsAssessmentDialogOpen}>
                 <DialogTrigger asChild>
-                   <Button className="bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white shadow-none rounded-lg h-10 px-5 text-sm font-medium gap-2 transition-all active:scale-[0.98]">
-                     <HugeiconsIcon icon={PlusSignIcon} className="size-4" strokeWidth={3} />
-                     Attach Assessment to Stage
-                   </Button>
+                  <button className="inline-flex items-center gap-2 h-10 px-5 rounded-lg text-[13px] font-medium border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors">
+                    <HugeiconsIcon icon={PlusSignIcon} className="size-4" strokeWidth={2.5} />
+                    Attach Assessment
+                  </button>
                 </DialogTrigger>
-                <DialogContent className="!top-[18%] !translate-y-0 max-w-[640px] rounded-xl border-slate-200 shadow-xl p-8 duration-0 data-open:zoom-in-100 data-closed:zoom-out-100">
-                   <DialogHeader className="mb-3">
-                     <DialogTitle className="text-[20px] font-semibold text-slate-900">Configure Stage Attachment</DialogTitle>
-                     <DialogDescription className="text-slate-500 mt-2 text-[14px]">
-                       Select an assessment and the stage that will trigger it.
-                     </DialogDescription>
-                   </DialogHeader>
-                   <form 
-                     onSubmit={(e) => {
-                       e.preventDefault();
-                       const formData = new FormData(e.currentTarget);
-                       const assessmentId = Number(formData.get("assessmentId"));
-                       const triggerStageId = Number(formData.get("triggerStageId"));
-                       if(assessmentId && triggerStageId) {
-                         attachAssessmentMutation.mutate(
-                           { assessmentId, triggerStageId },
-                           { onSuccess: () => setIsAssessmentDialogOpen(false) }
-                         );
-                       }
-                     }}
-                     className="space-y-7 pt-2"
-                   >
-                     <div className="space-y-2.5">
-                        <Label className="text-[14px] font-semibold text-slate-700">Select The Assessment</Label>
-                        <Select name="assessmentId" required>
-                           <SelectTrigger className="w-full h-10! border-slate-200 shadow-none rounded-lg text-slate-500 focus:ring-0">
-                             <SelectValue placeholder="Choose assessment..." />
-                           </SelectTrigger>
-                           <SelectContent className="rounded-lg shadow-lg border-slate-200">
-                              {allAssessments.map(a => (
-                                 <SelectItem key={a.id} value={a.id.toString()}>{a.title}</SelectItem>
-                              ))}
-                           </SelectContent>
-                        </Select>
-                     </div>
-                     <div className="space-y-2.5">
-                        <Label className="text-[14px] font-semibold text-slate-700">Select The Triggering Stage</Label>
-                        <Select name="triggerStageId" required>
-                           <SelectTrigger className="w-full h-10! border-slate-200 shadow-none rounded-lg text-slate-500 focus:ring-0">
-                             <SelectValue placeholder="When candidate is moved into..." />
-                           </SelectTrigger>
-                           <SelectContent className="rounded-lg shadow-lg border-slate-200">
-                              {stages.map(s => (
-                                 <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>
-                              ))}
-                           </SelectContent>
-                        </Select>
-                     </div>
-                     <div className="pt-6 flex justify-end">
-                       <Button type="submit" disabled={attachAssessmentMutation.isPending} className="h-10 px-8 bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white font-medium shadow-sm rounded-lg border-none">
-                         {attachAssessmentMutation.isPending ? "Attaching..." : "Confirm & Attach"}
-                       </Button>
-                     </div>
-                   </form>
+                <DialogContent className="!top-[18%] !translate-y-0 max-w-sm rounded-xl border-slate-200 shadow-lg p-6 duration-0 data-open:zoom-in-100 data-closed:zoom-out-100">
+                  <DialogHeader className="mb-4">
+                    <DialogTitle className="text-[16px] font-semibold text-slate-900">Attach Assessment</DialogTitle>
+                    <DialogDescription className="text-slate-400 text-[13px] mt-1">
+                      Auto-send when a candidate enters the selected stage.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const formData = new FormData(e.currentTarget);
+                      const assessmentId = Number(formData.get("assessmentId"));
+                      const triggerStageId = Number(formData.get("triggerStageId"));
+                      if (assessmentId && triggerStageId) {
+                        attachAssessmentMutation.mutate(
+                          { assessmentId, triggerStageId },
+                          { onSuccess: () => setIsAssessmentDialogOpen(false) },
+                        );
+                      }
+                    }}
+                    className="space-y-3"
+                  >
+                    <div className="space-y-1.5">
+                      <Label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Assessment</Label>
+                      <Select name="assessmentId" required>
+                        <SelectTrigger className="w-full h-9 border-slate-200 shadow-none rounded-lg text-[13px] text-slate-600 focus:ring-0">
+                          <SelectValue placeholder="Choose assessment…" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-lg shadow-lg border-slate-200">
+                          {allAssessments.map((a) => (
+                            <SelectItem key={a.id} value={a.id.toString()} className="text-[13px]">{a.title}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Trigger Stage</Label>
+                      <Select name="triggerStageId" required>
+                        <SelectTrigger className="w-full h-9 border-slate-200 shadow-none rounded-lg text-[13px] text-slate-600 focus:ring-0">
+                          <SelectValue placeholder="When candidate moves into…" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-lg shadow-lg border-slate-200">
+                          {stages.map((s) => (
+                            <SelectItem key={s.id} value={s.id.toString()} className="text-[13px]">{s.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="pt-2 flex justify-end">
+                      <Button
+                        type="submit"
+                        disabled={attachAssessmentMutation.isPending}
+                        className="h-9 px-5 bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white shadow-none border-none rounded-lg text-[13px] font-medium"
+                      >
+                        {attachAssessmentMutation.isPending ? "Saving…" : "Save"}
+                      </Button>
+                    </div>
+                  </form>
                 </DialogContent>
               </Dialog>
             </div>
 
-            <div className="pt-2">
-              {attachedAssessments.length > 0 ? (
-                 <div className="space-y-3">
-                   {attachedAssessments.map((attachment) => {
-                     const stageFound = stages.find((s) => s.id === attachment.triggerStageId);
-                     const assessmentFound = allAssessments.find((a) => a.id === attachment.assessmentId);
-                     return (
-                        <div key={attachment.id} className="flex justify-between items-center p-5 border border-slate-200 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow">
-                           <div className="flex flex-col space-y-1.5">
-                              <span className="text-slate-800 font-semibold text-[16px] flex items-center gap-3">
-                                {assessmentFound?.title || 'Unknown Assessment'} 
-                                <Badge variant="secondary" className="bg-[var(--theme-color)]/10 text-[var(--theme-color)] px-2.5 py-0.5 rounded-full text-xs font-semibold shadow-none border-none">Trigger Stage: {stageFound?.name || 'Unknown Stage'}</Badge>
-                              </span>
-                              <span className="text-slate-500 text-[14px]">Test Duration: {assessmentFound?.timeLimit || 0} mins</span>
-                           </div>
-                           <Button 
-                             onClick={() => detachAssessmentMutation.mutate(attachment.id)}
-                             disabled={detachAssessmentMutation.isPending}
-                             variant="outline" 
-                             className="h-9 px-4 border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600 shadow-none text-[13px] font-medium rounded-lg"
-                           >
-                             Remove Trigger
-                           </Button>
+            {attachedAssessments.length > 0 ? (
+              <div className="space-y-3">
+                {attachedAssessments.map((attachment) => {
+                  const stageFound = stages.find((s) => s.id === attachment.triggerStageId);
+                  const assessmentFound = allAssessments.find((a) => a.id === attachment.assessmentId);
+                  return (
+                    <div
+                      key={attachment.id}
+                      className="flex items-center justify-between px-5 py-4 bg-white border border-[var(--theme-color)]/20 hover:border-[var(--theme-color)]/40 rounded-xl transition-colors"
+                    >
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div className="size-10 rounded-xl bg-purple-50 flex items-center justify-center shrink-0 text-[18px]">
+                          📋
                         </div>
-                     );
-                   })}
-                 </div>
-              ) : (
-                <div className="py-12 flex flex-col items-center justify-center w-full">
-                   <p className="text-slate-500 text-[14px] mb-4 text-center">No assessments have been attached to this pipeline yet.</p>
-                   <Button onClick={() => setIsAssessmentDialogOpen(true)} variant="outline" className="h-9 px-5 text-[13px] font-medium rounded-lg text-slate-700 shadow-none border-slate-200 hover:bg-slate-50">
-                     Attach an Assessment
-                   </Button>
-                </div>
-              )}
-            </div>
+                        <div className="min-w-0">
+                          <p className="text-[14px] font-semibold text-slate-800 truncate">
+                            {assessmentFound?.title ?? "Unknown Assessment"}
+                          </p>
+                          <p className="text-[12px] text-slate-400 mt-0.5">
+                            Triggers on{" "}
+                            <span className="font-medium text-slate-500">
+                              {stageFound?.name ?? "Unknown Stage"}
+                            </span>
+                            {assessmentFound?.timeLimit ? ` · ${assessmentFound.timeLimit} mins` : ""}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setDetachTarget(attachment.id)}
+                        className="shrink-0 ml-4 inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-medium border border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 transition-colors"
+                      >
+                        <HugeiconsIcon icon={Delete02Icon} className="size-3.5" />
+                        Remove
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="py-12 flex flex-col items-center justify-center text-center border border-dashed border-slate-200 rounded-xl">
+                <p className="text-[13px] text-slate-400">No assessments attached yet.</p>
+                <button
+                  onClick={() => setIsAssessmentDialogOpen(true)}
+                  className="mt-2 text-[12px] font-medium text-[var(--theme-color)] hover:underline"
+                >
+                  Attach one
+                </button>
+              </div>
+            )}
+
+            <AlertDialog open={detachTarget !== null} onOpenChange={(o) => !o && setDetachTarget(null)}>
+              <AlertDialogContent className="max-w-sm rounded-xl border-slate-200 shadow-lg">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-[17px] font-semibold text-slate-900">
+                    Remove this assessment?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="text-[13px] text-slate-500 leading-relaxed">
+                    Candidates moved to this stage will no longer receive the assessment automatically.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter className="gap-2">
+                  <AlertDialogCancel className="h-9 px-5 rounded-lg border-slate-200 text-slate-600 text-[13px] font-medium shadow-none">
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => {
+                      if (detachTarget !== null) {
+                        detachAssessmentMutation.mutate(detachTarget, {
+                          onSuccess: () => setDetachTarget(null),
+                        });
+                      }
+                    }}
+                    disabled={detachAssessmentMutation.isPending}
+                    className="h-9 px-5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-[13px] font-medium shadow-none border-none disabled:opacity-70"
+                  >
+                    {detachAssessmentMutation.isPending ? "Removing…" : "Remove"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </TabsContent>
         </div>
       </Tabs>
