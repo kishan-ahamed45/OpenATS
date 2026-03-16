@@ -69,7 +69,7 @@ function CustomDragLayer() {
     >
       <div
         style={{ transform: "rotate(3deg)" }}
-        className="bg-white border border-slate-300 shadow-xl px-3 py-2.5 rounded-lg flex items-center gap-2 w-[260px] opacity-95"
+        className="bg-white dark:bg-neutral-900 border border-slate-300 dark:border-neutral-800 shadow-xl px-3 py-2.5 rounded-lg flex items-center gap-2 w-[260px] opacity-95"
       >
         <GripVertical className="size-3.5 text-slate-300 shrink-0" />
         <div className="space-y-0.5 min-w-0">
@@ -150,18 +150,18 @@ function DraggableCard({
     <div
       ref={ref as unknown as Ref<HTMLDivElement>}
       onClick={() => !isDragging && onClick(candidate.id)}
-      className={`bg-white px-3 py-2.5 rounded-lg flex items-center gap-2 group select-none transition-colors ${
+      className={`bg-white dark:bg-neutral-900 px-3 py-2.5 rounded-lg flex items-center gap-2 group select-none transition-colors ${
         isDragging
           ? "border-2 border-dashed border-[var(--theme-color)] opacity-40 cursor-grabbing"
-          : "border border-slate-200 hover:border-[var(--theme-color)]/40 cursor-pointer"
+          : "border border-slate-200 dark:border-neutral-800 hover:border-[var(--theme-color)]/40 cursor-pointer"
       }`}
     >
-      <GripVertical className="size-3.5 text-slate-300 shrink-0 group-hover:text-slate-400 transition-colors cursor-grab" />
+      <GripVertical className="size-3.5 text-slate-300 dark:text-neutral-600 shrink-0 group-hover:text-slate-400 dark:group-hover:text-neutral-500 transition-colors cursor-grab" />
       <div className="space-y-0.5 min-w-0">
-        <p className="font-semibold text-slate-800 text-[13px] leading-snug group-hover:text-[var(--theme-color)] transition-colors truncate">
+        <p className="font-semibold text-slate-800 dark:text-neutral-200 text-[13px] leading-snug group-hover:text-[var(--theme-color)] transition-colors truncate">
           {name}
         </p>
-        <p className="text-slate-400 text-[10px] font-medium uppercase tracking-tight">
+        <p className="text-slate-400 dark:text-neutral-500 text-[10px] font-medium uppercase tracking-tight">
           {appliedAtLabel}
         </p>
       </div>
@@ -217,10 +217,10 @@ function DroppableColumn({
           className="size-2 rounded-full"
           style={{ backgroundColor: stage.color }}
         />
-        <h3 className="font-semibold text-slate-700 text-[15px]">
+        <h3 className="font-semibold text-slate-700 dark:text-neutral-300 text-[15px]">
           {stage.name}
         </h3>
-        <span className="ml-auto text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-300 uppercase tracking-tighter">
+        <span className="ml-auto text-[11px] font-bold text-slate-500 dark:text-neutral-500 bg-slate-100 dark:bg-neutral-800 px-2 py-0.5 rounded-full border border-slate-300 dark:border-neutral-700 uppercase tracking-tighter">
           {candidates.length} Cards
         </span>
       </div>
@@ -230,7 +230,7 @@ function DroppableColumn({
         className={`flex-1 rounded-xl p-3 space-y-2 overflow-y-auto custom-scrollbar-y transition-colors duration-150 ${
           isActive
             ? "bg-[var(--theme-color)]/5 border-2 border-dashed border-[var(--theme-color)]/40"
-            : "bg-slate-50/60 border border-slate-200"
+            : "bg-slate-50/60 dark:bg-neutral-900/40 border border-slate-200 dark:border-neutral-800"
         }`}
       >
         {candidates.length === 0 && (
@@ -238,7 +238,7 @@ function DroppableColumn({
             className={`h-20 flex items-center justify-center rounded-lg border-2 border-dashed text-sm font-medium transition-colors ${
               isActive
                 ? "border-[var(--theme-color)]/40 text-[var(--theme-color)]/60 bg-[var(--theme-color)]/5"
-                : "border-slate-200 text-slate-300"
+                : "border-slate-200 dark:border-neutral-800 text-slate-300 dark:text-neutral-700"
             }`}
           >
             {isActive ? "Drop here" : "No candidates"}
@@ -394,37 +394,37 @@ export default function HiringPipelinePage() {
   }, [isDragging]);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-var(--header-height))] bg-white overflow-hidden w-full min-w-0">
+    <div className="flex flex-col h-[calc(100vh-var(--header-height))] bg-white dark:bg-neutral-950 overflow-hidden w-full min-w-0">
       <CustomDragLayer />
 
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white shrink-0 w-full">
+      <div className="sticky top-0 z-10 bg-white dark:bg-neutral-950 shrink-0 w-full">
         <div className="px-8 pt-8 pb-6 overflow-hidden">
           <div className="flex items-center justify-between gap-4 max-w-full">
             <div className="space-y-4 min-w-0">
               <div className="flex items-center gap-4">
-                <h1 className="text-[32px] font-semibold text-slate-900 leading-none truncate">
+                <h1 className="text-[32px] font-semibold text-slate-900 dark:text-neutral-100 leading-none truncate">
                   {job?.title ?? "Loading..."}
                 </h1>
                 {job && (
-                  <Badge className="bg-[#E6F4EA] text-[#1E8E3E] hover:bg-[#E6F4EA] border-none font-medium px-3 py-1 rounded-full text-xs shadow-none shrink-0">
+                  <Badge className="bg-[#E6F4EA] dark:bg-emerald-950/30 text-[#1E8E3E] dark:text-emerald-400 hover:bg-[#E6F4EA] dark:hover:bg-emerald-950/40 border-none font-medium px-3 py-1 rounded-full text-xs shadow-none shrink-0">
                     {job.status === "published" ? "Active Job" : job.status}
                   </Badge>
                 )}
               </div>
               {job && (
-                <div className="flex items-center text-sm font-medium text-slate-500 gap-2 truncate whitespace-nowrap opacity-80">
+                <div className="flex items-center text-sm font-medium text-slate-500 dark:text-neutral-400 gap-2 truncate whitespace-nowrap opacity-80">
                   <span className="shrink-0">
                     {EMPLOYMENT_LABELS[job.employmentType] ?? job.employmentType}
                   </span>
                   {job.location && (
                     <>
-                      <span className="text-slate-300 shrink-0">-</span>
+                      <span className="text-slate-300 dark:text-neutral-700 shrink-0">-</span>
                       <span className="shrink-0 truncate">{job.location}</span>
                     </>
                   )}
-                  <span className="text-slate-300 shrink-0">-</span>
-                  <span className="shrink-0 text-slate-400">
+                  <span className="text-slate-300 dark:text-neutral-700 shrink-0">-</span>
+                  <span className="shrink-0 text-slate-400 dark:text-neutral-500">
                     {localCandidates.length} candidate
                     {localCandidates.length !== 1 ? "s" : ""}
                   </span>
@@ -433,17 +433,17 @@ export default function HiringPipelinePage() {
             </div>
           </div>
         </div>
-        <div className="border-b border-slate-200" />
+        <div className="border-b border-slate-200 dark:border-neutral-800" />
       </div>
 
       {/* Kanban board */}
       <div
         ref={scrollRef}
-        className="flex-1 w-full min-w-0 overflow-x-auto overflow-y-auto bg-slate-50/10 pipeline-scroll-container"
+        className="flex-1 w-full min-w-0 overflow-x-auto overflow-y-auto bg-slate-50/10 dark:bg-neutral-950 pipeline-scroll-container"
       >
         {stages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
-            <p className="text-slate-400 text-sm">
+            <p className="text-slate-400 dark:text-neutral-600 text-sm">
               No pipeline stages defined for this job yet.
             </p>
           </div>
@@ -470,7 +470,7 @@ export default function HiringPipelinePage() {
       <Sheet open={isDetailOpen} onOpenChange={setIsDetailOpen}>
         <SheetContent
           showCloseButton={true}
-          className="w-[98vw] sm:max-w-[98vw] p-0 flex flex-row gap-0 border-l border-slate-200 shadow-none overflow-hidden bg-white"
+          className="w-[98vw] sm:max-w-[98vw] p-0 flex flex-row gap-0 border-l border-slate-200 dark:border-neutral-800 shadow-none overflow-hidden bg-white dark:bg-neutral-950"
         >
           {selectedCandidateId && (() => {
             const c = localCandidates.find((x) => x.id === selectedCandidateId);
@@ -479,28 +479,28 @@ export default function HiringPipelinePage() {
               <>
                 {/* Left — candidate info + CV */}
                 <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-                  <div className="px-6 lg:px-8 py-4 lg:py-5 border-b border-slate-100 shrink-0 bg-white">
+                  <div className="px-6 lg:px-8 py-4 lg:py-5 border-b border-slate-100 dark:border-neutral-800 shrink-0 bg-white dark:bg-neutral-950">
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 min-w-0">
-                      <h2 className="text-lg font-semibold text-slate-900 tracking-tight">
+                      <h2 className="text-lg font-semibold text-slate-900 dark:text-neutral-100 tracking-tight">
                         {c.firstName} {c.lastName}
                       </h2>
                       {c.stageName && (
-                        <Badge className="bg-slate-100 text-slate-600 hover:bg-slate-100 border-none shadow-none font-medium px-2 py-0.5 rounded-full text-[11px] uppercase tracking-wider whitespace-nowrap">
+                        <Badge className="bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 border-none shadow-none font-medium px-2 py-0.5 rounded-full text-[11px] uppercase tracking-wider whitespace-nowrap">
                           {c.stageName}
                         </Badge>
                       )}
                     </div>
-                    <p className="text-slate-500 text-[13px] mt-0.5">
+                    <p className="text-slate-500 dark:text-neutral-400 text-[13px] mt-0.5">
                       {job?.title ?? ""}
                       <span className="mx-1.5 opacity-30">•</span>
                       Applied {timeAgo(c.appliedAt)}
                     </p>
                     <div className="flex flex-wrap items-center gap-x-5 gap-y-1 mt-1.5">
-                      <span className="flex items-center gap-1.5 text-slate-500 text-[12px] font-medium">
+                      <span className="flex items-center gap-1.5 text-slate-500 dark:text-neutral-400 text-[12px] font-medium">
                         {c.email}
                       </span>
                       {c.phone && (
-                        <span className="flex items-center gap-1.5 text-slate-500 text-[12px] font-medium">
+                        <span className="flex items-center gap-1.5 text-slate-500 dark:text-neutral-400 text-[12px] font-medium">
                           {c.phone}
                         </span>
                       )}
@@ -547,13 +547,24 @@ export default function HiringPipelinePage() {
           background: #f8fafc !important;
           border-top: 1px solid #e2e8f0 !important;
         }
+        :global(.dark) .pipeline-scroll-container::-webkit-scrollbar-track {
+          background: #0a0a0a !important;
+          border-top-color: #1a1a1a !important;
+        }
         .pipeline-scroll-container::-webkit-scrollbar-thumb {
           background: #cbd5e1 !important;
           border-radius: 10px !important;
           border: 2px solid #f8fafc !important;
         }
+        :global(.dark) .pipeline-scroll-container::-webkit-scrollbar-thumb {
+          background: #262626 !important;
+          border-color: #0a0a0a !important;
+        }
         .pipeline-scroll-container::-webkit-scrollbar-thumb:hover {
           background: #94a3b8 !important;
+        }
+        :global(.dark) .pipeline-scroll-container::-webkit-scrollbar-thumb:hover {
+          background: #404040 !important;
         }
         .custom-scrollbar-y::-webkit-scrollbar {
           display: block !important;
@@ -562,6 +573,9 @@ export default function HiringPipelinePage() {
         .custom-scrollbar-y::-webkit-scrollbar-thumb {
           background: #e2e8f0 !important;
           border-radius: 10px !important;
+        }
+        :global(.dark) .custom-scrollbar-y::-webkit-scrollbar-thumb {
+          background: #262626 !important;
         }
       `}</style>
     </div>

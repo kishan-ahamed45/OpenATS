@@ -39,11 +39,11 @@ function formatDate(dateStr: string | null) {
 }
 
 const OFFER_STATUS_STYLES: Record<string, { bg: string; text: string }> = {
-  draft: { bg: "bg-amber-50", text: "text-amber-600" },
-  sent: { bg: "bg-blue-50", text: "text-blue-600" },
-  accepted: { bg: "bg-green-50", text: "text-green-600" },
-  declined: { bg: "bg-red-50", text: "text-red-500" },
-  withdrawn: { bg: "bg-slate-100", text: "text-slate-500" },
+  draft: { bg: "bg-amber-50 dark:bg-amber-950/30", text: "text-amber-600 dark:text-amber-400" },
+  sent: { bg: "bg-blue-50 dark:bg-blue-950/30", text: "text-blue-600 dark:text-blue-400" },
+  accepted: { bg: "bg-green-50 dark:bg-green-950/30", text: "text-green-600 dark:text-green-400" },
+  declined: { bg: "bg-red-50 dark:bg-red-950/30", text: "text-red-500 dark:text-red-400" },
+  withdrawn: { bg: "bg-slate-50 dark:bg-neutral-800", text: "text-slate-500 dark:text-neutral-400" },
 };
 
 interface CandidateSidePanelProps {
@@ -114,8 +114,8 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
 
   if (isLoading) {
     return (
-      <div className="w-[520px] border-l border-slate-100 flex items-center justify-center bg-white shrink-0">
-        <p className="text-slate-400 text-sm">Loading...</p>
+      <div className="w-[520px] border-l border-slate-100 dark:border-neutral-800 flex items-center justify-center bg-white dark:bg-neutral-950 shrink-0">
+        <p className="text-slate-400 dark:text-neutral-500 text-sm">Loading...</p>
       </div>
     );
   }
@@ -136,11 +136,11 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
   ];
 
   const triggerBase =
-    "shrink-0 data-active:!bg-[var(--theme-color)] data-active:!border-[var(--theme-color)] data-active:!text-white border border-slate-200 rounded-[8px] px-4 py-1.5 text-[13px] font-medium text-slate-600 shadow-none bg-white cursor-pointer whitespace-nowrap";
+    "shrink-0 data-active:!bg-[var(--theme-color)] data-active:!border-[var(--theme-color)] data-active:!text-white border border-slate-200 dark:border-neutral-800 rounded-[8px] px-4 py-1.5 text-[13px] font-medium text-slate-600 dark:text-neutral-400 shadow-none bg-white dark:bg-neutral-900 cursor-pointer whitespace-nowrap";
 
   return (
-    <div className="w-[520px] border-l border-slate-100 flex flex-col bg-white overflow-hidden shrink-0">
-      <div className="h-[58px] shrink-0 flex items-center px-5 border-b border-slate-100">
+    <div className="w-[520px] border-l border-slate-100 dark:border-neutral-800 flex flex-col bg-white dark:bg-neutral-950 overflow-hidden shrink-0">
+      <div className="h-[58px] shrink-0 flex items-center px-5 border-b border-slate-100 dark:border-neutral-800">
         {candidate.resumeUrl ? (
           <a href={candidate.resumeUrl} target="_blank" rel="noreferrer">
             <Button className="bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white font-medium text-[12px] gap-2 px-4 h-9 rounded-[8px] shadow-none border-none">
@@ -149,7 +149,7 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
             </Button>
           </a>
         ) : (
-          <span className="text-slate-400 text-sm italic">No resume uploaded</span>
+          <span className="text-slate-400 dark:text-neutral-500 text-sm italic">No resume uploaded</span>
         )}
       </div>
 
@@ -157,7 +157,7 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
         <div
           ref={tabsScrollRef}
           onWheel={handleTabsWheel}
-          className="border-b border-slate-100 bg-white shrink-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="border-b border-slate-100 dark:border-neutral-800 bg-white dark:bg-neutral-950 shrink-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           <div className="px-4 py-2.5">
             <TabsList className="bg-transparent h-fit p-0 w-max flex gap-1.5">
@@ -165,7 +165,7 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
                 <TabsTrigger key={value} value={value} className={triggerBase}>
                   {label}
                   {value === "offer" && offer && (
-                    <span className={`ml-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${offerStyle?.bg} ${offerStyle?.text}`}>
+                    <span className={`ml-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${offerStyle?.bg} dark:bg-opacity-20 ${offerStyle?.text}`}>
                       {offer.status}
                     </span>
                   )}
@@ -176,28 +176,28 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
         </div>
 
         <TabsContent value="answers" className="flex-1 overflow-y-auto p-5 outline-none min-h-0">
-          {candidate.answers.length === 0 && candidate.selections.length === 0 ? (
-            <p className="text-slate-400 text-sm italic">No custom answers submitted.</p>
+           {candidate.answers.length === 0 && candidate.selections.length === 0 ? (
+            <p className="text-slate-400 dark:text-neutral-500 text-sm italic">No custom answers submitted.</p>
           ) : (
             <div className="space-y-5">
               {candidate.answers.map((a) => (
                 <div key={a.id} className="space-y-1.5">
-                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">
+                  <p className="text-[11px] font-semibold text-slate-400 dark:text-neutral-500 uppercase tracking-wide">
                     Question #{a.questionId}
                   </p>
-                  <p className="text-[14px] text-slate-700 leading-relaxed">
-                    {a.answerText ?? <em className="text-slate-400">No text answer</em>}
+                  <p className="text-[14px] text-slate-700 dark:text-neutral-300 leading-relaxed">
+                    {a.answerText ?? <em className="text-slate-400 dark:text-neutral-500">No text answer</em>}
                   </p>
                 </div>
               ))}
               {candidate.selections.length > 0 && (
-                <div className="space-y-1.5 pt-3 border-t border-slate-100">
-                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">
+                <div className="space-y-1.5 pt-3 border-t border-slate-100 dark:border-neutral-800">
+                  <p className="text-[11px] font-semibold text-slate-400 dark:text-neutral-500 uppercase tracking-wide">
                     Selected Options
                   </p>
                   <div className="flex flex-wrap gap-2 pt-1">
                     {candidate.selections.map((s) => (
-                      <span key={s.id} className="text-[12px] bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full font-medium">
+                      <span key={s.id} className="text-[12px] bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400 px-2.5 py-1 rounded-full font-medium">
                         Option #{s.optionId}
                       </span>
                     ))}
@@ -210,21 +210,21 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
 
         <TabsContent value="history" className="flex-1 overflow-y-auto p-5 outline-none min-h-0">
           {candidate.history.length === 0 ? (
-            <p className="text-slate-400 text-sm italic">No stage history yet.</p>
+            <p className="text-slate-400 dark:text-neutral-500 text-sm italic">No stage history yet.</p>
           ) : (
             <div className="relative">
-              <div className="absolute left-[7px] top-2 bottom-2 w-px bg-slate-200" />
+              <div className="absolute left-[7px] top-2 bottom-2 w-px bg-slate-200 dark:bg-neutral-800" />
               <div className="space-y-5 pl-6">
                 {candidate.history.map((h, i) => (
                   <div key={h.id} className="relative">
                     <div
-                      className={`absolute -left-6 top-1 size-3.5 rounded-full border-2 border-white ring-2 ${i === candidate.history.length - 1
+                      className={`absolute -left-6 top-1 size-3.5 rounded-full border-2 border-white dark:border-neutral-950 ring-2 ${i === candidate.history.length - 1
                           ? "bg-[var(--theme-color)] ring-[var(--theme-color)]/30"
-                          : "bg-slate-300 ring-slate-200"
+                          : "bg-slate-300 dark:bg-neutral-700 ring-slate-200 dark:ring-neutral-800"
                         }`}
                     />
                     <div className="flex items-start justify-between gap-2">
-                      <span className="text-[14px] font-semibold text-slate-800">
+                      <span className="text-[14px] font-semibold text-slate-800 dark:text-neutral-200">
                         {stageMap[h.stageId] ?? `Stage #${h.stageId}`}
                       </span>
                       <span className="text-[11px] text-slate-400 shrink-0">
@@ -250,24 +250,24 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
         <TabsContent value="offer" className="flex-1 overflow-y-auto p-5 outline-none min-h-0">
           {!offer ? (
             <div className="flex flex-col items-center justify-center h-full gap-3 text-center py-12">
-              <div className="size-12 rounded-full bg-slate-100 flex items-center justify-center">
+              <div className="size-12 rounded-full bg-slate-100 dark:bg-neutral-800 flex items-center justify-center">
                 <span className="text-2xl">📄</span>
               </div>
-              <p className="text-slate-500 font-medium text-[14px]">No offer yet</p>
-              <p className="text-slate-400 text-[13px] max-w-[220px] leading-relaxed">
+              <p className="text-slate-500 dark:text-neutral-400 font-medium text-[14px]">No offer yet</p>
+              <p className="text-slate-400 dark:text-neutral-500 text-[13px] max-w-[220px] leading-relaxed">
                 An offer will appear here once the candidate reaches an offer stage.
               </p>
             </div>
           ) : isEditingOffer ? (
             <div className="space-y-4">
               <div className="flex items-center justify-between mb-1">
-                <p className="text-[13px] font-semibold text-slate-700">Edit Offer</p>
+                <p className="text-[13px] font-semibold text-slate-700 dark:text-neutral-300">Edit Offer</p>
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setIsEditingOffer(false)}
-                    className="h-8 px-3 text-[12px] border-slate-200 text-slate-500 shadow-none rounded-lg gap-1.5"
+                    className="h-8 px-3 text-[12px] border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-slate-500 dark:text-neutral-400 shadow-none rounded-lg gap-1.5"
                   >
                     <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
                     Cancel
@@ -286,11 +286,11 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
 
               <div className="space-y-1.5">
                 <Label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Status</Label>
-                <Select value={editStatus} onValueChange={setEditStatus}>
-                  <SelectTrigger className="h-10 border-slate-200 shadow-none text-[13px] focus:ring-0 focus:border-[var(--theme-color)] w-full">
+                <Select value={editStatus} onValueChange={(v) => setEditStatus(v ?? "")}>
+                  <SelectTrigger className="h-10 border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-none text-[13px] focus:ring-0 focus:border-[var(--theme-color)] w-full">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-lg shadow-lg border-slate-200">
+                  <SelectContent className="rounded-lg shadow-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
                     {["draft", "sent", "pending", "accepted", "declined", "withdrawn"].map((s) => (
                       <SelectItem key={s} value={s} className="text-[13px] capitalize">{s}</SelectItem>
                     ))}
@@ -301,11 +301,11 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Currency</Label>
-                  <Select value={editCurrency} onValueChange={setEditCurrency}>
-                    <SelectTrigger className="h-10 border-slate-200 shadow-none text-[13px] focus:ring-0 focus:border-[var(--theme-color)] w-full">
+                  <Select value={editCurrency} onValueChange={(v) => setEditCurrency(v ?? "")}>
+                    <SelectTrigger className="h-10 border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-none text-[13px] focus:ring-0 focus:border-[var(--theme-color)] w-full">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="rounded-lg shadow-lg border-slate-200">
+                    <SelectContent className="rounded-lg shadow-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
                       {["USD", "EUR", "GBP", "LKR", "INR", "AUD"].map((c) => (
                         <SelectItem key={c} value={c} className="text-[13px]">{c}</SelectItem>
                       ))}
@@ -313,12 +313,12 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Pay Frequency</Label>
-                  <Select value={editPayFreq} onValueChange={setEditPayFreq}>
-                    <SelectTrigger className="h-10 border-slate-200 shadow-none text-[13px] focus:ring-0 focus:border-[var(--theme-color)] w-full">
+                  <Label className="text-[11px] font-semibold text-slate-400 dark:text-neutral-500 uppercase tracking-wide">Pay Frequency</Label>
+                  <Select value={editPayFreq} onValueChange={(v) => setEditPayFreq(v ?? "")}>
+                    <SelectTrigger className="h-10 border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-none text-[13px] focus:ring-0 focus:border-[var(--theme-color)] w-full">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="rounded-lg shadow-lg border-slate-200">
+                    <SelectContent className="rounded-lg shadow-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
                       {["hourly", "daily", "weekly", "monthly", "yearly"].map((f) => (
                         <SelectItem key={f} value={f} className="text-[13px] capitalize">{f}</SelectItem>
                       ))}
@@ -335,7 +335,7 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
                   value={editSalary}
                   onChange={(e) => setEditSalary(e.target.value)}
                   placeholder="e.g. 75000"
-                  className="h-10 border-slate-200 shadow-none text-[13px] focus-visible:ring-0 focus-visible:border-[var(--theme-color)] transition-[border-color] duration-200"
+                  className="h-10 border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-none text-[13px] focus-visible:ring-0 focus-visible:border-[var(--theme-color)] transition-[border-color] duration-200"
                 />
               </div>
 
@@ -346,16 +346,16 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
                     type="date"
                     value={editStartDate}
                     onChange={(e) => setEditStartDate(e.target.value)}
-                    className="h-10 border-slate-200 shadow-none text-[13px] focus-visible:ring-0 focus-visible:border-[var(--theme-color)] transition-[border-color] duration-200"
+                    className="h-10 border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-none text-[13px] focus-visible:ring-0 focus-visible:border-[var(--theme-color)] transition-[border-color] duration-200"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Expiry Date</Label>
+                  <Label className="text-[11px] font-semibold text-slate-400 dark:text-neutral-500 uppercase tracking-wide">Expiry Date</Label>
                   <Input
                     type="date"
                     value={editExpiryDate}
                     onChange={(e) => setEditExpiryDate(e.target.value)}
-                    className="h-10 border-slate-200 shadow-none text-[13px] focus-visible:ring-0 focus-visible:border-[var(--theme-color)] transition-[border-color] duration-200"
+                    className="h-10 border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-none text-[13px] focus-visible:ring-0 focus-visible:border-[var(--theme-color)] transition-[border-color] duration-200"
                   />
                 </div>
               </div>
@@ -370,7 +370,7 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
             <div className="space-y-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <span className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide">Status</span>
+                  <span className="text-[12px] font-semibold text-slate-500 dark:text-neutral-400 uppercase tracking-wide">Status</span>
                   <Badge className={`${offerStyle?.bg} ${offerStyle?.text} hover:opacity-90 border-none shadow-none font-semibold px-3 py-1 rounded-md text-[11px] uppercase tracking-wider`}>
                     {offer.status}
                   </Badge>
@@ -379,14 +379,14 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
                   variant="outline"
                   size="sm"
                   onClick={openOfferEdit}
-                  className="h-8 px-3 text-[12px] border-slate-200 text-slate-500 hover:text-slate-700 shadow-none rounded-lg gap-1.5"
+                  className="h-8 px-3 text-[12px] border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-slate-500 dark:text-neutral-400 hover:text-slate-700 dark:hover:text-neutral-200 shadow-none rounded-lg gap-1.5"
                 >
                   <HugeiconsIcon icon={PencilEdit01Icon} className="size-3.5" />
                   Edit
                 </Button>
               </div>
 
-              <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 overflow-hidden">
+              <div className="divide-y divide-slate-100 dark:divide-neutral-800 rounded-xl border border-slate-200 dark:border-neutral-800 overflow-hidden">
                 {[
                   {
                     label: "Salary",
@@ -399,19 +399,19 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
                   { label: "Sent At", value: offer.sentAt ? timeAgo(offer.sentAt) : "Not sent yet" },
                 ].map(({ label, value }) => (
                   <div key={label} className="flex items-center justify-between px-4 py-3 gap-4">
-                    <span className="text-[13px] text-slate-500 font-medium shrink-0">{label}</span>
-                    <span className="text-[13px] text-slate-800 font-semibold text-right break-words">{value}</span>
+                    <span className="text-[13px] text-slate-500 dark:text-neutral-400 font-medium shrink-0">{label}</span>
+                    <span className="text-[13px] text-slate-800 dark:text-neutral-200 font-semibold text-right break-words">{value}</span>
                   </div>
                 ))}
               </div>
 
               {offer.renderedHtml && (
                 <div className="space-y-2">
-                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">
+                  <p className="text-[11px] font-semibold text-slate-400 dark:text-neutral-500 uppercase tracking-wide">
                     Offer Letter Preview
                   </p>
                   <div
-                    className="rounded-xl border border-slate-200 p-4 text-[13px] text-slate-700 leading-relaxed max-h-[340px] overflow-y-auto prose prose-sm w-full"
+                    className="rounded-xl border border-slate-200 dark:border-neutral-800 p-4 text-[13px] text-slate-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 leading-relaxed max-h-[340px] overflow-y-auto prose prose-sm w-full"
                     dangerouslySetInnerHTML={{ __html: offer.renderedHtml }}
                   />
                 </div>
@@ -427,7 +427,7 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
               <Input
                 value={candidate.email}
                 readOnly
-                className="h-10 border-slate-200 shadow-none bg-slate-50 text-slate-700 text-[13px] focus-visible:ring-0 focus-visible:border-slate-200 cursor-default"
+                className="h-10 border-slate-200 dark:border-neutral-800 shadow-none bg-slate-50 dark:bg-neutral-900 text-slate-700 dark:text-neutral-300 text-[13px] focus-visible:ring-0 focus-visible:border-slate-200 dark:focus-visible:border-neutral-800 cursor-default"
               />
             </div>
             <div className="space-y-1.5">
@@ -436,7 +436,7 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
                 value={emailSubject}
                 onChange={(e) => setEmailSubject(e.target.value)}
                 placeholder="e.g. Interview Invitation — Software Engineer"
-                className="h-10 border-slate-200 shadow-none text-[13px] focus-visible:ring-0 focus-visible:border-[var(--theme-color)] transition-[border-color] duration-200"
+                className="h-10 border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 shadow-none text-[13px] focus-visible:ring-0 focus-visible:border-[var(--theme-color)] transition-[border-color] duration-200"
               />
             </div>
             <div className="space-y-1.5 flex-1 flex flex-col min-h-0">
@@ -445,12 +445,12 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
                 value={emailBody}
                 onChange={(e) => setEmailBody(e.target.value)}
                 placeholder="Write your message here..."
-                className="flex-1 min-h-[160px] w-full rounded-md border border-slate-200 px-3 py-2.5 text-[13px] text-slate-700 leading-relaxed resize-none focus:outline-none focus:border-[var(--theme-color)] transition-[border-color] duration-200"
+                className="flex-1 min-h-[160px] w-full rounded-md border border-slate-200 dark:border-neutral-800 px-3 py-2.5 text-[13px] text-slate-700 dark:text-neutral-300 bg-white dark:bg-neutral-950 leading-relaxed resize-none focus:outline-none focus:border-[var(--theme-color)] transition-[border-color] duration-200"
               />
             </div>
             <div className="flex items-center justify-between pt-1 shrink-0">
               <span className="text-[12px] text-slate-400">
-                Sending to <strong className="text-slate-600">{candidate.email}</strong>
+                Sending to <strong className="text-slate-600 dark:text-neutral-300">{candidate.email}</strong>
               </span>
               <Button
                 disabled={!emailSubject.trim() || !emailBody.trim()}
@@ -467,12 +467,12 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
           {(() => {
             const attempts = assessmentsData?.data ?? [];
             if (!assessmentsData) {
-              return <p className="text-slate-400 text-sm italic">Loading…</p>;
+              return <p className="text-slate-400 dark:text-neutral-500 text-sm italic">Loading…</p>;
             }
             if (attempts.length === 0) {
               return (
                 <div className="flex flex-col items-center justify-center h-full gap-3 text-center py-12">
-                  <div className="size-12 rounded-full bg-slate-100 flex items-center justify-center">
+                  <div className="size-12 rounded-full bg-slate-100 dark:bg-neutral-800 flex items-center justify-center">
                     <span className="text-2xl">📊</span>
                   </div>
                   <p className="text-slate-500 font-medium text-[14px]">No assessments yet</p>
@@ -496,24 +496,24 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
                   const passColor = a.passed ? "text-green-600" : "text-red-500";
 
                   return (
-                    <div key={a.id} className="rounded-xl border border-slate-200 overflow-hidden">
+                    <div key={a.id} className="rounded-xl border border-slate-200 dark:border-neutral-800 overflow-hidden">
                       {/* Header */}
-                      <div className="flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-100">
-                        <p className="text-[13px] font-semibold text-slate-800 truncate pr-3">
+                      <div className="flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-neutral-900 border-b border-slate-100 dark:border-neutral-800">
+                        <p className="text-[13px] font-semibold text-slate-800 dark:text-neutral-200 truncate pr-3">
                           {a.assessmentTitle}
                         </p>
-                        <span className={`shrink-0 text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide ${s.bg} ${s.text}`}>
+                        <span className={`shrink-0 text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide ${s.bg} dark:bg-opacity-20 ${s.text}`}>
                           {s.label}
                         </span>
                       </div>
 
                       {/* Body */}
-                      <div className="divide-y divide-slate-100">
+                      <div className="divide-y divide-slate-100 dark:divide-neutral-800">
                         {score != null && (
                           <div className="px-4 py-3 flex items-center justify-between gap-4">
-                            <span className="text-[12px] text-slate-500 font-medium">Score</span>
+                            <span className="text-[12px] text-slate-500 dark:text-neutral-400 font-medium">Score</span>
                             <div className="flex items-center gap-2">
-                              <div className="w-28 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                              <div className="w-28 h-1.5 rounded-full bg-slate-100 dark:bg-neutral-800 overflow-hidden">
                                 <div
                                   className={`h-full rounded-full ${score >= 50 ? "bg-green-500" : "bg-red-400"}`}
                                   style={{ width: `${score}%` }}
@@ -536,7 +536,7 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
                         {a.completedAt && (
                           <div className="px-4 py-3 flex items-center justify-between gap-4">
                             <span className="text-[12px] text-slate-500 font-medium">Completed</span>
-                            <span className="text-[13px] text-slate-700 font-medium">
+                            <span className="text-[13px] text-slate-700 dark:text-neutral-300 font-medium">
                               {formatDate(a.completedAt)}
                             </span>
                           </div>
@@ -544,7 +544,7 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
                         {a.status === "pending" && (
                           <div className="px-4 py-3 flex items-center justify-between gap-4">
                             <span className="text-[12px] text-slate-500 font-medium">Link expires</span>
-                            <span className="text-[13px] text-slate-700 font-medium">
+                            <span className="text-[13px] text-slate-700 dark:text-neutral-300 font-medium">
                               {formatDate(a.expiresAt)}
                             </span>
                           </div>

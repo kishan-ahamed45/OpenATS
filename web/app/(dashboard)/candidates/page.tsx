@@ -76,18 +76,18 @@ function RowMenu({ onDelete }: { onDelete(): void }) {
           e.stopPropagation();
           setOpen((o) => !o);
         }}
-        className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+        className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
       >
         <HugeiconsIcon icon={MoreVerticalIcon} className="size-4" />
       </button>
       {open && (
-        <div className="absolute right-0 top-8 z-50 w-44 bg-white border border-slate-200 rounded-lg shadow-lg py-1 text-sm">
+        <div className="absolute right-0 top-8 z-50 w-44 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-lg shadow-lg py-1 text-sm">
           <button
             onClick={() => {
               setOpen(false);
               onDelete();
             }}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-red-600 hover:bg-red-50"
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20"
           >
             <HugeiconsIcon icon={Delete02Icon} className="size-4 text-red-400" />
             Delete
@@ -139,10 +139,10 @@ export default function ManageCandidatesPage() {
   };
 
   return (
-    <div className="flex flex-1 flex-col bg-white">
+    <div className="flex flex-1 flex-col bg-white dark:bg-neutral-950">
       {/* Header */}
       <div className="px-8 py-4 flex items-center justify-between">
-        <h1 className="text-[28px] font-medium text-slate-900 leading-none">
+        <h1 className="text-[28px] font-medium text-slate-900 dark:text-neutral-100 leading-none">
           Manage Candidates
         </h1>
         <Button
@@ -155,7 +155,7 @@ export default function ManageCandidatesPage() {
       </div>
 
       {/* Filters */}
-      <div className="border-y border-slate-200 px-8 py-3.5 flex items-center gap-4">
+      <div className="border-y border-slate-200 dark:border-neutral-800 px-8 py-3.5 flex items-center gap-4">
         <div className="relative w-80">
           <HugeiconsIcon
             icon={Search01Icon}
@@ -165,7 +165,7 @@ export default function ManageCandidatesPage() {
             placeholder="Search Candidate"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-11 h-10! bg-white border-slate-200 shadow-none rounded-lg text-sm placeholder:text-slate-300 transition-[border-color] duration-200 ease-in-out"
+            className="pl-11 h-10! bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 shadow-none rounded-lg text-sm placeholder:text-slate-300 dark:placeholder:text-neutral-600 transition-[border-color] duration-200 ease-in-out"
           />
         </div>
 
@@ -175,10 +175,10 @@ export default function ManageCandidatesPage() {
             setSelectedJobId(v === "all" ? undefined : Number(v))
           }
         >
-          <SelectTrigger className="w-52 h-10! bg-white border-slate-200 shadow-none rounded-lg text-slate-500 text-sm focus:ring-0 px-4">
+          <SelectTrigger className="w-52 h-10! bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 shadow-none rounded-lg text-slate-500 dark:text-neutral-400 text-sm focus:ring-0 px-4">
             <SelectValue placeholder="Job Position" />
           </SelectTrigger>
-          <SelectContent className="rounded-lg shadow-lg border-slate-200">
+          <SelectContent className="rounded-lg shadow-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
             <SelectItem value="all">All Positions</SelectItem>
             {jobs.map((j) => (
               <SelectItem key={j.id} value={String(j.id)}>
@@ -194,7 +194,7 @@ export default function ManageCandidatesPage() {
             setSearch("");
             setSelectedJobId(undefined);
           }}
-          className="text-slate-600 font-medium text-sm h-10 px-4 hover:bg-transparent hover:text-slate-900 border-none ml-2"
+          className="text-slate-600 dark:text-neutral-400 font-medium text-sm h-10 px-4 hover:bg-transparent hover:text-slate-900 dark:hover:text-neutral-100 border-none ml-2"
         >
           Clear All
         </Button>
@@ -202,20 +202,20 @@ export default function ManageCandidatesPage() {
 
       {/* Table */}
       <div className="px-8 py-6">
-        <div className="border border-slate-200 rounded-xl bg-white shadow-none overflow-hidden">
+        <div className="border border-slate-200 dark:border-neutral-800 rounded-xl bg-white dark:bg-neutral-900 shadow-none overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow className="border-b border-slate-200 bg-white hover:bg-transparent">
-                <TableHead className="h-13 px-8 font-semibold text-slate-900 text-sm">
+              <TableRow className="border-b border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-transparent">
+                <TableHead className="h-13 px-8 font-semibold text-slate-900 dark:text-neutral-100 text-sm">
                   Candidate Name
                 </TableHead>
-                <TableHead className="h-13 px-8 font-semibold text-slate-900 text-sm">
+                <TableHead className="h-13 px-8 font-semibold text-slate-900 dark:text-neutral-100 text-sm">
                   Stage
                 </TableHead>
-                <TableHead className="h-13 px-8 font-semibold text-slate-900 text-sm">
+                <TableHead className="h-13 px-8 font-semibold text-slate-900 dark:text-neutral-100 text-sm">
                   Applied for
                 </TableHead>
-                <TableHead className="h-13 px-8 font-semibold text-slate-900 text-sm">
+                <TableHead className="h-13 px-8 font-semibold text-slate-900 dark:text-neutral-100 text-sm">
                   Applied on
                 </TableHead>
                 <TableHead className="h-13 px-4 w-12" />
@@ -244,25 +244,25 @@ export default function ManageCandidatesPage() {
                 candidates.map((c) => (
                   <TableRow
                     key={c.id}
-                    className="border-b border-slate-200 last:border-0 font-medium cursor-pointer hover:bg-slate-50 transition-colors"
+                    className="border-b border-slate-200 dark:border-neutral-800 last:border-0 font-medium cursor-pointer hover:bg-slate-50 dark:hover:bg-neutral-800/50 transition-colors"
                     onClick={() => handleRowClick(c)}
                   >
-                    <TableCell className="h-13 px-8 py-0 font-medium text-slate-700">
+                    <TableCell className="h-13 px-8 py-0 font-medium text-slate-700 dark:text-neutral-200">
                       {c.firstName} {c.lastName}
                     </TableCell>
                     <TableCell className="h-13 px-8 py-0">
                       {c.stageName ? (
-                        <Badge className="bg-slate-100 text-slate-600 hover:bg-slate-100 border-none shadow-none font-medium px-2.5 py-0.5 rounded-full text-[12px]">
+                        <Badge className="bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 border-none shadow-none font-medium px-2.5 py-0.5 rounded-full text-[12px]">
                           {c.stageName}
                         </Badge>
                       ) : (
                         <span className="text-slate-400 text-sm">—</span>
                       )}
                     </TableCell>
-                    <TableCell className="h-13 px-8 py-0 text-slate-500 font-normal">
+                    <TableCell className="h-13 px-8 py-0 text-slate-500 dark:text-neutral-400 font-normal">
                       {c.jobTitle ?? "—"}
                     </TableCell>
-                    <TableCell className="h-13 px-8 py-0 text-slate-500 font-normal">
+                    <TableCell className="h-13 px-8 py-0 text-slate-500 dark:text-neutral-400 font-normal">
                       {timeAgo(c.appliedAt)}
                     </TableCell>
                     <TableCell
@@ -277,8 +277,8 @@ export default function ManageCandidatesPage() {
             </TableBody>
           </Table>
 
-          <div className="flex items-center justify-between px-8 py-3.5 border-t border-slate-200 bg-white">
-            <span className="text-sm font-medium text-slate-400">
+          <div className="flex items-center justify-between px-8 py-3.5 border-t border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
+            <span className="text-sm font-medium text-slate-400 dark:text-neutral-500">
               {isLoading
                 ? "Loading..."
                 : `${candidates.length} result${candidates.length !== 1 ? "s" : ""}`}
@@ -291,26 +291,26 @@ export default function ManageCandidatesPage() {
       <Sheet open={isDetailOpen} onOpenChange={setIsDetailOpen}>
         <SheetContent
           showCloseButton={true}
-          className="w-[98vw] sm:max-w-[98vw] p-0 flex flex-row gap-0 border-l border-slate-200 shadow-none overflow-hidden bg-white"
+          className="w-[98vw] sm:max-w-[98vw] p-0 flex flex-row gap-0 border-l border-slate-200 dark:border-neutral-800 shadow-none overflow-hidden bg-white dark:bg-neutral-950"
         >
           {selectedCandidate && (
             <>
               {/* Left — CV preview */}
               <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-                <div className="px-6 lg:px-8 py-4 lg:py-5 border-b border-slate-100 shrink-0 bg-white">
+                <div className="px-6 lg:px-8 py-4 lg:py-5 border-b border-slate-100 dark:border-neutral-800 shrink-0 bg-white dark:bg-neutral-950">
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 min-w-0">
-                    <h2 className="text-lg font-semibold text-slate-900 tracking-tight">
+                    <h2 className="text-lg font-semibold text-slate-900 dark:text-neutral-100 tracking-tight">
                       {selectedCandidate.firstName} {selectedCandidate.lastName}
                     </h2>
                     {selectedCandidate.stageName && (
-                      <Badge className="bg-slate-100 text-slate-600 hover:bg-slate-100 border-none shadow-none font-medium px-2 py-0.5 rounded-full text-[11px] uppercase tracking-wider whitespace-nowrap">
+                      <Badge className="bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 border-none shadow-none font-medium px-2 py-0.5 rounded-full text-[11px] uppercase tracking-wider whitespace-nowrap">
                         {selectedCandidate.stageName}
                       </Badge>
                     )}
                   </div>
-                  <p className="text-slate-500 text-[13px] mt-0.5">
+                  <p className="text-slate-500 dark:text-neutral-400 text-[13px] mt-0.5">
                     {selectedCandidate.jobTitle ?? "Unknown Job"}
-                    <span className="mx-1.5 opacity-30">•</span>
+                    <span className="mx-1.5 opacity-30 mt-1">•</span>
                     Applied {timeAgo(selectedCandidate.appliedAt)}
                   </p>
                   <div className="flex flex-wrap items-center gap-x-5 gap-y-1 mt-1.5">
@@ -320,7 +320,7 @@ export default function ManageCandidatesPage() {
                     ].map(([icon, value], i) => (
                       <div
                         key={i}
-                        className="flex items-center gap-1.5 text-slate-500 text-[12px] font-medium hover:text-[var(--theme-color)] cursor-pointer whitespace-nowrap"
+                        className="flex items-center gap-1.5 text-slate-500 dark:text-neutral-400 text-[12px] font-medium hover:text-[var(--theme-color)] cursor-pointer whitespace-nowrap"
                       >
                         <HugeiconsIcon icon={icon as any} className="size-3.5 text-slate-400" />
                         <span>{value as string}</span>
@@ -359,20 +359,20 @@ export default function ManageCandidatesPage() {
         open={!!deleteTarget}
         onOpenChange={(o) => !o && setDeleteTarget(null)}
       >
-        <AlertDialogContent className="max-w-sm rounded-xl border-slate-200 shadow-lg">
+        <AlertDialogContent className="max-w-sm rounded-xl border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-lg">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-[17px] font-semibold text-slate-900">
+            <AlertDialogTitle className="text-[17px] font-semibold text-slate-900 dark:text-neutral-100">
               Delete this candidate?
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-[13px] text-slate-500 leading-relaxed">
-              <strong className="text-slate-700">
+            <AlertDialogDescription className="text-[13px] text-slate-500 dark:text-neutral-400 leading-relaxed">
+              <strong className="text-slate-700 dark:text-neutral-200">
                 {deleteTarget?.firstName} {deleteTarget?.lastName}
               </strong>{" "}
               will be permanently deleted. This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2">
-            <AlertDialogCancel className="h-9 px-5 rounded-lg border-slate-200 text-slate-600 text-[13px] font-medium shadow-none">
+            <AlertDialogCancel className="h-9 px-5 rounded-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-slate-600 dark:text-neutral-400 text-[13px] font-medium shadow-none hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction

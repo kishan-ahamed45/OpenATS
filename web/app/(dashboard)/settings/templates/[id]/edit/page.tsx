@@ -200,8 +200,8 @@ function BlockEditor({
 }) {
   if (["divider", "spacer", "image"].includes(block.kind)) {
     return (
-      <div className="flex items-center justify-between px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 group">
-        <span className="text-[13px] text-slate-500 capitalize font-medium">
+      <div className="flex items-center justify-between px-4 py-3 border border-slate-200 dark:border-neutral-800 rounded-xl bg-slate-50 dark:bg-neutral-900 group">
+        <span className="text-[13px] text-slate-500 dark:text-neutral-400 capitalize font-medium">
           {block.kind}
         </span>
         <button
@@ -214,9 +214,9 @@ function BlockEditor({
     );
   }
   return (
-    <div className="border border-slate-200 rounded-xl bg-white group overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 bg-slate-50/60">
-        <span className="text-[12px] font-semibold text-slate-400 uppercase tracking-wide">
+    <div className="border border-slate-200 dark:border-neutral-800 rounded-xl bg-white dark:bg-neutral-950 group overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-neutral-800 bg-slate-50/60 dark:bg-neutral-900/60">
+        <span className="text-[12px] font-semibold text-slate-400 dark:text-neutral-500 uppercase tracking-wide">
           {block.kind}
         </span>
         <button
@@ -230,7 +230,7 @@ function BlockEditor({
         value={block.content}
         onChange={(e) => onChange(block.id, e.target.value)}
         rows={block.kind === "text" ? 5 : 2}
-        className="w-full px-4 py-3 text-[14px] text-slate-700 leading-relaxed resize-none focus:outline-none placeholder:text-slate-300"
+        className="w-full px-4 py-3 text-[14px] text-slate-700 dark:text-neutral-300 leading-relaxed resize-none bg-white dark:bg-neutral-950 focus:outline-none placeholder:text-slate-300 dark:placeholder:text-neutral-700"
         placeholder={`Enter ${block.kind} content`}
       />
       <div className="px-4 pb-3 flex flex-wrap gap-1.5">
@@ -313,9 +313,9 @@ export default function EditTemplatePage() {
 
   if (notFound) {
     return (
-      <div className="flex flex-1 items-center justify-center bg-white">
+      <div className="flex flex-1 items-center justify-center bg-white dark:bg-neutral-950">
         <div className="text-center space-y-3">
-          <p className="text-slate-500 text-[15px]">Template not found.</p>
+          <p className="text-slate-500 dark:text-neutral-400 text-[15px]">Template not found.</p>
           <Link
             href="settings/templates"
             className="text-[var(--theme-color)] font-medium hover:underline text-sm"
@@ -328,13 +328,13 @@ export default function EditTemplatePage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-var(--header-height,0px))] bg-white overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-var(--header-height,0px))] bg-white dark:bg-neutral-950 overflow-hidden">
       {/* Top Bar */}
-      <div className="flex items-center justify-between px-7 py-4 border-b border-slate-200 shrink-0">
+      <div className="flex items-center justify-between px-7 py-4 border-b border-slate-200 dark:border-neutral-800 shrink-0">
         <div className="flex items-center gap-4">
           <Link
             href="settings/templates"
-            className="flex items-center gap-1.5 text-slate-500 hover:text-slate-800 text-[13px] font-medium transition-colors"
+            className="flex items-center gap-1.5 text-slate-500 dark:text-neutral-400 hover:text-slate-800 dark:hover:text-neutral-200 text-[13px] font-medium transition-colors"
           >
             <HugeiconsIcon
               icon={ArrowLeft01Icon}
@@ -343,13 +343,13 @@ export default function EditTemplatePage() {
             />
             Back
           </Link>
-          <div className="h-4 w-px bg-slate-200" />
+          <div className="h-4 w-px bg-slate-200 dark:bg-neutral-800" />
           <span
             className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${TYPE_META[templateType].badge}`}
           >
             {TYPE_META[templateType].label}
           </span>
-          <span className="text-[14px] text-slate-600 font-medium truncate max-w-sm">
+          <span className="text-[14px] text-slate-600 dark:text-neutral-300 font-medium truncate max-w-sm">
             {name || "Edit template"}
           </span>
         </div>
@@ -365,32 +365,32 @@ export default function EditTemplatePage() {
       {/* Split Pane */}
       <div className="flex flex-1 overflow-hidden">
         {/* LEFT */}
-        <div className="w-[52%] border-r border-slate-200 flex flex-col overflow-y-auto bg-white">
+        <div className="w-[52%] border-r border-slate-200 dark:border-neutral-800 flex flex-col overflow-y-auto bg-white dark:bg-neutral-950">
           <div className="p-7 space-y-6">
             <div>
-              <Label className="text-[12px] font-semibold text-slate-500 uppercase tracking-widest mb-2 block">
+              <Label className="text-[12px] font-semibold text-slate-500 dark:text-neutral-400 uppercase tracking-widest mb-2 block">
                 Template Name
               </Label>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="h-10 border-slate-200 rounded-lg shadow-none focus-visible:ring-0 focus-visible:border-[var(--theme-color)]/50 text-[15px]"
+                className="h-10 bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 rounded-lg shadow-none focus-visible:ring-0 focus-visible:border-[var(--theme-color)]/50 text-[15px]"
               />
             </div>
             <div>
-              <Label className="text-[12px] font-semibold text-slate-500 uppercase tracking-widest mb-2 block">
+              <Label className="text-[12px] font-semibold text-slate-500 dark:text-neutral-400 uppercase tracking-widest mb-2 block">
                 Email Subject
               </Label>
               <Input
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                className="h-10 border-slate-200 rounded-lg shadow-none focus-visible:ring-0 focus-visible:border-[var(--theme-color)]/50 text-sm"
+                className="h-10 bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 rounded-lg shadow-none focus-visible:ring-0 focus-visible:border-[var(--theme-color)]/50 text-sm"
               />
             </div>
             <div>
-              <Label className="text-[12px] font-semibold text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+              <Label className="text-[12px] font-semibold text-slate-500 dark:text-neutral-400 uppercase tracking-widest mb-2 flex items-center gap-2">
                 Variables{" "}
-                <span className="text-[10px] font-normal text-slate-400 normal-case tracking-normal">
+                <span className="text-[10px] font-normal text-slate-400 dark:text-neutral-600 normal-case tracking-normal">
                   · click to copy
                 </span>
               </Label>
@@ -407,7 +407,7 @@ export default function EditTemplatePage() {
               </div>
             </div>
             <div>
-              <Label className="text-[12px] font-semibold text-slate-500 uppercase tracking-widest mb-2.5 block">
+              <Label className="text-[12px] font-semibold text-slate-500 dark:text-neutral-400 uppercase tracking-widest mb-2.5 block">
                 Add Block
               </Label>
               <div className="flex flex-wrap gap-2">
@@ -415,7 +415,7 @@ export default function EditTemplatePage() {
                   <button
                     key={kind}
                     onClick={() => addBlock(kind)}
-                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-slate-600 text-[13px] font-medium hover:border-[var(--theme-color)]/40 hover:text-[var(--theme-color)] hover:bg-[var(--theme-color)]/5 transition-all"
+                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-slate-600 dark:text-neutral-400 text-[13px] font-medium hover:border-[var(--theme-color)]/40 hover:text-[var(--theme-color)] hover:bg-[var(--theme-color)]/5 dark:hover:bg-[var(--theme-color)]/10 transition-all"
                   >
                     <HugeiconsIcon
                       icon={BLOCK_ICONS[kind]}
@@ -427,7 +427,7 @@ export default function EditTemplatePage() {
               </div>
             </div>
             {blocks.length === 0 ? (
-              <div className="flex flex-col items-center justify-center min-h-[180px] rounded-xl border-2 border-dashed border-slate-200 text-center gap-2">
+              <div className="flex flex-col items-center justify-center min-h-[180px] rounded-xl border-2 border-dashed border-slate-200 dark:border-neutral-800 text-center gap-2">
                 <span className="text-[28px] text-slate-300 select-none">
                   +
                 </span>
@@ -455,9 +455,9 @@ export default function EditTemplatePage() {
         </div>
 
         {/* RIGHT: Preview */}
-        <div className="flex-1 bg-[#f8fafc] flex flex-col overflow-y-auto">
-          <div className="px-6 py-4 border-b border-slate-200 bg-white shrink-0">
-            <div className="flex items-center gap-2 text-[13px] font-medium text-slate-500">
+        <div className="flex-1 bg-[#f8fafc] dark:bg-neutral-900/50 flex flex-col overflow-y-auto">
+          <div className="px-6 py-4 border-b border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 shrink-0">
+            <div className="flex items-center gap-2 text-[13px] font-medium text-slate-500 dark:text-neutral-400">
               <HugeiconsIcon
                 icon={EyeIcon}
                 className="size-4"

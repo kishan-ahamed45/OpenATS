@@ -1,6 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTheme } from "next-themes";
+import { cn } from "@/lib/utils";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Sun01Icon, Moon01Icon, ComputerIcon } from "@hugeicons/core-free-icons";
 
 const PRESET_COLORS = [
   { name: "Terracotta", value: "#D97757" },
@@ -14,6 +18,7 @@ const PRESET_COLORS = [
 ];
 
 export default function ThemeSettingsPage() {
+  const { theme, setTheme } = useTheme();
   const [themeColor, setThemeColor] = useState("#D97757");
   const [savedColor, setSavedColor] = useState("#D97757");
   const [justSaved, setJustSaved] = useState(false);
@@ -89,79 +94,145 @@ export default function ThemeSettingsPage() {
   };
 
   return (
-    <div className="flex flex-1 flex-col bg-white">
+    <div className="flex flex-1 flex-col bg-white dark:bg-neutral-950">
       {/* Page header */}
-      <div className="px-8 py-6 border-b border-slate-100">
-        <h1 className="text-[22px] font-semibold text-slate-900 leading-none">
+      <div className="px-8 py-6 border-b border-slate-100 dark:border-neutral-800">
+        <h1 className="text-[22px] font-semibold text-slate-900 dark:text-neutral-100 leading-none">
           Theme
         </h1>
-        <p className="text-sm text-slate-500 mt-1.5">
+        <p className="text-sm text-slate-500 dark:text-neutral-400 mt-1.5">
           Choose an accent color for buttons, sidebar highlights, and focus
           states.
         </p>
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="flex px-8 py-8 min-h-full">
-          {/* ── Left: Controls ── */}
-          <div className="w-120 shrink-0 space-y-10 pr-12">
-            {/* Section: Presets */}
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-4">
-                Presets
+        <div className="max-w-xl mx-auto px-8 py-12 space-y-12">
+          {/* Section: Appearance */}
+          <section>
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-neutral-500 mb-6">
+              Appearance
+            </p>
+            <div className="space-y-4">
+              <p className="text-sm font-medium text-slate-700 dark:text-neutral-300">
+                Color mode
               </p>
-              <div className="flex flex-wrap gap-3">
-                {PRESET_COLORS.map((preset) => {
-                  const isSelected =
-                    themeColor.toLowerCase() === preset.value.toLowerCase();
-                  return (
-                    <button
-                      key={preset.value}
-                      title={preset.name}
-                      onClick={() => handleColorChange(preset.value)}
-                      className="group flex flex-col items-center gap-1.5 focus:outline-none"
+              <div className="grid grid-cols-3 gap-4">
+                {[
+                  { id: "light", label: "Light", icon: Sun01Icon },
+                  { id: "system", label: "Auto", icon: ComputerIcon },
+                  { id: "dark", label: "Dark", icon: Moon01Icon },
+                ].map((mode) => (
+                  <button
+                    key={mode.id}
+                    onClick={() => setTheme(mode.id)}
+                    className={cn(
+                      "group relative flex flex-col items-center gap-3 focus:outline-none"
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "relative w-full aspect-[4/3] rounded-xl border-2 transition-all flex items-center justify-center bg-slate-50 dark:bg-neutral-900 overflow-hidden",
+                        theme === mode.id
+                          ? "border-blue-500 ring-1 ring-blue-500 shadow-sm"
+                          : "border-slate-200 dark:border-neutral-800 hover:border-slate-300 dark:hover:border-neutral-700"
+                      )}
                     >
-                      <div
-                        className="w-9 h-9 rounded-full transition-all duration-150"
-                        style={{
-                          backgroundColor: preset.value,
-                          boxShadow: isSelected
-                            ? `0 0 0 2px white, 0 0 0 4px ${preset.value}`
-                            : "none",
-                          transform: isSelected ? "scale(1.1)" : "scale(1)",
-                        }}
+                      <HugeiconsIcon
+                        icon={mode.icon}
+                        className={cn(
+                          "size-8 transition-colors duration-200",
+                          theme === mode.id
+                            ? "text-blue-500"
+                            : "text-slate-400 dark:text-neutral-500"
+                        )}
+                        strokeWidth={1.5}
                       />
-                      <span className="text-[11px] text-slate-500 group-hover:text-slate-700 transition-colors">
-                        {preset.name}
-                      </span>
-                    </button>
-                  );
-                })}
+                    </div>
+                    <span
+                      className={cn(
+                        "text-xs font-medium transition-colors",
+                        theme === mode.id
+                          ? "text-slate-900 dark:text-neutral-100"
+                          : "text-slate-500 dark:text-neutral-400"
+                      )}
+                    >
+                      {mode.label}
+                    </span>
+                  </button>
+                ))}
               </div>
             </div>
+          </section>
 
-            {/* Divider */}
-            <div className="border-t border-slate-100" />
+          {/* Divider */}
+          <div className="border-t border-slate-100 dark:border-neutral-800" />
 
-            {/* Section: Custom color */}
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-4">
-                Custom Color
-              </p>
-              <div className="flex items-center gap-3">
-                <label
-                  htmlFor="colorPicker"
-                  className="relative w-10 h-10 rounded-lg cursor-pointer overflow-hidden border border-slate-200 shadow-sm shrink-0"
-                  style={{ backgroundColor: themeColor }}
-                >
-                  <input
-                    id="colorPicker"
-                    type="color"
-                    value={themeColor}
-                    onChange={(e) => handleColorChange(e.target.value)}
-                    className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-                  />
-                </label>
+          {/* Section: Presets */}
+          <section>
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-neutral-500 mb-6">
+              Presets
+            </p>
+            <div className="flex flex-wrap gap-4">
+              {PRESET_COLORS.map((preset) => {
+                const isSelected =
+                  themeColor.toLowerCase() === preset.value.toLowerCase();
+                return (
+                  <button
+                    key={preset.value}
+                    title={preset.name}
+                    onClick={() => handleColorChange(preset.value)}
+                    className="group flex flex-col items-center gap-2 focus:outline-none"
+                  >
+                    <div
+                      className="w-10 h-10 rounded-full transition-all duration-200 shadow-sm"
+                      style={{
+                        backgroundColor: preset.value,
+                        boxShadow: isSelected
+                          ? `0 0 0 2px var(--background), 0 0 0 4px ${preset.value}`
+                          : "none",
+                        transform: isSelected ? "scale(1.1)" : "scale(1)",
+                      }}
+                    />
+                    <span
+                      className={cn(
+                        "text-[10px] uppercase font-bold tracking-tight transition-colors",
+                        isSelected
+                          ? "text-slate-900 dark:text-neutral-100"
+                          : "text-slate-400 group-hover:text-slate-600"
+                      )}
+                    >
+                      {preset.name}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* Divider */}
+          <div className="border-t border-slate-100 dark:border-neutral-800" />
+
+          {/* Section: Custom color */}
+          <section>
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-neutral-500 mb-6">
+              Custom Color
+            </p>
+            <div className="flex items-center gap-4">
+              <label
+                htmlFor="colorPicker"
+                className="relative w-12 h-12 rounded-xl cursor-pointer overflow-hidden border border-slate-200 dark:border-neutral-800 shadow-sm shrink-0 transition-transform hover:scale-105"
+                style={{ backgroundColor: themeColor }}
+              >
+                <input
+                  id="colorPicker"
+                  type="color"
+                  value={themeColor}
+                  onChange={(e) => handleColorChange(e.target.value)}
+                  className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                />
+              </label>
+              <div className="flex flex-col gap-1">
                 <input
                   type="text"
                   value={themeColor}
@@ -169,169 +240,48 @@ export default function ThemeSettingsPage() {
                     const val = e.target.value;
                     if (/^#[0-9a-fA-F]{0,6}$/.test(val)) handleColorChange(val);
                   }}
-                  className="h-10 w-36 bg-white border border-slate-200 rounded-lg px-3 text-sm font-mono text-slate-700 focus:outline-none focus:border-slate-400 transition-colors"
+                  className="h-10 w-36 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-lg px-3 text-sm font-mono text-slate-700 dark:text-neutral-300 focus:outline-none focus:border-blue-500 transition-colors"
                   placeholder="#000000"
                   maxLength={7}
                   spellCheck={false}
                 />
-                <span className="text-xs text-slate-400">Hex value</span>
+                <span className="text-[10px] font-semibold text-slate-400 uppercase ml-1">
+                  Hex value
+                </span>
               </div>
             </div>
+          </section>
 
-            {/* Divider */}
-            <div className="border-t border-slate-100" />
+          {/* Divider */}
+          <div className="border-t border-slate-100 dark:border-neutral-800" />
 
-            {/* Footer actions */}
-            <div className="flex items-center justify-between">
+          {/* Footer actions */}
+          <div className="flex items-center justify-between pt-4">
+            <button
+              onClick={handleReset}
+              className="text-sm font-medium text-slate-500 dark:text-neutral-400 hover:text-slate-800 dark:hover:text-neutral-200 transition-colors"
+            >
+              Reset to default
+            </button>
+            <div className="flex items-center gap-4">
+              {themeColor !== savedColor && !justSaved && (
+                <span className="text-xs font-medium text-amber-500 animate-pulse">
+                  Unsaved changes
+                </span>
+              )}
+              {justSaved && (
+                <span className="text-xs font-medium text-green-600">
+                  Settings saved!
+                </span>
+              )}
               <button
-                onClick={handleReset}
-                className="text-sm text-slate-500 hover:text-slate-800 transition-colors underline-offset-2 hover:underline"
+                onClick={handleSave}
+                disabled={themeColor === savedColor}
+                className="h-10 px-6 rounded-lg text-sm font-semibold text-white transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100 shadow-sm"
+                style={{ backgroundColor: "var(--theme-color)" }}
               >
-                Reset to default
+                Save changes
               </button>
-              <div className="flex items-center gap-3">
-                {themeColor !== savedColor && !justSaved && (
-                  <span className="text-xs text-amber-500">
-                    Unsaved changes
-                  </span>
-                )}
-                {justSaved && (
-                  <span className="text-xs text-green-600">Saved!</span>
-                )}
-                <button
-                  onClick={handleSave}
-                  disabled={themeColor === savedColor}
-                  className="h-9 px-5 rounded-lg text-sm font-medium text-white transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: "var(--theme-color)" }}
-                >
-                  Save changes
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Vertical divider */}
-          <div className="w-px bg-slate-100 shrink-0 self-stretch" />
-
-          {/* ── Right: Live preview panel ── */}
-          <div className="flex-1 pl-12">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-4">
-              Preview
-            </p>
-
-            <div className="rounded-xl border border-slate-200 overflow-hidden bg-white">
-              {/* Mock top bar */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-white">
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-5 h-5 rounded"
-                    style={{ backgroundColor: themeColor }}
-                  />
-                  <span className="text-[13px] font-semibold text-slate-700">
-                    OpenATS
-                  </span>
-                </div>
-                <div className="w-6 h-6 rounded-full bg-slate-200" />
-              </div>
-
-              {/* Mock body */}
-              <div className="flex" style={{ minHeight: 300 }}>
-                {/* Mock sidebar */}
-                <div className="w-28 shrink-0 border-r border-slate-100 bg-slate-50 p-3 space-y-1">
-                  {["Dashboard", "Jobs", "Candidates", "Assessments"].map(
-                    (item, i) => (
-                      <div
-                        key={item}
-                        className="flex items-center gap-2 px-2 py-1.5 rounded-md text-xs font-medium transition-colors"
-                        style={
-                          i === 1
-                            ? { backgroundColor: themeColor, color: "white" }
-                            : { color: "#64748b" }
-                        }
-                      >
-                        <div
-                          className="w-2.5 h-2.5 rounded-sm shrink-0"
-                          style={{
-                            backgroundColor:
-                              i === 1 ? "rgba(255,255,255,0.6)" : "#cbd5e1",
-                          }}
-                        />
-                        {item}
-                      </div>
-                    ),
-                  )}
-                </div>
-
-                {/* Mock content */}
-                <div className="flex-1 p-4 space-y-4 bg-white">
-                  {/* Mock page title row */}
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="h-3 w-14 rounded bg-slate-800 mb-1.5" />
-                      <div className="h-2 w-16 rounded bg-slate-200" />
-                    </div>
-                    <button
-                      className="h-7 px-3 rounded-md text-white text-[11px] font-medium"
-                      style={{ backgroundColor: themeColor }}
-                    >
-                      + New Job
-                    </button>
-                  </div>
-
-                  {/* Mock input with focus ring */}
-                  <div
-                    className="h-8 w-full rounded-md border-2 bg-white px-2.5 flex items-center gap-2"
-                    style={{ borderColor: themeColor }}
-                  >
-                    <div className="w-3 h-3 rounded-full border border-slate-300" />
-                    <div className="h-2 w-14 rounded bg-slate-200" />
-                  </div>
-
-                  {/* Mock table rows */}
-                  <div className="space-y-1.5">
-                    {[
-                      ["Senior Engineer", "Engineering"],
-                      ["Product Designer", "Design"],
-                      ["Data Analyst", "Analytics"],
-                    ].map(([title, dept]) => (
-                      <div
-                        key={title}
-                        className="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 border border-slate-100"
-                      >
-                        <div>
-                          <div className="h-2.5 w-16 rounded bg-slate-700 mb-1" />
-                          <div className="h-2 w-10 rounded bg-slate-300" />
-                        </div>
-                        <span
-                          className="text-[10px] font-medium px-2 py-0.5 rounded-full"
-                          style={{
-                            backgroundColor: `${themeColor}18`,
-                            color: themeColor,
-                          }}
-                        >
-                          {dept}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Mock button row */}
-                  <div className="flex items-center gap-2 pt-1">
-                    <button
-                      className="h-7 px-3 rounded-md text-white text-[11px] font-medium"
-                      style={{ backgroundColor: themeColor }}
-                    >
-                      Save
-                    </button>
-                    <button
-                      className="h-7 px-3 rounded-md text-[11px] font-medium border bg-white"
-                      style={{ borderColor: themeColor, color: themeColor }}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>

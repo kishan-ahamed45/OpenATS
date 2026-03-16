@@ -98,11 +98,11 @@ export default function CreateNewJobPage() {
   };
 
   return (
-    <div className="flex flex-1 flex-col bg-white">
+    <div className="flex flex-1 flex-col bg-white dark:bg-neutral-950">
       <div className="px-14 py-10 pb-20 max-w-5xl">
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-4">
-            <h1 className="text-[28px] font-medium text-slate-900 leading-none">
+            <h1 className="text-[28px] font-medium text-slate-900 dark:text-neutral-100 leading-none">
               Create New Job
             </h1>
           </div>
@@ -116,7 +116,7 @@ export default function CreateNewJobPage() {
             />
             <Label
               htmlFor="job-active"
-              className="text-sm font-medium text-slate-600 cursor-pointer pl-1"
+              className="text-sm font-medium text-slate-600 dark:text-neutral-400 cursor-pointer pl-1"
             >
               Make This Job Active
             </Label>
@@ -125,28 +125,28 @@ export default function CreateNewJobPage() {
 
         <div className="space-y-8">
           <div className="space-y-3">
-            <Label className="text-sm font-semibold text-slate-700">
+            <Label className="text-sm font-semibold text-slate-700 dark:text-neutral-300">
               Job Title
             </Label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Senior Software Engineer - Backend"
-              className="h-10! border-slate-200 shadow-none rounded-lg placeholder:text-slate-300"
+              className="h-10! bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 shadow-none rounded-lg placeholder:text-slate-300 dark:placeholder:text-neutral-600"
             />
           </div>
 
           {/* Department and Employment Type */}
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-2.5">
-              <Label className="text-sm font-semibold text-slate-700">
+              <Label className="text-sm font-semibold text-slate-700 dark:text-neutral-300">
                 Department
               </Label>
               <Select onValueChange={(val) => setDepartmentId(Number(val))}>
-                <SelectTrigger className="w-full h-10! border-slate-200 shadow-none rounded-lg text-slate-500 focus:ring-0">
+                <SelectTrigger className="w-full h-10! bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 shadow-none rounded-lg text-slate-500 dark:text-neutral-400 focus:ring-0">
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
-                <SelectContent className="rounded-lg shadow-lg border-slate-200">
+                <SelectContent className="rounded-lg shadow-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
                   {departments.map((dept) => (
                     <SelectItem key={dept.id} value={String(dept.id)}>
                       {dept.name}
@@ -156,14 +156,14 @@ export default function CreateNewJobPage() {
               </Select>
             </div>
             <div className="space-y-2.5">
-              <Label className="text-sm font-semibold text-slate-700">
+              <Label className="text-sm font-semibold text-slate-700 dark:text-neutral-300">
                 Employement Type
               </Label>
-              <Select onValueChange={setEmploymentType}>
-                <SelectTrigger className="w-full h-10! border-slate-200 shadow-none rounded-lg text-slate-500 focus:ring-0">
+              <Select onValueChange={(val) => setEmploymentType(val as string)}>
+                <SelectTrigger className="w-full h-10! bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 shadow-none rounded-lg text-slate-500 dark:text-neutral-400 focus:ring-0">
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
-                <SelectContent className="rounded-lg shadow-lg border-slate-200">
+                <SelectContent className="rounded-lg shadow-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
                   <SelectItem value="full_time">Full Time</SelectItem>
                   <SelectItem value="part_time">Part Time</SelectItem>
                   <SelectItem value="contract">Contract</SelectItem>
@@ -175,19 +175,19 @@ export default function CreateNewJobPage() {
 
           {/* Skills */}
           <div className="space-y-2.5">
-            <Label className="text-sm font-semibold text-slate-700">
+            <Label className="text-sm font-semibold text-slate-700 dark:text-neutral-300">
               Skills
             </Label>
-            <div className="min-h-10 p-1.5 flex flex-wrap gap-2 border border-slate-200 rounded-lg bg-white focus-within:border-[var(--theme-color)] transition-[border-color] duration-200">
+            <div className="min-h-10 p-1.5 flex flex-wrap gap-2 border border-slate-200 dark:border-neutral-800 rounded-lg bg-white dark:bg-neutral-900 focus-within:border-[var(--theme-color)] transition-[border-color] duration-200">
               {skills.map((skill) => (
                 <div
                   key={skill}
-                  className="inline-flex items-center bg-[#F1F5F9] text-slate-700 font-medium px-2.5 py-1 gap-2 rounded-md transition-all hover:bg-slate-200"
+                  className="inline-flex items-center bg-[#F1F5F9] dark:bg-neutral-800 text-slate-700 dark:text-neutral-300 font-medium px-2.5 py-1 gap-2 rounded-md transition-all hover:bg-slate-200 dark:hover:bg-neutral-700"
                 >
                   <span className="text-[13px] leading-none">{skill}</span>
                   <button
                     onClick={() => removeSkill(skill)}
-                    className="flex items-center justify-center size-4.5 -mr-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-300/50 transition-all"
+                    className="flex items-center justify-center size-4.5 -mr-1 rounded-md text-slate-400 dark:text-neutral-500 hover:text-slate-600 dark:hover:text-neutral-300 hover:bg-slate-300/50 dark:hover:bg-neutral-700/50 transition-all"
                   >
                     <HugeiconsIcon icon={Cancel01Icon} className="size-3" />
                   </button>
@@ -201,31 +201,31 @@ export default function CreateNewJobPage() {
                 placeholder={
                   skills.length === 0 ? "Type and press enter..." : ""
                 }
-                className="flex-1 min-w-[120px] bg-transparent border-none outline-none text-sm px-1 placeholder:text-slate-300"
+                className="flex-1 min-w-[120px] bg-transparent border-none outline-none text-sm px-1 placeholder:text-slate-300 dark:placeholder:text-neutral-600 text-slate-900 dark:text-neutral-100"
               />
             </div>
           </div>
 
           {/* Location */}
           <div className="space-y-2.5">
-            <Label className="text-sm font-semibold text-slate-700">
+            <Label className="text-sm font-semibold text-slate-700 dark:text-neutral-300">
               Location
             </Label>
             <Input
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="Search"
-              className="h-10! border-slate-200 shadow-none rounded-lg"
+              className="h-10! bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 shadow-none rounded-lg placeholder:text-slate-300 dark:placeholder:text-neutral-600"
             />
           </div>
 
           {/* Job Description */}
           <div className="space-y-2.5">
-            <Label className="text-sm font-semibold text-slate-700">
+            <Label className="text-sm font-semibold text-slate-700 dark:text-neutral-300">
               Job Description
             </Label>
-            <div className="border border-slate-200 rounded-xl overflow-hidden">
-              <div className="flex items-center gap-1.5 p-2 bg-[#F8FAFC]/50 border-b border-slate-200">
+            <div className="border border-slate-200 dark:border-neutral-800 rounded-xl overflow-hidden shadow-none">
+              <div className="flex items-center gap-1.5 p-2 bg-[#F8FAFC]/50 dark:bg-neutral-900/50 border-b border-slate-200 dark:border-neutral-800">
                 <Button
                   variant="ghost"
                   size="icon"
@@ -280,7 +280,7 @@ export default function CreateNewJobPage() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-8 text-slate-500 hover:text-slate-900"
+                  className="size-8 text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-100"
                 >
                   <HugeiconsIcon icon={Sorting05Icon} className="size-4" />
                 </Button>
@@ -288,14 +288,14 @@ export default function CreateNewJobPage() {
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full min-h-[160px] p-4 text-sm focus:outline-none placeholder:text-slate-300"
+                className="w-full min-h-[160px] p-4 text-sm bg-white dark:bg-neutral-900 text-slate-900 dark:text-neutral-100 focus:outline-none placeholder:text-slate-300 dark:placeholder:text-neutral-600"
                 placeholder="Type here..."
               />
             </div>
           </div>
 
-          <div className="border-t border-slate-100 pt-10 space-y-5 mt-4">
-            <h3 className="text-[17px] font-semibold text-slate-800">
+          <div className="border-t border-slate-100 dark:border-neutral-800 pt-10 space-y-5 mt-4">
+            <h3 className="text-[17px] font-semibold text-slate-800 dark:text-neutral-100">
               Salary Information
             </h3>
 
@@ -312,7 +312,7 @@ export default function CreateNewJobPage() {
                   />
                   <Label
                     htmlFor="salary-info"
-                    className="text-sm font-medium text-slate-600 cursor-pointer whitespace-nowrap"
+                    className="text-sm font-medium text-slate-600 dark:text-neutral-400 cursor-pointer whitespace-nowrap"
                   >
                     Include Salary Information
                   </Label>
@@ -333,7 +333,7 @@ export default function CreateNewJobPage() {
                     />
                     <Label
                       htmlFor="range"
-                      className="text-sm font-medium text-slate-600 cursor-pointer"
+                      className="text-sm font-medium text-slate-600 dark:text-neutral-400 cursor-pointer"
                     >
                       Salary Range
                     </Label>
@@ -346,7 +346,7 @@ export default function CreateNewJobPage() {
                     />
                     <Label
                       htmlFor="fixed"
-                      className="text-sm font-medium text-slate-600 cursor-pointer"
+                      className="text-sm font-medium text-slate-600 dark:text-neutral-400 cursor-pointer"
                     >
                       Fixed Salary
                     </Label>
@@ -358,14 +358,14 @@ export default function CreateNewJobPage() {
                 <div className="space-y-7 animate-in fade-in slide-in-from-top-2 duration-200">
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2.5">
-                      <Label className="text-sm font-semibold text-slate-700">
+                      <Label className="text-sm font-semibold text-slate-700 dark:text-neutral-300">
                         Currency
                       </Label>
-                      <Select value={currency} onValueChange={setCurrency}>
-                        <SelectTrigger className="w-full h-10! border-slate-200 shadow-none rounded-lg text-slate-500 focus:ring-0">
+                      <Select value={currency} onValueChange={(val) => setCurrency(val || "USD")}>
+                        <SelectTrigger className="w-full h-10! bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 shadow-none rounded-lg text-slate-500 dark:text-neutral-400 focus:ring-0">
                           <SelectValue placeholder="USD" />
                         </SelectTrigger>
-                        <SelectContent className="rounded-lg shadow-lg border-slate-200">
+                        <SelectContent className="rounded-lg shadow-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
                           <SelectItem value="USD">USD</SelectItem>
                           <SelectItem value="EUR">EUR</SelectItem>
                           <SelectItem value="LKR">LKR</SelectItem>
@@ -373,14 +373,14 @@ export default function CreateNewJobPage() {
                       </Select>
                     </div>
                     <div className="space-y-2.5">
-                      <Label className="text-sm font-semibold text-slate-700">
+                      <Label className="text-sm font-semibold text-slate-700 dark:text-neutral-300">
                         Paid Every
                       </Label>
-                      <Select value={payFrequency} onValueChange={setPayFrequency}>
-                        <SelectTrigger className="w-full h-10! border-slate-200 shadow-none rounded-lg text-slate-500 focus:ring-0">
+                      <Select value={payFrequency} onValueChange={(val) => setPayFrequency(val || "yearly")}>
+                        <SelectTrigger className="w-full h-10! bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 shadow-none rounded-lg text-slate-500 dark:text-neutral-400 focus:ring-0">
                           <SelectValue placeholder="Month" />
                         </SelectTrigger>
-                        <SelectContent className="rounded-lg shadow-lg border-slate-200">
+                        <SelectContent className="rounded-lg shadow-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
                           <SelectItem value="hourly">Hourly</SelectItem>
                           <SelectItem value="monthly">Monthly</SelectItem>
                           <SelectItem value="yearly">Yearly</SelectItem>
@@ -392,38 +392,38 @@ export default function CreateNewJobPage() {
                   {salaryType === "range" ? (
                     <div className="grid grid-cols-2 gap-6 pt-2">
                       <div className="space-y-2.5">
-                        <Label className="text-sm font-semibold text-slate-700">
+                        <Label className="text-sm font-semibold text-slate-700 dark:text-neutral-300">
                           Minimum Salary
                         </Label>
                         <Input
                           value={salaryMin}
                           onChange={(e) => setSalaryMin(e.target.value)}
                           placeholder="e.g. 50,000"
-                          className="h-10! border-slate-200 shadow-none rounded-lg"
+                          className="h-10! bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 shadow-none rounded-lg text-slate-900 dark:text-neutral-100 placeholder:text-slate-300 dark:placeholder:text-neutral-600"
                         />
                       </div>
                       <div className="space-y-2.5">
-                        <Label className="text-sm font-semibold text-slate-700">
+                        <Label className="text-sm font-semibold text-slate-700 dark:text-neutral-300">
                           Maximum Salary
                         </Label>
                         <Input
                           value={salaryMax}
                           onChange={(e) => setSalaryMax(e.target.value)}
                           placeholder="e.g. 80,000"
-                          className="h-10! border-slate-200 shadow-none rounded-lg"
+                          className="h-10! bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 shadow-none rounded-lg text-slate-900 dark:text-neutral-100 placeholder:text-slate-300 dark:placeholder:text-neutral-600"
                         />
                       </div>
                     </div>
                   ) : (
                     <div className="space-y-2.5 pt-2">
-                      <Label className="text-sm font-semibold text-slate-700">
+                      <Label className="text-sm font-semibold text-slate-700 dark:text-neutral-300">
                         Enter Fixed Salary
                       </Label>
                       <Input
                         value={salaryFixed}
                         onChange={(e) => setSalaryFixed(e.target.value)}
                         placeholder="e.g. 75,000"
-                        className="h-10! border-slate-200 shadow-none rounded-lg"
+                        className="h-10! bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 shadow-none rounded-lg text-slate-900 dark:text-neutral-100 placeholder:text-slate-300 dark:placeholder:text-neutral-600"
                       />
                     </div>
                   )}
@@ -444,7 +444,7 @@ export default function CreateNewJobPage() {
             </Button>
             <Link
               href="/jobs"
-              className="flex items-center justify-center border border-slate-200 text-slate-600 rounded-lg h-10 px-6 font-medium hover:bg-slate-50 transition-colors"
+              className="flex items-center justify-center border border-slate-200 dark:border-neutral-800 text-slate-600 dark:text-neutral-400 rounded-lg h-10 px-6 font-medium bg-white dark:bg-neutral-900 hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors"
             >
               Cancel
             </Link>

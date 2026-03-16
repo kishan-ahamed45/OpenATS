@@ -12,6 +12,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ModeToggle } from "@/components/mode-toggle";
 
 const SEGMENT_LABELS: Record<string, string> = {
   "": "Dashboard",
@@ -52,7 +53,7 @@ export function SiteHeader() {
   ];
 
   return (
-    <header className="bg-white sticky top-0 z-50 flex w-full items-center border-b border-slate-100">
+    <header className="bg-white dark:bg-neutral-950 sticky top-0 z-50 flex w-full items-center border-b border-slate-100 dark:border-neutral-800">
       <div className="flex h-(--header-height) w-full items-center justify-between px-6">
         <Breadcrumb>
           <BreadcrumbList>
@@ -64,16 +65,16 @@ export function SiteHeader() {
                     <>
                       <BreadcrumbLink
                         href={crumb.href}
-                        className="text-slate-400 font-medium hover:text-slate-600 transition-colors"
+                        className="text-slate-400 dark:text-neutral-500 font-medium hover:text-slate-600 dark:hover:text-neutral-300 transition-colors"
                       >
                         {crumb.label}
                       </BreadcrumbLink>
-                      <BreadcrumbSeparator className="text-slate-300">
+                      <BreadcrumbSeparator className="text-slate-300 dark:text-neutral-700">
                         <span className="text-lg font-light">&gt;</span>
                       </BreadcrumbSeparator>
                     </>
                   ) : (
-                    <BreadcrumbPage className="text-slate-600 font-medium">
+                    <BreadcrumbPage className="text-slate-600 dark:text-neutral-300 font-medium">
                       {crumb.label}
                     </BreadcrumbPage>
                   )}
@@ -84,11 +85,13 @@ export function SiteHeader() {
         </Breadcrumb>
 
         <div className="flex items-center gap-4">
-          <button className="flex items-center justify-center size-9 rounded-full bg-slate-100/80 text-slate-500 hover:bg-slate-200 transition-colors">
+          <ModeToggle />
+          
+          <button className="flex items-center justify-center size-9 rounded-full bg-slate-100/80 dark:bg-neutral-900 text-slate-500 dark:text-neutral-400 hover:bg-slate-200 dark:hover:bg-neutral-800 transition-colors">
             <HugeiconsIcon icon={Notification03Icon} className="size-5" />
           </button>
 
-          <Avatar className="size-9 border-2 border-slate-100">
+          <Avatar className="size-9 border-2 border-slate-100 dark:border-neutral-800">
             <AvatarImage src="https://github.com/nutlope.png" alt="User" />
             <AvatarFallback className="bg-orange-100 text-orange-600 font-medium">
               JD

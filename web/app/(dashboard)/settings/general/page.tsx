@@ -34,7 +34,7 @@ import {
 } from "@/hooks/use-api";
 
 const inputCls =
-  "h-10 bg-white border-slate-200 rounded-lg shadow-none text-sm placeholder:text-slate-400 focus-visible:ring-0 focus-visible:border-slate-400 transition-colors";
+  "h-10 bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 rounded-lg shadow-none text-sm placeholder:text-slate-400 dark:placeholder:text-neutral-600 focus-visible:ring-0 focus-visible:border-slate-400 dark:focus-visible:border-neutral-700 transition-colors";
 
 function CompanyForm({ company }: { company: Company }) {
   const upsertCompany = useUpsertCompany();
@@ -57,13 +57,13 @@ function CompanyForm({ company }: { company: Company }) {
 
   return (
     <>
-      <div className="border border-slate-200 rounded-xl p-6">
-        <p className="text-[13px] font-semibold text-slate-700 mb-4">
+      <div className="border border-slate-200 dark:border-neutral-800 rounded-xl p-6">
+        <p className="text-[13px] font-semibold text-slate-700 dark:text-neutral-300 mb-4">
           Company Logo
         </p>
         <div className="flex items-start gap-5">
           <div
-            className="w-20 h-20 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center bg-slate-50 shrink-0 overflow-hidden cursor-pointer hover:border-slate-300 transition-colors"
+            className="w-20 h-20 border-2 border-dashed border-slate-200 dark:border-neutral-800 rounded-xl flex items-center justify-center bg-slate-50 dark:bg-neutral-900 shrink-0 overflow-hidden cursor-pointer hover:border-slate-300 dark:hover:border-neutral-700 transition-colors"
             onClick={() => fileRef.current?.click()}
           >
             {logo ? (
@@ -98,21 +98,21 @@ function CompanyForm({ company }: { company: Company }) {
             >
               Upload Logo
             </Button>
-            <p className="text-[12px] text-slate-400">
+            <p className="text-[12px] text-slate-400 dark:text-neutral-500">
               PNG, JPG Up To 5MB. Recommended Size: 200x200px
             </p>
           </div>
         </div>
       </div>
 
-      <div className="border border-slate-200 rounded-xl p-6 space-y-5">
-        <p className="text-[13px] font-semibold text-slate-700">
+      <div className="border border-slate-200 dark:border-neutral-800 rounded-xl p-6 space-y-5">
+        <p className="text-[13px] font-semibold text-slate-700 dark:text-neutral-300">
           Company Information
         </p>
 
         <div className="grid grid-cols-2 gap-5">
           <div>
-            <Label className="text-[13px] font-medium text-slate-600 mb-1.5 block">
+            <Label className="text-[13px] font-medium text-slate-600 dark:text-neutral-400 mb-1.5 block">
               Company Name
             </Label>
             <Input
@@ -122,7 +122,7 @@ function CompanyForm({ company }: { company: Company }) {
             />
           </div>
           <div>
-            <Label className="text-[13px] font-medium text-slate-600 mb-1.5 block">
+            <Label className="text-[13px] font-medium text-slate-600 dark:text-neutral-400 mb-1.5 block">
               Email
             </Label>
             <Input
@@ -133,7 +133,7 @@ function CompanyForm({ company }: { company: Company }) {
             />
           </div>
           <div>
-            <Label className="text-[13px] font-medium text-slate-600 mb-1.5 block">
+            <Label className="text-[13px] font-medium text-slate-600 dark:text-neutral-400 mb-1.5 block">
               Website
             </Label>
             <Input
@@ -143,7 +143,7 @@ function CompanyForm({ company }: { company: Company }) {
             />
           </div>
           <div>
-            <Label className="text-[13px] font-medium text-slate-600 mb-1.5 block">
+            <Label className="text-[13px] font-medium text-slate-600 dark:text-neutral-400 mb-1.5 block">
               Phone
             </Label>
             <Input
@@ -155,7 +155,7 @@ function CompanyForm({ company }: { company: Company }) {
         </div>
 
         <div>
-          <Label className="text-[13px] font-medium text-slate-600 mb-1.5 block">
+          <Label className="text-[13px] font-medium text-slate-600 dark:text-neutral-400 mb-1.5 block">
             Address
           </Label>
           <Input
@@ -220,9 +220,9 @@ export default function SettingsGeneralPage() {
   };
 
   return (
-    <div className="flex flex-1 flex-col bg-white">
-      <div className="px-8 py-6 border-b border-slate-100">
-        <h1 className="text-[22px] font-semibold text-slate-900 leading-none">
+    <div className="flex flex-1 flex-col bg-white dark:bg-neutral-950">
+      <div className="px-8 py-6 border-b border-slate-100 dark:border-neutral-800">
+        <h1 className="text-[22px] font-semibold text-slate-900 dark:text-neutral-100 leading-none">
           Company General Settings
         </h1>
       </div>
@@ -232,13 +232,13 @@ export default function SettingsGeneralPage() {
           <CompanyForm key={company.id} company={company} />
         ) : (
           <>
-            <div className="border border-slate-200 rounded-xl p-6 h-36 animate-pulse bg-slate-50" />
-            <div className="border border-slate-200 rounded-xl p-6 h-64 animate-pulse bg-slate-50" />
+            <div className="border border-slate-200 dark:border-neutral-800 rounded-xl p-6 h-36 animate-pulse bg-slate-50 dark:bg-neutral-900" />
+            <div className="border border-slate-200 dark:border-neutral-800 rounded-xl p-6 h-64 animate-pulse bg-slate-50 dark:bg-neutral-900" />
           </>
         )}
 
-        <div className="border border-slate-200 rounded-xl p-6 space-y-4">
-          <p className="text-[13px] font-semibold text-slate-700">
+        <div className="border border-slate-200 dark:border-neutral-800 rounded-xl p-6 space-y-4">
+          <p className="text-[13px] font-semibold text-slate-700 dark:text-neutral-300">
             Departments
           </p>
 
@@ -248,7 +248,7 @@ export default function SettingsGeneralPage() {
               value={newDept}
               onChange={(e) => setNewDept(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleAddDept()}
-              className="flex-1 h-10 bg-white border-slate-200 rounded-lg shadow-none text-sm placeholder:text-slate-400 focus-visible:ring-0 focus-visible:border-slate-400 transition-colors"
+              className="flex-1 h-10 bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 rounded-lg shadow-none text-sm placeholder:text-slate-400 dark:placeholder:text-neutral-600 focus-visible:ring-0 focus-visible:border-slate-400 dark:focus-visible:border-neutral-700 transition-colors"
             />
             <Button
               onClick={handleAddDept}
@@ -260,7 +260,7 @@ export default function SettingsGeneralPage() {
             </Button>
           </div>
 
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-slate-100 dark:divide-neutral-800">
             {departments.map((dept) => (
               <div
                 key={dept.id}
@@ -276,10 +276,10 @@ export default function SettingsGeneralPage() {
                       if (e.key === "Escape") setEditingId(null);
                     }}
                     onBlur={() => handleSaveDept(dept.id)}
-                    className="flex-1 mr-4 h-9 bg-white border-slate-200 rounded-lg shadow-none text-sm focus-visible:ring-0 focus-visible:border-slate-400"
+                    className="flex-1 mr-4 h-9 bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 rounded-lg shadow-none text-sm focus-visible:ring-0 focus-visible:border-slate-400 dark:focus-visible:border-neutral-700"
                   />
                 ) : (
-                  <span className="text-[14px] text-slate-700">{dept.name}</span>
+                  <span className="text-[14px] text-slate-700 dark:text-neutral-300">{dept.name}</span>
                 )}
 
                 <div className="flex items-center gap-1.5 shrink-0">
@@ -288,7 +288,7 @@ export default function SettingsGeneralPage() {
                       setEditingId(dept.id);
                       setEditingVal(dept.name);
                     }}
-                    className="p-2 rounded-lg text-slate-400 hover:text-[var(--theme-color)] hover:bg-[var(--theme-color)]/5 transition-colors"
+                    className="p-2 rounded-lg text-slate-400 dark:text-neutral-500 hover:text-[var(--theme-color)] hover:bg-[var(--theme-color)]/5 dark:hover:bg-[var(--theme-color)]/10 transition-colors"
                     title="Edit"
                   >
                     <HugeiconsIcon
@@ -299,7 +299,7 @@ export default function SettingsGeneralPage() {
                   </button>
                   <button
                     onClick={() => setDeleteId(dept.id)}
-                    className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                    className="p-2 rounded-lg text-slate-400 dark:text-neutral-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                     title="Delete"
                   >
                     <HugeiconsIcon
@@ -319,13 +319,13 @@ export default function SettingsGeneralPage() {
         open={deleteId !== null}
         onOpenChange={(open) => !open && setDeleteId(null)}
       >
-        <AlertDialogContent className="max-w-sm rounded-2xl border-slate-200 shadow-xl">
+        <AlertDialogContent className="max-w-sm rounded-2xl border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-[17px] font-semibold text-slate-900">
+            <AlertDialogTitle className="text-[17px] font-semibold text-slate-900 dark:text-neutral-100">
               Delete Department?
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-[13px] text-slate-500 leading-relaxed">
-              <strong className="text-slate-700">
+            <AlertDialogDescription className="text-[13px] text-slate-500 dark:text-neutral-400 leading-relaxed">
+              <strong className="text-slate-700 dark:text-neutral-200">
                 {deleteId !== null
                   ? (departments.find((d) => d.id === deleteId)?.name ?? "")
                   : ""}
@@ -334,7 +334,7 @@ export default function SettingsGeneralPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2">
-            <AlertDialogCancel className="h-9 px-5 rounded-lg border-slate-200 text-slate-600 text-[13px] font-medium shadow-none hover:bg-slate-50">
+            <AlertDialogCancel className="h-9 px-5 rounded-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-slate-600 dark:text-neutral-400 text-[13px] font-medium shadow-none hover:bg-slate-50 dark:hover:bg-neutral-800">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction

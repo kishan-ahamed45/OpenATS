@@ -108,9 +108,9 @@ export default function AssessmentsPage() {
   };
 
   return (
-    <div className="flex flex-1 flex-col bg-white">
+    <div className="flex flex-1 flex-col bg-white dark:bg-neutral-950">
       <div className="px-8 py-4 flex items-center justify-between">
-        <h1 className="text-[28px] font-medium text-slate-900 leading-none">
+        <h1 className="text-[28px] font-medium text-slate-900 dark:text-neutral-100 leading-none">
           Assessments
         </h1>
         <ThemeButton
@@ -127,7 +127,7 @@ export default function AssessmentsPage() {
         </ThemeButton>
       </div>
 
-      <div className="border-y border-slate-200 px-8 py-3.5 flex items-center gap-4">
+      <div className="border-y border-slate-200 dark:border-neutral-800 px-8 py-3.5 flex items-center gap-4">
         <div className="relative w-80">
           <HugeiconsIcon
             icon={Search01Icon}
@@ -135,23 +135,23 @@ export default function AssessmentsPage() {
           />
           <Input
             placeholder="Search assessments…"
-            className="pl-11 h-10! bg-white border-slate-200 shadow-none rounded-lg text-sm placeholder:text-slate-300 transition-[border-color] duration-200 ease-in-out"
+            className="pl-11 h-10! bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 shadow-none rounded-lg text-sm placeholder:text-slate-300 dark:placeholder:text-neutral-600 transition-[border-color] duration-200 ease-in-out"
           />
         </div>
         <Select>
-          <SelectTrigger className="w-36 h-10! bg-white border-slate-200 shadow-none rounded-lg text-slate-500 text-sm focus:ring-0 px-4">
+          <SelectTrigger className="w-36 h-10! bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 shadow-none rounded-lg text-slate-500 dark:text-neutral-400 text-sm focus:ring-0 px-4">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
-          <SelectContent className="rounded-lg shadow-lg border-slate-200">
+          <SelectContent className="rounded-lg shadow-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
             <SelectItem value="active">Active</SelectItem>
             <SelectItem value="inactive">Inactive</SelectItem>
           </SelectContent>
         </Select>
         <Select>
-          <SelectTrigger className="w-36 h-10! bg-white border-slate-200 shadow-none rounded-lg text-slate-500 text-sm focus:ring-0 px-4">
+          <SelectTrigger className="w-36 h-10! bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 shadow-none rounded-lg text-slate-500 dark:text-neutral-400 text-sm focus:ring-0 px-4">
             <SelectValue placeholder="Difficulty" />
           </SelectTrigger>
-          <SelectContent className="rounded-lg shadow-lg border-slate-200">
+          <SelectContent className="rounded-lg shadow-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
             <SelectItem value="easy">Easy</SelectItem>
             <SelectItem value="medium">Medium</SelectItem>
             <SelectItem value="hard">Hard</SelectItem>
@@ -159,7 +159,7 @@ export default function AssessmentsPage() {
         </Select>
         <Button
           variant="ghost"
-          className="text-slate-600 font-medium text-sm h-10 px-4 hover:bg-transparent hover:text-slate-900 border-none ml-2"
+          className="text-slate-600 dark:text-neutral-400 font-medium text-sm h-10 px-4 hover:bg-transparent hover:text-slate-900 dark:hover:text-neutral-100 border-none ml-2"
         >
           Clear All
         </Button>
@@ -180,14 +180,14 @@ export default function AssessmentsPage() {
             {assessments.map((a) => (
               <div
                 key={a.id}
-                className="flex flex-col border border-slate-200 rounded-lg bg-white"
+                className="flex flex-col border border-slate-200 dark:border-neutral-800 rounded-lg bg-white dark:bg-neutral-900 shadow-sm"
               >
                 {/* Card body */}
                 <div className="flex flex-col gap-2.5 px-5 pt-5 pb-4">
                   {/* Title */}
                   <Link
                     href={`/assessments/${a.id}`}
-                    className="text-[15px] font-semibold text-slate-800 leading-snug hover:underline underline-offset-4 decoration-1 truncate"
+                    className="text-[15px] font-semibold text-slate-800 dark:text-neutral-200 leading-snug hover:underline underline-offset-4 decoration-1 truncate"
                   >
                     {a.title}
                   </Link>
@@ -195,7 +195,7 @@ export default function AssessmentsPage() {
                   {/* Badges + stats in one row */}
                   <div className="flex items-center gap-2">
                     <span
-                      className={`inline-flex items-center text-[12px] font-medium px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700`}
+                      className={`inline-flex items-center text-[12px] font-medium px-2.5 py-1 rounded-md bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400`}
                     >
                       Active
                     </span>
@@ -216,7 +216,7 @@ export default function AssessmentsPage() {
                 </div>
 
                 {/* Card footer */}
-                <div className="flex items-center gap-1.5 px-4 py-3 border-t border-slate-100">
+                <div className="flex items-center gap-1.5 px-4 py-3 border-t border-slate-100 dark:border-neutral-800">
                   <ThemeButton
                     asChild
                     href={`/assessments/${a.id}`}
@@ -226,14 +226,14 @@ export default function AssessmentsPage() {
                   </ThemeButton>
                   <button
                     onClick={() => openInviteDialog(a)}
-                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-[12px] font-medium border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-[12px] font-medium border border-slate-200 dark:border-neutral-800 text-slate-500 dark:text-neutral-400 hover:bg-slate-50 dark:hover:bg-neutral-800 hover:text-slate-700 dark:hover:text-neutral-200"
                   >
                     <HugeiconsIcon icon={UserAdd01Icon} className="size-3.5" />
                     Invite
                   </button>
                   <button
                     onClick={() => setDeleteTarget(a)}
-                    className="ml-auto inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-[12px] font-medium border border-red-200 text-red-400 hover:bg-red-50 hover:text-red-500"
+                    className="ml-auto inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-[12px] font-medium border border-red-200 dark:border-red-900/50 text-red-400 dark:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-500"
                   >
                     <HugeiconsIcon icon={Delete02Icon} className="size-3.5" />
                     Delete
@@ -247,33 +247,33 @@ export default function AssessmentsPage() {
 
       {/* Invite dialog */}
       <Dialog open={!!inviteTarget} onOpenChange={(o) => !o && setInviteTarget(null)}>
-        <DialogContent className="max-w-md rounded-xl border-slate-200 shadow-lg p-6">
+        <DialogContent className="max-w-md rounded-xl border-slate-200 dark:border-neutral-800 shadow-lg p-6 bg-white dark:bg-neutral-950">
           <DialogHeader>
-            <DialogTitle className="text-[17px] font-semibold text-slate-900">
+            <DialogTitle className="text-[17px] font-semibold text-slate-900 dark:text-neutral-100">
               Invite Candidate
             </DialogTitle>
-            <p className="text-[13px] text-slate-500 mt-1">
+            <p className="text-[13px] text-slate-500 dark:text-neutral-400 mt-1">
               Generates a unique assessment link for the selected candidate.
             </p>
           </DialogHeader>
 
           <div className="space-y-4 mt-2">
             <div className="space-y-1.5">
-              <Label className="text-[12px] font-semibold text-slate-400 uppercase tracking-wide">
+              <Label className="text-[12px] font-semibold text-slate-400 dark:text-neutral-500 uppercase tracking-wide">
                 Assessment
               </Label>
-              <p className="text-[14px] font-medium text-slate-700">{inviteTarget?.title}</p>
+              <p className="text-[14px] font-medium text-slate-700 dark:text-neutral-300">{inviteTarget?.title}</p>
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-[12px] font-semibold text-slate-400 uppercase tracking-wide">
+              <Label className="text-[12px] font-semibold text-slate-400 dark:text-neutral-500 uppercase tracking-wide">
                 Select Candidate
               </Label>
-              <Select value={selectedCandidateId} onValueChange={setSelectedCandidateId}>
-                <SelectTrigger className="h-10 border-slate-200 shadow-none text-[13px] focus:ring-0 w-full">
+              <Select value={selectedCandidateId} onValueChange={(v) => setSelectedCandidateId(v ?? "")}>
+                <SelectTrigger className="h-10 border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-none text-[13px] focus:ring-0 w-full">
                   <SelectValue placeholder="Choose a candidate…" />
                 </SelectTrigger>
-                <SelectContent className="rounded-lg shadow-lg border-slate-200">
+                <SelectContent className="rounded-lg shadow-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
                   {candidates.map((c) => (
                     <SelectItem key={c.id} value={String(c.id)} className="text-[13px]">
                       {c.firstName} {c.lastName}
@@ -298,19 +298,19 @@ export default function AssessmentsPage() {
               </Button>
             ) : (
               <div className="space-y-2">
-                <Label className="text-[12px] font-semibold text-slate-400 uppercase tracking-wide">
+                <Label className="text-[12px] font-semibold text-slate-400 dark:text-neutral-500 uppercase tracking-wide">
                   Assessment Link
                 </Label>
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-[12px] text-slate-600 truncate font-mono">
+                  <div className="flex-1 bg-slate-50 dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-lg px-3 py-2 text-[12px] text-slate-600 dark:text-neutral-300 truncate font-mono">
                     {generatedLink}
                   </div>
                   <button
                     onClick={copyLink}
                     className={`shrink-0 h-9 px-3 rounded-lg text-[12px] font-medium border inline-flex items-center gap-1.5 ${
                       copied
-                        ? "bg-emerald-50 text-emerald-600 border-emerald-200"
-                        : "border-slate-200 text-slate-500 hover:bg-slate-50"
+                        ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50"
+                        : "border-slate-200 dark:border-neutral-800 text-slate-500 dark:text-neutral-400 hover:bg-slate-50 dark:hover:bg-neutral-800"
                     }`}
                   >
                     <HugeiconsIcon icon={copied ? CheckmarkCircle01Icon : Copy01Icon} className="size-3.5" />
@@ -342,18 +342,18 @@ export default function AssessmentsPage() {
         open={!!deleteTarget}
         onOpenChange={(o) => !o && setDeleteTarget(null)}
       >
-        <AlertDialogContent className="max-w-sm rounded-xl border-slate-200 shadow-lg">
+        <AlertDialogContent className="max-w-sm rounded-xl border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-lg">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-[17px] font-semibold text-slate-900">
+            <AlertDialogTitle className="text-[17px] font-semibold text-slate-900 dark:text-neutral-100">
               Delete Assessment?
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-[13px] text-slate-500 leading-relaxed">
-              <strong className="text-slate-700">{deleteTarget?.title}</strong>{" "}
+            <AlertDialogDescription className="text-[13px] text-slate-500 dark:text-neutral-400 leading-relaxed">
+              <strong className="text-slate-700 dark:text-neutral-200">{deleteTarget?.title}</strong>{" "}
               will be permanently deleted. This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2">
-            <AlertDialogCancel className="h-9 px-5 rounded-lg border-slate-200 text-slate-600 text-[13px] font-medium shadow-none">
+            <AlertDialogCancel className="h-9 px-5 rounded-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-slate-600 dark:text-neutral-400 hover:bg-slate-50 dark:hover:bg-neutral-800 text-[13px] font-medium shadow-none">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction

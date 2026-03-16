@@ -23,18 +23,27 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
+import { ThemeProvider } from "@/components/theme-provider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${publicSans.variable} ${bebasNeue.variable}`}>
+    <html lang="en" className={`${publicSans.variable} ${bebasNeue.variable}`} suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-x-hidden`}
       >
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <AsgardeoProvider>{children as any}</AsgardeoProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <AsgardeoProvider>{children as any}</AsgardeoProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -82,15 +82,15 @@ function formatTime(secs: number) {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const DARK = "#2d4a60";
-const LIGHT_BG = "#f0f2f5";
-const WHITE = "#ffffff";
-const BORDER = "#e2e8f0";
-const TEXT_MAIN = "#0f172a";
-const TEXT_MUTED = "#64748b";
-const TEXT_LIGHT = "#94a3b8";
+const DARK = "var(--assessment-dark)";
+const LIGHT_BG = "var(--assessment-bg)";
+const WHITE = "var(--assessment-white)";
+const BORDER = "var(--assessment-border)";
+const TEXT_MAIN = "var(--assessment-text-main)";
+const TEXT_MUTED = "var(--assessment-text-muted)";
+const TEXT_LIGHT = "var(--assessment-text-light)";
 const EMERALD = "#22c55e";
-const SELECTED_BG = "rgba(45,74,96,0.10)";
+const SELECTED_BG = "var(--assessment-selected-bg)";
 
 // ── SVG Icons (unchanged) ─────────────────────────────────────────────────────
 
@@ -464,15 +464,15 @@ export default function AssessmentPage() {
             </button>
 
             <AlertDialog open={quitOpen} onOpenChange={setQuitOpen}>
-              <AlertDialogContent className="max-w-sm rounded-2xl border-slate-200 shadow-xl">
+              <AlertDialogContent className="max-w-sm rounded-2xl border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xl">
                 <AlertDialogHeader>
-                  <AlertDialogTitle className="text-[17px] font-semibold text-slate-900">Quit this quiz?</AlertDialogTitle>
-                  <AlertDialogDescription className="text-[13px] text-slate-500 leading-relaxed">
+                  <AlertDialogTitle className="text-[17px] font-semibold text-slate-900 dark:text-neutral-100">Quit this quiz?</AlertDialogTitle>
+                  <AlertDialogDescription className="text-[13px] text-slate-500 dark:text-neutral-400 leading-relaxed">
                     Your progress will be lost. This action cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter className="gap-2">
-                  <AlertDialogCancel className="h-9 px-5 rounded-lg border-slate-200 text-slate-600 text-[13px] font-medium shadow-none hover:bg-slate-50">
+                  <AlertDialogCancel className="h-9 px-5 rounded-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-slate-600 dark:text-neutral-400 text-[13px] font-medium shadow-none hover:bg-slate-50 dark:hover:bg-neutral-800">
                     Stay in Quiz
                   </AlertDialogCancel>
                   <AlertDialogAction onClick={() => { window.location.href = "/"; }} className="h-9 px-5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-[13px] font-medium shadow-none border-none">
@@ -499,7 +499,7 @@ export default function AssessmentPage() {
           <span>{answered} Answered</span>
         </div>
 
-        <div style={{ height: 8, backgroundColor: "#e2e8f0", borderRadius: 99, overflow: "hidden" }}>
+        <div style={{ height: 8, backgroundColor: "var(--assessment-border)", borderRadius: 99, overflow: "hidden" }}>
           <div style={{ height: "100%", width: `${progress}%`, backgroundColor: DARK, borderRadius: 99, transition: "width 0.4s ease" }} />
         </div>
       </div>
@@ -510,7 +510,7 @@ export default function AssessmentPage() {
         <div style={{ flex: 1, overflowY: "auto", padding: "28px 24px 28px 28px" }}>
           <div style={{ maxWidth: 900, margin: "0 auto", backgroundColor: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", padding: "36px 44px", display: "flex", flexDirection: "column", gap: 28 }}>
             <div>
-              <span style={{ display: "inline-block", backgroundColor: "#e8f5e9", color: DARK, fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 99, marginBottom: 16 }}>
+              <span style={{ display: "inline-block", backgroundColor: "rgba(34, 197, 94, 0.1)", color: DARK, fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 99, marginBottom: 16 }}>
                 Question {currentQ + 1}
               </span>
               <h2 style={{ fontSize: 20, fontWeight: 700, color: TEXT_MAIN, margin: "0 0 8px 0", lineHeight: 1.45 }}>{question.title}</h2>
@@ -522,7 +522,7 @@ export default function AssessmentPage() {
             {/* Text answer */}
             {isText && (
               <div>
-                <span style={{ display: "inline-block", backgroundColor: "#eff6ff", color: "#2563eb", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 99, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>
+                <span style={{ display: "inline-block", backgroundColor: "rgba(37, 99, 235, 0.1)", color: "#2563eb", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 99, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>
                   {question.questionType === "short_answer" ? "Short Answer" : "Long Answer"}
                 </span>
                 <textarea
@@ -544,7 +544,7 @@ export default function AssessmentPage() {
             {isOption && question.options.length > 0 && (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {isMulti && (
-                  <span style={{ display: "inline-block", backgroundColor: "#fef3c7", color: "#92400e", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 99, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4, width: "fit-content" }}>
+                  <span style={{ display: "inline-block", backgroundColor: "rgba(245, 158, 11, 0.1)", color: "#92400e", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 99, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4, width: "fit-content" }}>
                     Multiple Select
                   </span>
                 )}
@@ -558,7 +558,7 @@ export default function AssessmentPage() {
                       style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderRadius: 12, textAlign: "left", border: selected ? `1.5px solid ${DARK}` : `1px solid ${BORDER}`, backgroundColor: selected ? SELECTED_BG : WHITE, cursor: "pointer", transition: "all 0.15s" }}
                     >
                       {isMulti ? (
-                        <div style={{ width: 20, height: 20, borderRadius: 5, flexShrink: 0, border: selected ? `2px solid ${DARK}` : `2px solid #cbd5e1`, backgroundColor: selected ? DARK : WHITE, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}>
+                        <div style={{ width: 20, height: 20, borderRadius: 5, flexShrink: 0, border: selected ? `2px solid ${DARK}` : `2px solid var(--assessment-text-light)`, backgroundColor: selected ? DARK : WHITE, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}>
                           {selected && <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
                         </div>
                       ) : (
@@ -599,9 +599,9 @@ export default function AssessmentPage() {
               {questions.map((q, i) => {
                 const isAns = isAnswered(q);
                 const isCurrent = i === currentQ;
-                const bg = isCurrent ? DARK : isAns ? "#dcfce7" : "#f1f5f9";
+                const bg = isCurrent ? DARK : isAns ? "rgba(34, 197, 94, 0.15)" : "var(--assessment-bg)";
                 const color = isCurrent ? WHITE : isAns ? "#16a34a" : TEXT_MUTED;
-                const border = isCurrent ? `1px solid ${DARK}` : isAns ? "1px solid #86efac" : "1px solid transparent";
+                const border = isCurrent ? `1px solid ${DARK}` : isAns ? "1px solid rgba(22, 163, 74, 0.3)" : "1px solid transparent";
                 return (
                   <button key={q.id} onClick={() => setCurrentQ(i)} style={{ width: "100%", aspectRatio: "1", borderRadius: 8, border, backgroundColor: bg, color, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.15s", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     {i + 1}
@@ -612,7 +612,7 @@ export default function AssessmentPage() {
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 10, borderTop: `1px solid ${BORDER}`, paddingTop: 20 }}>
-            {[{ bg: DARK, border: `1px solid ${DARK}`, color: WHITE, label: "Current" }, { bg: "#dcfce7", border: "1px solid #86efac", color: "#16a34a", label: "Answered" }, { bg: "#f1f5f9", border: "1px solid transparent", color: TEXT_MUTED, label: "Unanswered" }].map((item) => (
+            {[{ bg: DARK, border: `1px solid ${DARK}`, color: WHITE, label: "Current" }, { bg: "rgba(34, 197, 94, 0.15)", border: "1px solid rgba(22, 163, 74, 0.3)", color: "#16a34a", label: "Answered" }, { bg: "var(--assessment-bg)", border: "1px solid transparent", color: TEXT_MUTED, label: "Unanswered" }].map((item) => (
               <div key={item.label} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <div style={{ width: 24, height: 24, borderRadius: 6, backgroundColor: item.bg, border: item.border, flexShrink: 0 }} />
                 <span style={{ fontSize: 12, color: TEXT_MUTED }}>{item.label}</span>

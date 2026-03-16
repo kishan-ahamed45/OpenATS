@@ -58,11 +58,11 @@ const EMPLOYMENT_LABELS: Record<string, string> = {
 };
 
 const STATUS_BADGE: Record<string, { label: string; bg: string; text: string }> = {
-  draft:     { label: "Draft",     bg: "bg-amber-50",   text: "text-amber-600" },
-  inactive:  { label: "Inactive",  bg: "bg-slate-100",  text: "text-slate-500" },
-  published: { label: "Active Job",bg: "bg-[#E6F4EA]",  text: "text-[#1E8E3E]" },
-  closed:    { label: "Closed",    bg: "bg-red-50",     text: "text-red-500"   },
-  archived:  { label: "Archived",  bg: "bg-slate-100",  text: "text-slate-500" },
+  draft:     { label: "Draft",     bg: "bg-amber-50 dark:bg-amber-950/30",   text: "text-amber-600 dark:text-amber-400" },
+  inactive:  { label: "Inactive",  bg: "bg-slate-100 dark:bg-neutral-800",   text: "text-slate-500 dark:text-neutral-400" },
+  published: { label: "Active Job",bg: "bg-emerald-50 dark:bg-emerald-950/30", text: "text-emerald-600 dark:text-emerald-400" },
+  closed:    { label: "Closed",    bg: "bg-red-50 dark:bg-red-950/30",       text: "text-red-500 dark:text-red-400"   },
+  archived:  { label: "Archived",  bg: "bg-slate-100 dark:bg-neutral-800",   text: "text-slate-500 dark:text-neutral-400" },
 };
 
 function timeAgo(dateStr: string) {
@@ -279,14 +279,14 @@ export default function JobDetailsPage() {
   }
 
   return (
-    <div className="flex flex-1 overflow-hidden bg-slate-50">
-      <div className="flex flex-1 flex-col bg-white overflow-y-auto relative">
+    <div className="flex flex-1 overflow-hidden bg-slate-50 dark:bg-neutral-950">
+      <div className="flex flex-1 flex-col bg-white dark:bg-neutral-950 overflow-y-auto relative">
         <div className="px-8 pt-10 pb-0 max-w-full 2xl:max-w-[1600px] w-full mx-auto">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-8 mt-2">
           {/* Left Column: Job Info */}
           <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-4 cursor-default">
-              <h1 className="text-[32px] font-semibold text-slate-900 tracking-tight leading-none">
+              <h1 className="text-[32px] font-semibold text-slate-900 dark:text-neutral-100 tracking-tight leading-none">
                 {jobLoading ? "Loading..." : (job?.title ?? "Job Not Found")}
               </h1>
               {job && STATUS_BADGE[job.status] && (
@@ -299,18 +299,18 @@ export default function JobDetailsPage() {
             </div>
 
             {job && (
-              <div className="flex flex-wrap items-center text-[15px] font-medium text-slate-500 gap-x-4 gap-y-2 cursor-default">
+              <div className="flex flex-wrap items-center text-[15px] font-medium text-slate-500 dark:text-neutral-400 gap-x-4 gap-y-2 cursor-default">
                 <span>{EMPLOYMENT_LABELS[job.employmentType]}</span>
                 {job.location && (
                   <>
-                    <div className="w-1.5 h-1.5 rounded-full bg-slate-300"></div>
+                    <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-neutral-600"></div>
                     <span>{job.location}</span>
                   </>
                 )}
                 {formatSalary(job) && (
                   <>
-                    <div className="w-1.5 h-1.5 rounded-full bg-slate-300"></div>
-                    <span className="text-slate-800 font-medium">
+                    <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-neutral-600"></div>
+                    <span className="text-slate-800 dark:text-neutral-200 font-medium">
                       {formatSalary(job)}
                     </span>
                   </>
@@ -329,8 +329,8 @@ export default function JobDetailsPage() {
               </Link>
               
               <div className="flex items-center gap-1.5 cursor-default px-3 py-1.5 rounded-md text-[14px] transition-colors">
-                <span className="font-semibold text-slate-900 leading-none">0</span>
-                <span className="text-slate-600 font-medium leading-none">Candidates</span>
+                <span className="font-semibold text-slate-900 dark:text-neutral-100 leading-none">0</span>
+                <span className="text-slate-600 dark:text-neutral-400 font-medium leading-none">Candidates</span>
               </div>
             </div>
           </div>
@@ -340,7 +340,7 @@ export default function JobDetailsPage() {
             <Button
               variant="outline"
               onClick={() => setIsNotesOpen(!isNotesOpen)}
-              className="border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg h-11 px-5 font-medium gap-2.5"
+              className="border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-slate-700 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800 hover:text-slate-900 dark:hover:text-neutral-100 rounded-lg h-11 px-5 font-medium gap-2.5"
             >
               <HugeiconsIcon icon={ParagraphIcon} className="size-[18px]" strokeWidth={2} />
               <span>Internal Notes</span>
@@ -360,36 +360,36 @@ export default function JobDetailsPage() {
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <div className="w-full border-y border-slate-100 py-3 bg-white shadow-none">
+        <div className="w-full border-y border-slate-100 dark:border-neutral-800 py-3 bg-white dark:bg-neutral-950 shadow-none">
           <div className="px-8 max-w-full 2xl:max-w-[1600px] w-full mx-auto">
             <TabsList className="bg-transparent w-full justify-start rounded-none h-auto p-0 gap-3">
               <TabsTrigger
                 value="overview"
-                className="data-[state=active]:bg-transparent !shadow-none border border-slate-200 data-[state=active]:border-[var(--theme-color)] rounded-lg px-6 h-[38px] text-slate-600 data-[state=active]:text-[var(--theme-color)] font-medium text-[15px] transition-all hover:bg-slate-50 flex-none flex items-center justify-center whitespace-nowrap"
+                className="data-[state=active]:bg-transparent !shadow-none border border-slate-200 dark:border-neutral-800 data-[state=active]:border-[var(--theme-color)] rounded-lg px-6 h-[38px] text-slate-600 dark:text-neutral-400 data-[state=active]:text-[var(--theme-color)] font-medium text-[15px] transition-all hover:bg-slate-50 dark:hover:bg-neutral-900 flex-none flex items-center justify-center whitespace-nowrap"
               >
                 Overview
               </TabsTrigger>
               <TabsTrigger
                 value="hiring-team"
-                className="data-[state=active]:bg-transparent !shadow-none border border-slate-200 data-[state=active]:border-[var(--theme-color)] rounded-lg px-6 h-[38px] text-slate-600 data-[state=active]:text-[var(--theme-color)] font-medium text-[15px] transition-all hover:bg-slate-50 flex-none flex items-center justify-center whitespace-nowrap"
+                className="data-[state=active]:bg-transparent !shadow-none border border-slate-200 dark:border-neutral-800 data-[state=active]:border-[var(--theme-color)] rounded-lg px-6 h-[38px] text-slate-600 dark:text-neutral-400 data-[state=active]:text-[var(--theme-color)] font-medium text-[15px] transition-all hover:bg-slate-50 dark:hover:bg-neutral-900 flex-none flex items-center justify-center whitespace-nowrap"
               >
                 Hiring Team
               </TabsTrigger>
               <TabsTrigger
                 value="hiring-process"
-                className="data-[state=active]:bg-transparent !shadow-none border border-slate-200 data-[state=active]:border-[var(--theme-color)] rounded-lg px-6 h-[38px] text-slate-600 data-[state=active]:text-[var(--theme-color)] font-medium text-[15px] transition-all hover:bg-slate-50 flex-none flex items-center justify-center whitespace-nowrap"
+                className="data-[state=active]:bg-transparent !shadow-none border border-slate-200 dark:border-neutral-800 data-[state=active]:border-[var(--theme-color)] rounded-lg px-6 h-[38px] text-slate-600 dark:text-neutral-400 data-[state=active]:text-[var(--theme-color)] font-medium text-[15px] transition-all hover:bg-slate-50 dark:hover:bg-neutral-900 flex-none flex items-center justify-center whitespace-nowrap"
               >
                 Hiring Process
               </TabsTrigger>
               <TabsTrigger
                 value="custom-questions"
-                className="data-[state=active]:bg-transparent !shadow-none border border-slate-200 data-[state=active]:border-[var(--theme-color)] rounded-lg px-6 h-[38px] text-slate-600 data-[state=active]:text-[var(--theme-color)] font-medium text-[15px] transition-all hover:bg-slate-50 flex-none flex items-center justify-center whitespace-nowrap"
+                className="data-[state=active]:bg-transparent !shadow-none border border-slate-200 dark:border-neutral-800 data-[state=active]:border-[var(--theme-color)] rounded-lg px-6 h-[38px] text-slate-600 dark:text-neutral-400 data-[state=active]:text-[var(--theme-color)] font-medium text-[15px] transition-all hover:bg-slate-50 dark:hover:bg-neutral-900 flex-none flex items-center justify-center whitespace-nowrap"
               >
                 Custom Questions
               </TabsTrigger>
               <TabsTrigger
                 value="assessments"
-                className="data-[state=active]:bg-transparent !shadow-none border border-slate-200 data-[state=active]:border-[var(--theme-color)] rounded-lg px-6 h-[38px] text-slate-600 data-[state=active]:text-[var(--theme-color)] font-medium text-[15px] transition-all hover:bg-slate-50 flex-none flex items-center justify-center whitespace-nowrap"
+                className="data-[state=active]:bg-transparent !shadow-none border border-slate-200 dark:border-neutral-800 data-[state=active]:border-[var(--theme-color)] rounded-lg px-6 h-[38px] text-slate-600 dark:text-neutral-400 data-[state=active]:text-[var(--theme-color)] font-medium text-[15px] transition-all hover:bg-slate-50 dark:hover:bg-neutral-900 flex-none flex items-center justify-center whitespace-nowrap"
               >
                 Assessments
               </TabsTrigger>
@@ -403,14 +403,14 @@ export default function JobDetailsPage() {
             className="pt-10 animate-in fade-in duration-300 max-w-4xl"
           >
             {jobLoading ? (
-              <p className="text-slate-400 text-[15px]">Loading...</p>
+              <p className="text-slate-400 dark:text-neutral-500 text-[15px]">Loading...</p>
             ) : job?.description ? (
               <div
-                className="text-slate-600 leading-relaxed text-[15px] [&_p]:mb-4 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_h2]:font-semibold [&_h2]:text-slate-800 [&_h2]:mb-2 [&_h3]:font-medium [&_h3]:text-slate-700 [&_h3]:mb-1"
+                className="text-slate-600 dark:text-neutral-300 leading-relaxed text-[15px] [&_p]:mb-4 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_h2]:font-semibold [&_h2]:text-slate-800 dark:[&_h2]:text-neutral-100 [&_h2]:mb-2 [&_h3]:font-medium [&_h3]:text-slate-700 dark:[&_h3]:text-neutral-200 [&_h3]:mb-1"
                 dangerouslySetInnerHTML={{ __html: job.description }}
               />
             ) : (
-              <p className="text-slate-400 text-[15px]">No description provided.</p>
+              <p className="text-slate-400 dark:text-neutral-500 text-[15px]">No description provided.</p>
             )}
           </TabsContent>
 
@@ -421,7 +421,7 @@ export default function JobDetailsPage() {
             <div className="space-y-6">
               <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div className="flex items-center gap-4">
-                  <span className="text-slate-500 font-medium text-[15px]">
+                  <span className="text-slate-500 dark:text-neutral-400 font-medium text-[15px]">
                     Hiring Manager
                   </span>
                   <button className="flex items-center gap-2 text-[var(--theme-color)] hover:underline font-medium text-[14px]">
@@ -438,16 +438,16 @@ export default function JobDetailsPage() {
                 <div className="size-11 rounded-full bg-[var(--theme-color)] flex items-center justify-center text-white font-medium text-sm overflow-hidden">
                   <div className="w-full h-full bg-[var(--theme-color)]" />
                 </div>
-                <span className="text-slate-700 font-medium text-[15px]">
+                <span className="text-slate-700 dark:text-neutral-300 font-medium text-[15px]">
                   Chamal Senarathna
                 </span>
               </div>
             </div>
 
             <div className="space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-neutral-800 pb-4">
                 <div className="flex items-center gap-4">
-                  <span className="text-slate-500 font-medium text-[15px]">
+                  <span className="text-slate-500 dark:text-neutral-400 font-medium text-[15px]">
                     Interviewer
                   </span>
                   <button className="flex items-center gap-2 text-[var(--theme-color)] hover:underline font-medium text-[14px]">
@@ -464,7 +464,7 @@ export default function JobDetailsPage() {
                 <div className="size-11 rounded-full bg-[var(--theme-color)] flex items-center justify-center text-white font-medium text-sm overflow-hidden">
                   <div className="w-full h-full bg-[var(--theme-color)]" />
                 </div>
-                <span className="text-slate-700 font-medium text-[15px]">
+                <span className="text-slate-700 dark:text-neutral-300 font-medium text-[15px]">
                   Risikesan Jegatheesan
                 </span>
               </div>
@@ -477,10 +477,10 @@ export default function JobDetailsPage() {
           >
             <div className="flex items-start justify-between">
               <div className="space-y-1">
-                <h3 className="text-slate-900 font-semibold text-[17px]">
+                <h3 className="text-slate-900 dark:text-neutral-100 font-semibold text-[17px]">
                   Hiring Pipeline Stages
                 </h3>
-                <p className="text-slate-500 text-[13px]">
+                <p className="text-slate-500 dark:text-neutral-400 text-[13px]">
                   Drag To Reorder Stages. Click To Edit Or Remove.
                 </p>
               </div>
@@ -513,12 +513,12 @@ export default function JobDetailsPage() {
                   return (
                     <div
                       ref={ref as Ref<HTMLDivElement>}
-                      className={`flex items-center justify-between p-4 border rounded-lg transition-all group bg-white ${
+                      className={`flex items-center justify-between p-4 border rounded-lg transition-all group bg-white dark:bg-neutral-900 ${
                         isDragging
-                          ? "opacity-40 border-slate-300"
+                          ? "opacity-40 border-slate-300 dark:border-neutral-700"
                           : isOver
                             ? "border-[var(--theme-color)]/40 bg-[var(--theme-color)]/5"
-                            : "border-slate-200/70 hover:border-slate-300"
+                            : "border-slate-200/70 dark:border-neutral-800 hover:border-slate-300 dark:hover:border-neutral-700"
                       }`}
                     >
                       <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -537,7 +537,7 @@ export default function JobDetailsPage() {
                                 if (e.key === "Enter") handleSaveStage(stage.id);
                                 if (e.key === "Escape") setEditingStageId(null);
                               }}
-                              className="h-8 border-slate-200 shadow-none focus-visible:ring-1 focus-visible:ring-slate-300 text-[14px] w-48"
+                              className="h-8 border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-slate-900 dark:text-neutral-100 shadow-none focus-visible:ring-1 focus-visible:ring-slate-300 text-[14px] w-48"
                             />
                             <button
                               onClick={() => handleSaveStage(stage.id)}
@@ -548,13 +548,13 @@ export default function JobDetailsPage() {
                             </button>
                             <button
                               onClick={() => setEditingStageId(null)}
-                              className="text-xs font-medium text-slate-500 hover:text-slate-700 px-3 h-8 rounded-md border border-slate-200"
+                              className="text-xs font-medium text-slate-500 dark:text-neutral-400 hover:text-slate-700 dark:hover:text-neutral-200 px-3 h-8 rounded-md border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900"
                             >
                               Cancel
                             </button>
                           </div>
                         ) : (
-                          <span className="text-slate-700 font-medium text-[15px]">
+                          <span className="text-slate-700 dark:text-neutral-200 font-medium text-[15px]">
                             {stage.name}
                           </span>
                         )}
@@ -635,12 +635,12 @@ export default function JobDetailsPage() {
                     return (
                       <div
                         ref={ref as Ref<HTMLDivElement>}
-                        className={`group relative border rounded-lg bg-white transition-all ${
+                        className={`group relative border rounded-lg bg-white dark:bg-neutral-900 transition-all ${
                           isDragging
-                            ? "opacity-40 border-slate-300"
+                            ? "opacity-40 border-slate-300 dark:border-neutral-700"
                             : isOver
                               ? "border-[var(--theme-color)]/40 bg-[var(--theme-color)]/5"
-                              : "border-slate-200 hover:border-slate-300"
+                              : "border-slate-200 dark:border-neutral-800 hover:border-slate-300 dark:hover:border-neutral-700"
                         }`}
                       >
                         {editingQuestionId === q.id ? (
@@ -652,10 +652,10 @@ export default function JobDetailsPage() {
                                   setEditQuestionType(val as "short_answer" | "long_answer" | "checkbox" | "radio")
                                 }
                               >
-                                <SelectTrigger className="w-[180px] h-10 border-slate-200 bg-white shadow-none text-slate-600 focus:ring-1 focus:ring-slate-300">
+                                <SelectTrigger className="w-[180px] h-10 border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-slate-600 dark:text-neutral-300 shadow-none focus:ring-1 focus:ring-slate-300">
                                   <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent className="border-slate-200 shadow-md">
+                                <SelectContent className="border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-md">
                                   <SelectItem value="short_answer">
                                     <div className="flex items-center gap-2">
                                       <HugeiconsIcon icon={TextIcon} className="size-4" />
@@ -691,7 +691,7 @@ export default function JobDetailsPage() {
                                   if (e.key === "Enter") handleSaveQuestion(q.id);
                                   if (e.key === "Escape") setEditingQuestionId(null);
                                 }}
-                                className="flex-1 h-10 border-slate-200 bg-white shadow-none focus-visible:ring-1 focus-visible:ring-slate-300 text-[15px]"
+                                className="flex-1 h-10 border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-none focus-visible:ring-1 focus-visible:ring-slate-300 text-[15px]"
                               />
                               <div className="flex items-center gap-2 px-2">
                                 <Checkbox
@@ -702,7 +702,7 @@ export default function JobDetailsPage() {
                                 />
                                 <Label
                                   htmlFor={`edit-required-${q.id}`}
-                                  className="text-slate-600 font-medium text-[15px] cursor-pointer"
+                                  className="text-slate-600 dark:text-neutral-300 font-medium text-[15px] cursor-pointer"
                                 >
                                   Required
                                 </Label>
@@ -743,7 +743,7 @@ export default function JobDetailsPage() {
                                 )}
                               </div>
                               <div className="flex flex-col">
-                                <span className="text-slate-700 font-medium text-[15px]">
+                                <span className="text-slate-700 dark:text-neutral-200 font-medium text-[15px]">
                                   {q.title}
                                 </span>
                                 {q.isRequired && (
@@ -787,7 +787,7 @@ export default function JobDetailsPage() {
                 })}
 
                 {isAddingMode && (
-                  <div className="p-3 border border-slate-200 rounded-lg bg-white space-y-4 animate-in slide-in-from-top-2 duration-200">
+                  <div className="p-3 border border-slate-200 dark:border-neutral-800 rounded-lg bg-white dark:bg-neutral-900 space-y-4 animate-in slide-in-from-top-2 duration-200">
                     <div className="flex flex-wrap items-center gap-4">
                       <Select
                         defaultValue="short_answer"
@@ -795,10 +795,10 @@ export default function JobDetailsPage() {
                           setNewQuestionType(val as "short_answer" | "long_answer" | "checkbox" | "radio")
                         }
                       >
-                        <SelectTrigger className="w-[180px] h-10 border-slate-200 bg-white shadow-none text-slate-600 focus:ring-1 focus:ring-slate-300">
+                        <SelectTrigger className="w-[180px] h-10 border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-slate-600 dark:text-neutral-300 shadow-none focus:ring-1 focus:ring-slate-300">
                           <SelectValue placeholder="Question Type" />
                         </SelectTrigger>
-                        <SelectContent className="border-slate-200 shadow-md">
+                        <SelectContent className="border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-md">
                           <SelectItem value="short_answer">
                             <div className="flex items-center gap-2">
                               <HugeiconsIcon icon={TextIcon} className="size-4" />
@@ -830,18 +830,17 @@ export default function JobDetailsPage() {
                         placeholder="Enter the question here"
                         value={newQuestionText}
                         onChange={(e) => setNewQuestionText(e.target.value)}
-                        className="flex-1 h-10 border-slate-200 bg-white shadow-none focus-visible:ring-1 focus-visible:ring-slate-300 text-[15px]"
+                        className="flex-1 h-10 border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-none focus-visible:ring-1 focus-visible:ring-slate-300 text-[15px]"
                       />
 
                       {(newQuestionType === "radio" ||
-                        newQuestionType === "checkbox" ||
-                        newQuestionType === "boolean") && (
+                        newQuestionType === "checkbox") && (
                         <Dialog>
                           <DialogTrigger
                             render={
                               <Button
                                 variant="outline"
-                                className="h-10 border-[var(--theme-color)] text-[var(--theme-color)] hover:bg-slate-50 font-medium px-4 shadow-none gap-2"
+                                className="h-10 border-[var(--theme-color)] text-[var(--theme-color)] hover:bg-slate-50 dark:hover:bg-neutral-800 font-medium px-4 shadow-none gap-2"
                               />
                             }
                           >
@@ -851,26 +850,26 @@ export default function JobDetailsPage() {
                             />
                             <span>Setup Options & Logic</span>
                           </DialogTrigger>
-                          <DialogContent className="max-w-md border-slate-200">
+                          <DialogContent className="max-w-md border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xl">
                             <DialogHeader>
-                              <DialogTitle className="text-slate-900">
+                              <DialogTitle className="text-slate-900 dark:text-neutral-100">
                                 Setup Question Logic
                               </DialogTitle>
-                              <DialogDescription className="text-slate-500">
+                              <DialogDescription className="text-slate-500 dark:text-neutral-400">
                                 Add options and define the logic for this
                                 question.
                               </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-4 py-4">
                               <div className="space-y-2">
-                                <Label className="text-slate-700">
+                                <Label className="text-slate-700 dark:text-neutral-300">
                                   Options
                                 </Label>
                                 <div className="space-y-2">
                                   <div className="flex gap-2">
                                     <Input
                                       placeholder="Option 1"
-                                      className="h-9 border-slate-200 text-sm"
+                                      className="h-9 bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 text-sm placeholder:text-slate-400 dark:placeholder:text-neutral-600 focus-visible:ring-0"
                                     />
                                     <Button
                                       variant="ghost"
@@ -911,7 +910,7 @@ export default function JobDetailsPage() {
                         />
                         <Label
                           htmlFor="required"
-                          className="text-slate-600 font-medium text-[15px] cursor-pointer"
+                          className="text-slate-600 dark:text-neutral-300 font-medium text-[15px] cursor-pointer"
                         >
                           Required
                         </Label>
@@ -925,7 +924,7 @@ export default function JobDetailsPage() {
                             setNewQuestionText("");
                             setNewQuestionRequired(false);
                           }}
-                          className="h-10 px-6 border-slate-200 text-slate-600 hover:bg-slate-50 font-medium shadow-none"
+                          className="h-10 px-6 border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800 font-medium shadow-none"
                         >
                           Cancel
                         </Button>
@@ -971,20 +970,22 @@ export default function JobDetailsPage() {
           <TabsContent value="assessments" className="pt-8 space-y-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[18px] font-semibold text-slate-900">Automated Assessments</p>
-                <p className="text-[13px] text-slate-400 mt-1">Sent automatically when a candidate reaches the trigger stage.</p>
+                <p className="text-[18px] font-semibold text-slate-900 dark:text-neutral-100">Automated Assessments</p>
+                <p className="text-[13px] text-slate-400 dark:text-neutral-500 mt-1">Sent automatically when a candidate reaches the trigger stage.</p>
               </div>
               <Dialog open={isAssessmentDialogOpen} onOpenChange={setIsAssessmentDialogOpen}>
-                <DialogTrigger asChild>
-                  <button className="inline-flex items-center gap-2 h-10 px-5 rounded-lg text-[13px] font-medium border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors">
-                    <HugeiconsIcon icon={PlusSignIcon} className="size-4" strokeWidth={2.5} />
-                    Attach Assessment
-                  </button>
-                </DialogTrigger>
-                <DialogContent className="!top-[18%] !translate-y-0 max-w-sm rounded-xl border-slate-200 shadow-lg p-6 duration-0 data-open:zoom-in-100 data-closed:zoom-out-100">
+                <DialogTrigger
+                  render={
+                    <button className="inline-flex items-center gap-2 h-10 px-5 rounded-lg text-[13px] font-medium border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800 hover:text-slate-800 dark:hover:text-neutral-100 transition-colors">
+                      <HugeiconsIcon icon={PlusSignIcon} className="size-4" strokeWidth={2.5} />
+                      Attach Assessment
+                    </button>
+                  }
+                />
+                <DialogContent className="!top-[18%] !translate-y-0 max-w-sm rounded-xl border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-lg p-6 duration-0 data-open:zoom-in-100 data-closed:zoom-out-100">
                   <DialogHeader className="mb-4">
-                    <DialogTitle className="text-[16px] font-semibold text-slate-900">Attach Assessment</DialogTitle>
-                    <DialogDescription className="text-slate-400 text-[13px] mt-1">
+                    <DialogTitle className="text-[16px] font-semibold text-slate-900 dark:text-neutral-100">Attach Assessment</DialogTitle>
+                    <DialogDescription className="text-slate-400 dark:text-neutral-500 text-[13px] mt-1">
                       Auto-send when a candidate enters the selected stage.
                     </DialogDescription>
                   </DialogHeader>
@@ -1004,12 +1005,12 @@ export default function JobDetailsPage() {
                     className="space-y-3"
                   >
                     <div className="space-y-1.5">
-                      <Label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Assessment</Label>
+                      <Label className="text-[11px] font-semibold text-slate-400 dark:text-neutral-500 uppercase tracking-wide">Assessment</Label>
                       <Select name="assessmentId" required>
-                        <SelectTrigger className="w-full h-9 border-slate-200 shadow-none rounded-lg text-[13px] text-slate-600 focus:ring-0">
+                        <SelectTrigger className="w-full h-9 border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-none rounded-lg text-[13px] text-slate-600 dark:text-neutral-300 focus:ring-0">
                           <SelectValue placeholder="Choose assessment…" />
                         </SelectTrigger>
-                        <SelectContent className="rounded-lg shadow-lg border-slate-200">
+                        <SelectContent className="rounded-lg shadow-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
                           {allAssessments.map((a) => (
                             <SelectItem key={a.id} value={a.id.toString()} className="text-[13px]">{a.title}</SelectItem>
                           ))}
@@ -1017,12 +1018,12 @@ export default function JobDetailsPage() {
                       </Select>
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Trigger Stage</Label>
+                      <Label className="text-[11px] font-semibold text-slate-400 dark:text-neutral-500 uppercase tracking-wide">Trigger Stage</Label>
                       <Select name="triggerStageId" required>
-                        <SelectTrigger className="w-full h-9 border-slate-200 shadow-none rounded-lg text-[13px] text-slate-600 focus:ring-0">
+                        <SelectTrigger className="w-full h-9 border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-none rounded-lg text-[13px] text-slate-600 dark:text-neutral-300 focus:ring-0">
                           <SelectValue placeholder="When candidate moves into…" />
                         </SelectTrigger>
-                        <SelectContent className="rounded-lg shadow-lg border-slate-200">
+                        <SelectContent className="rounded-lg shadow-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
                           {stages.map((s) => (
                             <SelectItem key={s.id} value={s.id.toString()} className="text-[13px]">{s.name}</SelectItem>
                           ))}
@@ -1051,16 +1052,16 @@ export default function JobDetailsPage() {
                   return (
                     <div
                       key={attachment.id}
-                      className="flex items-center justify-between px-5 py-4 bg-white border border-[var(--theme-color)]/20 hover:border-[var(--theme-color)]/40 rounded-xl transition-colors"
+                      className="flex items-center justify-between px-5 py-4 bg-white dark:bg-neutral-900 border border-[var(--theme-color)]/20 hover:border-[var(--theme-color)]/40 rounded-xl transition-colors"
                     >
                       <div className="flex items-center gap-4 min-w-0">
-                        <div className="size-10 rounded-xl bg-purple-50 flex items-center justify-center shrink-0 text-[18px]">
+                        <div className="size-10 rounded-xl bg-purple-50 dark:bg-purple-950/30 flex items-center justify-center shrink-0 text-[18px]">
                           📋
                         </div>
-                        <div className="min-w-0">
-                          <p className="text-[14px] font-semibold text-slate-800 truncate">
-                            {assessmentFound?.title ?? "Unknown Assessment"}
-                          </p>
+                          <div className="min-w-0">
+                            <p className="text-[14px] font-semibold text-slate-800 dark:text-neutral-200 truncate">
+                              {assessmentFound?.title ?? "Unknown Assessment"}
+                            </p>
                           <p className="text-[12px] text-slate-400 mt-0.5">
                             Triggers on{" "}
                             <span className="font-medium text-slate-500">
@@ -1072,7 +1073,7 @@ export default function JobDetailsPage() {
                       </div>
                       <button
                         onClick={() => setDetachTarget(attachment.id)}
-                        className="shrink-0 ml-4 inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-medium border border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 transition-colors"
+                        className="shrink-0 ml-4 inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-medium border border-red-200 dark:border-red-900 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 hover:border-red-300 dark:hover:border-red-800 transition-colors"
                       >
                         <HugeiconsIcon icon={Delete02Icon} className="size-3.5" />
                         Remove
@@ -1082,8 +1083,8 @@ export default function JobDetailsPage() {
                 })}
               </div>
             ) : (
-              <div className="py-12 flex flex-col items-center justify-center text-center border border-dashed border-slate-200 rounded-xl">
-                <p className="text-[13px] text-slate-400">No assessments attached yet.</p>
+              <div className="py-12 flex flex-col items-center justify-center text-center border border-dashed border-slate-200 dark:border-neutral-800 rounded-xl">
+                <p className="text-[13px] text-slate-400 dark:text-neutral-500">No assessments attached yet.</p>
                 <button
                   onClick={() => setIsAssessmentDialogOpen(true)}
                   className="mt-2 text-[12px] font-medium text-[var(--theme-color)] hover:underline"
@@ -1094,17 +1095,17 @@ export default function JobDetailsPage() {
             )}
 
             <AlertDialog open={detachTarget !== null} onOpenChange={(o) => !o && setDetachTarget(null)}>
-              <AlertDialogContent className="max-w-sm rounded-xl border-slate-200 shadow-lg">
+              <AlertDialogContent className="max-w-sm rounded-xl border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-lg">
                 <AlertDialogHeader>
-                  <AlertDialogTitle className="text-[17px] font-semibold text-slate-900">
+                  <AlertDialogTitle className="text-[17px] font-semibold text-slate-900 dark:text-neutral-100">
                     Remove this assessment?
                   </AlertDialogTitle>
-                  <AlertDialogDescription className="text-[13px] text-slate-500 leading-relaxed">
+                  <AlertDialogDescription className="text-[13px] text-slate-500 dark:text-neutral-400 leading-relaxed">
                     Candidates moved to this stage will no longer receive the assessment automatically.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter className="gap-2">
-                  <AlertDialogCancel className="h-9 px-5 rounded-lg border-slate-200 text-slate-600 text-[13px] font-medium shadow-none">
+                  <AlertDialogCancel className="h-9 px-5 rounded-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-slate-600 dark:text-neutral-400 text-[13px] font-medium shadow-none hover:bg-slate-50 dark:hover:bg-neutral-800">
                     Cancel
                   </AlertDialogCancel>
                   <AlertDialogAction
@@ -1128,14 +1129,14 @@ export default function JobDetailsPage() {
       </Tabs>
 
       <Dialog open={configOpen} onOpenChange={setConfigOpen}>
-        <DialogContent className="!top-[18%] !translate-y-0 max-w-[780px] sm:max-w-[780px] rounded-lg border-slate-200 shadow-lg p-7 duration-0 data-open:zoom-in-100 data-closed:zoom-out-100">
+        <DialogContent className="!top-[18%] !translate-y-0 max-w-[780px] sm:max-w-[780px] rounded-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-lg p-7 duration-0 data-open:zoom-in-100 data-closed:zoom-out-100">
           <DialogHeader className="mb-1">
-            <DialogTitle className="text-[19px] font-semibold text-slate-900">
+            <DialogTitle className="text-[19px] font-semibold text-slate-900 dark:text-neutral-100">
               Configure Stage
             </DialogTitle>
           </DialogHeader>
 
-          <div className="flex items-center gap-7 py-3.5 border-b border-slate-100">
+          <div className="flex items-center gap-7 py-3.5 border-b border-slate-100 dark:border-neutral-800">
             {(["offer", "rejection", "none"] as const).map((t) => (
               <label
                 key={t}
@@ -1157,7 +1158,7 @@ export default function JobDetailsPage() {
                   className={`text-[15px] font-medium ${
                     configType === t
                       ? "text-[var(--theme-color)]"
-                      : "text-slate-600"
+                      : "text-slate-600 dark:text-neutral-400"
                   }`}
                 >
                   {t === "rejection"
@@ -1171,17 +1172,17 @@ export default function JobDetailsPage() {
           {configType === "offer" && (
             <div className="space-y-4 pt-1">
               <div>
-                <Label className="text-[13px] font-medium text-slate-700 mb-1.5 block">
+                <Label className="text-[13px] font-medium text-slate-700 dark:text-neutral-300 mb-1.5 block">
                   Select Offer Template
                 </Label>
                 <Select
                   value={configOfferTemplate}
                   onValueChange={(val) => setConfigOfferTemplate(val || "")}
                 >
-                  <SelectTrigger className="w-full h-10 border-slate-200 rounded-md shadow-none text-slate-400 focus:ring-0 text-sm">
+                  <SelectTrigger className="w-full h-10 border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 rounded-md shadow-none text-slate-400 dark:text-neutral-500 focus:ring-0 text-sm">
                     <SelectValue placeholder="Software Engineering Offer Template" />
                   </SelectTrigger>
-                  <SelectContent className="rounded-lg border-slate-200 shadow-md">
+                  <SelectContent className="rounded-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-md">
                     <SelectItem value="se-offer">
                       Software Engineering Offer Template
                     </SelectItem>
@@ -1213,14 +1214,14 @@ export default function JobDetailsPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label className="text-[13px] font-medium text-slate-700 mb-1.5 block">
+                  <Label className="text-[13px] font-medium text-slate-700 dark:text-neutral-300 mb-1.5 block">
                     Expiry Days
                   </Label>
                   <Input
                     type="number"
                     value={configExpiry}
                     onChange={(e) => setConfigExpiry(e.target.value)}
-                    className="h-10 border-slate-200 rounded-md shadow-none focus-visible:ring-0 focus-visible:border-slate-300"
+                    className="h-10 border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 rounded-md shadow-none focus-visible:ring-0 focus-visible:border-slate-300"
                   />
                 </div>
               </div>
@@ -1229,17 +1230,17 @@ export default function JobDetailsPage() {
 
           {configType === "rejection" && (
             <div className="pt-1">
-              <Label className="text-[13px] font-medium text-slate-700 mb-1.5 block">
+              <Label className="text-[13px] font-medium text-slate-700 dark:text-neutral-300 mb-1.5 block">
                 Select Rejection Email Template
               </Label>
               <Select
                 value={configRejectTemplate}
                 onValueChange={(val) => setConfigRejectTemplate(val || "")}
               >
-                <SelectTrigger className="w-full h-10 border-slate-200 rounded-md shadow-none text-slate-400 focus:ring-0 text-sm">
+                <SelectTrigger className="w-full h-10 border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-none text-slate-400 dark:text-neutral-500 focus:ring-0 text-sm">
                   <SelectValue placeholder="Software Engineering Offer Template" />
                 </SelectTrigger>
-                <SelectContent className="rounded-lg border-slate-200 shadow-md">
+                <SelectContent className="rounded-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-md">
                   <SelectItem value="se-reject">
                     Software Engineering Rejection Template
                   </SelectItem>
@@ -1255,7 +1256,7 @@ export default function JobDetailsPage() {
             <Button
               variant="outline"
               onClick={() => setConfigOpen(false)}
-              className="h-10 px-6 border-slate-200 text-slate-600 hover:bg-slate-50 font-medium shadow-none rounded-md"
+              className="h-10 px-6 border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800 font-medium shadow-none rounded-md"
             >
               Cancel
             </Button>
@@ -1270,16 +1271,16 @@ export default function JobDetailsPage() {
       </Dialog>
 
       <Dialog open={addStageOpen} onOpenChange={setAddStageOpen}>
-        <DialogContent className="!top-[18%] !translate-y-0 max-w-[460px] rounded-lg border-slate-200 shadow-lg p-7 duration-0 data-open:zoom-in-100 data-closed:zoom-out-100">
+        <DialogContent className="!top-[18%] !translate-y-0 max-w-[460px] rounded-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-lg p-7 duration-0 data-open:zoom-in-100 data-closed:zoom-out-100">
           <DialogHeader className="mb-3">
-            <DialogTitle className="text-[19px] font-semibold text-slate-900">
+            <DialogTitle className="text-[19px] font-semibold text-slate-900 dark:text-neutral-100">
               Add New Stage
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             <div>
-              <Label className="text-[13px] font-medium text-slate-700 mb-1.5 block">
+              <Label className="text-[13px] font-medium text-slate-700 dark:text-neutral-300 mb-1.5 block">
                 Stage Name
               </Label>
               <Input
@@ -1288,11 +1289,11 @@ export default function JobDetailsPage() {
                 value={newStageName}
                 onChange={(e) => setNewStageName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleAddStage()}
-                className="h-10 border-slate-200 rounded-md shadow-none focus-visible:ring-0 focus-visible:border-slate-300 text-[14px] placeholder:text-slate-300"
+                className="h-10 border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 rounded-md shadow-none focus-visible:ring-0 focus-visible:border-slate-300 text-[14px] placeholder:text-slate-300 dark:placeholder:text-neutral-600"
               />
             </div>
-            <div className="text-[13px] text-slate-500 space-y-0.5 pl-0.5">
-              <p className="font-medium text-slate-600 mb-1">Tips:</p>
+            <div className="text-[13px] text-slate-500 dark:text-neutral-400 space-y-0.5 pl-0.5">
+              <p className="font-medium text-slate-600 dark:text-neutral-300 mb-1">Tips:</p>
               <p>• Keep stage names short and descriptive</p>
               <p>• Use consistent naming conventions</p>
               <p>• Drag to reorder stages in the pipeline</p>
@@ -1303,7 +1304,7 @@ export default function JobDetailsPage() {
             <Button
               variant="outline"
               onClick={() => setAddStageOpen(false)}
-              className="h-10 px-6 border-slate-200 text-slate-600 hover:bg-slate-50 font-medium shadow-none rounded-md"
+              className="h-10 px-6 border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800 font-medium shadow-none rounded-md"
             >
               Cancel
             </Button>
@@ -1321,29 +1322,29 @@ export default function JobDetailsPage() {
       </div>
 
       {isNotesOpen && (
-        <div className="w-[450px] shrink-0 border-l border-slate-200 flex flex-col bg-white shadow-[-8px_0_24px_rgba(0,0,0,0.02)] z-10 relative">
-          <div className="p-5 border-b border-slate-100 bg-white flex items-center justify-between shrink-0">
-            <h3 className="text-lg font-semibold text-slate-900">
+        <div className="w-[450px] shrink-0 border-l border-slate-200 dark:border-neutral-800 flex flex-col bg-white dark:bg-neutral-950 shadow-[-8px_0_24px_rgba(0,0,0,0.05)] z-10 relative">
+          <div className="p-5 border-b border-slate-100 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex items-center justify-between shrink-0">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-neutral-100">
               Internal Notes
             </h3>
             <button
                onClick={() => setIsNotesOpen(false)}
-               className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-full transition-colors"
+               className="text-slate-400 dark:text-neutral-500 hover:text-slate-600 dark:hover:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 p-2 rounded-full transition-colors"
             >
               <HugeiconsIcon icon={Cancel01Icon} className="size-[20px]" />
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-white scroll-smooth relative">
+          <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-white dark:bg-neutral-950 scroll-smooth relative">
             {allMessages.length === 0 ? (
-              <p className="text-slate-400 text-[13px] text-center pt-8">
+              <p className="text-slate-400 dark:text-neutral-500 text-[13px] text-center pt-8">
                 No notes yet. Be the first to add one.
               </p>
             ) : (
               allMessages.map((msg) => (
                 <div
                   key={msg.id}
-                  className="bg-slate-50/80 border border-slate-100 p-4 rounded-xl space-y-3 w-full shadow-none"
+                  className="bg-slate-50/80 dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800 p-4 rounded-xl space-y-3 w-full shadow-none"
                 >
                   <div className="flex items-center gap-3">
                     <div className="size-8 rounded-full bg-[var(--theme-color)] flex items-center justify-center text-white text-[11px] font-semibold overflow-hidden shrink-0">
@@ -1355,15 +1356,15 @@ export default function JobDetailsPage() {
                       )}
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-slate-900 font-semibold text-[13px] leading-tight">
+                      <span className="text-slate-900 dark:text-neutral-100 font-semibold text-[13px] leading-tight">
                         {msg.senderName ?? "Unknown"}
                       </span>
-                      <span className="text-slate-400 text-[11px]">
+                      <span className="text-slate-400 dark:text-neutral-500 text-[11px]">
                         {timeAgo(msg.sentAt)}
                       </span>
                     </div>
                   </div>
-                  <p className="text-slate-600 text-[13px] leading-relaxed">
+                  <p className="text-slate-600 dark:text-neutral-300 text-[13px] leading-relaxed">
                     {msg.message}
                   </p>
                 </div>
@@ -1373,7 +1374,7 @@ export default function JobDetailsPage() {
             <div className="h-4 w-full"></div>
           </div>
 
-          <div className="p-5 border-t border-slate-100 bg-white space-y-4 shrink-0">
+          <div className="p-5 border-t border-slate-100 dark:border-neutral-800 bg-white dark:bg-neutral-950 space-y-4 shrink-0">
             <div className="relative">
               <textarea
                 value={noteText}
@@ -1382,7 +1383,7 @@ export default function JobDetailsPage() {
                   if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSendNote();
                 }}
                 placeholder="Add a note... (Ctrl+Enter to send)"
-                className="w-full min-h-[100px] p-4 border border-slate-200 rounded-xl bg-white focus:ring-1 focus:ring-[var(--theme-color)]/20 focus:border-[var(--theme-color)] outline-none text-[14px] text-slate-700 transition-all resize-none shadow-none"
+                className="w-full min-h-[100px] p-4 border border-slate-200 dark:border-neutral-800 rounded-xl bg-white dark:bg-neutral-900 focus:ring-1 focus:ring-[var(--theme-color)]/20 focus:border-[var(--theme-color)] outline-none text-[14px] text-slate-700 dark:text-neutral-300 placeholder:text-slate-300 dark:placeholder:text-neutral-600 transition-all resize-none shadow-none"
               />
             </div>
             <Button

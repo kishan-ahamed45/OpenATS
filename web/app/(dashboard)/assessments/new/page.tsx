@@ -77,10 +77,10 @@ const TRUE_FALSE_OPTIONS: AnswerOption[] = [
 ];
 
 const inputCls =
-  "h-11 bg-white border-slate-200 rounded-lg shadow-none text-sm placeholder:text-slate-400 focus-visible:ring-0 focus-visible:border-slate-400 transition-colors";
+  "h-11 bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 rounded-lg shadow-none text-sm placeholder:text-slate-400 dark:placeholder:text-neutral-500 text-slate-900 dark:text-neutral-100 focus-visible:ring-0 focus-visible:border-slate-400 transition-colors";
 
 const textareaCls =
-  "w-full px-3.5 py-3 text-sm bg-white border border-slate-200 rounded-lg shadow-none placeholder:text-slate-400 focus:outline-none focus:border-slate-400 resize-none transition-colors";
+  "w-full px-3.5 py-3 text-sm bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-lg shadow-none placeholder:text-slate-400 dark:placeholder:text-neutral-500 text-slate-900 dark:text-neutral-100 focus:outline-none focus:border-slate-400 resize-none transition-colors";
 
 export default function CreateAssessmentPage() {
   const router = useRouter();
@@ -254,19 +254,19 @@ export default function CreateAssessmentPage() {
   const correctLabel = currentQ?.options.find((o) => o.isCorrect)?.text ?? null;
 
   return (
-    <div className="flex flex-1 flex-col bg-white overflow-hidden">
-      <div className="px-8 py-5 border-b border-slate-100 flex items-center justify-between shrink-0 gap-4">
+    <div className="flex flex-1 flex-col bg-white dark:bg-neutral-950 overflow-hidden">
+      <div className="px-8 py-5 border-b border-slate-100 dark:border-neutral-800 flex items-center justify-between shrink-0 gap-4">
         <div className="flex items-center gap-5 min-w-0">
-          <h1 className="text-[22px] font-semibold text-slate-900 leading-none whitespace-nowrap">
+          <h1 className="text-[22px] font-semibold text-slate-900 dark:text-neutral-100 leading-none whitespace-nowrap">
             Create New Assessment
           </h1>
           <div className="flex items-center gap-2.5">
             <Switch
               checked={isActive}
               onCheckedChange={setIsActive}
-              className="data-checked:bg-[var(--theme-color)] scale-110"
+              className="data-[state=checked]:bg-[var(--theme-color)] scale-110"
             />
-            <span className="text-sm text-slate-600 font-medium whitespace-nowrap">
+            <span className="text-sm text-slate-600 dark:text-neutral-400 font-medium whitespace-nowrap">
               Make this Active
             </span>
           </div>
@@ -285,7 +285,7 @@ export default function CreateAssessmentPage() {
           <Link href="/assessments">
             <Button
               variant="outline"
-              className="h-10 px-6 rounded-lg border-slate-200 text-slate-600 bg-white hover:bg-slate-50 shadow-none font-medium text-sm"
+              className="h-10 px-6 rounded-lg border-slate-200 dark:border-neutral-800 text-slate-600 dark:text-neutral-400 bg-white dark:bg-neutral-900 hover:bg-slate-50 dark:hover:bg-neutral-800 shadow-none font-medium text-sm"
             >
               Cancel
             </Button>
@@ -293,12 +293,12 @@ export default function CreateAssessmentPage() {
         </div>
       </div>
 
-      <div className="border-b border-slate-100 shrink-0">
+      <div className="border-b border-slate-100 dark:border-neutral-800 shrink-0">
         <button
           onClick={() => setMetaOpen((o) => !o)}
-          className="w-full flex items-center justify-between px-8 py-4 hover:bg-slate-50/60 transition-colors group"
+          className="w-full flex items-center justify-between px-8 py-4 hover:bg-slate-50/60 dark:hover:bg-neutral-900 transition-colors group"
         >
-          <span className="text-[12px] font-semibold text-slate-500 tracking-widest uppercase">
+          <span className="text-[12px] font-semibold text-slate-500 dark:text-neutral-400 tracking-widest uppercase">
             Assessment Details
           </span>
           <HugeiconsIcon
@@ -311,7 +311,7 @@ export default function CreateAssessmentPage() {
         {metaOpen && (
           <div className="px-8 pb-8 space-y-5">
             <div>
-              <Label className="text-[13px] font-medium text-slate-600 mb-1.5 block">
+              <Label className="text-[13px] font-medium text-slate-600 dark:text-neutral-400 mb-1.5 block">
                 Assessment Title
               </Label>
               <Input
@@ -322,7 +322,7 @@ export default function CreateAssessmentPage() {
               />
             </div>
             <div>
-              <Label className="text-[13px] font-medium text-slate-600 mb-1.5 block">
+              <Label className="text-[13px] font-medium text-slate-600 dark:text-neutral-400 mb-1.5 block">
                 Description
               </Label>
               <textarea
@@ -335,7 +335,7 @@ export default function CreateAssessmentPage() {
             </div>
             <div className="grid grid-cols-2 gap-5">
               <div>
-                <Label className="text-[13px] font-medium text-slate-600 mb-1.5 block">
+                <Label className="text-[13px] font-medium text-slate-600 dark:text-neutral-400 mb-1.5 block">
                   Time Limit (Minutes)
                 </Label>
                 <Input
@@ -345,7 +345,7 @@ export default function CreateAssessmentPage() {
                 />
               </div>
               <div>
-                <Label className="text-[13px] font-medium text-slate-600 mb-1.5 block">
+                <Label className="text-[13px] font-medium text-slate-600 dark:text-neutral-400 mb-1.5 block">
                   Total Points
                 </Label>
                 <Input
@@ -360,9 +360,9 @@ export default function CreateAssessmentPage() {
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        <div className="w-[280px] border-r border-slate-100 flex flex-col shrink-0 bg-white">
-          <div className="px-5 py-4 border-b border-slate-100">
-            <span className="text-[13px] font-semibold text-slate-700">
+        <div className="w-[280px] border-r border-slate-100 dark:border-neutral-800 flex flex-col shrink-0 bg-white dark:bg-neutral-950">
+          <div className="px-5 py-4 border-b border-slate-100 dark:border-neutral-800">
+            <span className="text-[13px] font-semibold text-slate-700 dark:text-neutral-300">
               Questions ({questions.length})
             </span>
           </div>
@@ -399,12 +399,12 @@ export default function CreateAssessmentPage() {
                   <div
                     ref={ref as Ref<HTMLDivElement>}
                     className={`w-full text-left rounded-lg px-3.5 py-3 flex items-center gap-3 transition-all border cursor-pointer group ${isDragging
-                      ? "opacity-40 border-transparent bg-slate-100"
+                      ? "opacity-40 border-transparent bg-slate-100 dark:bg-neutral-800"
                       : isOver
                         ? "border-[var(--theme-color)]/30 bg-[var(--theme-color)]/5"
                         : selectedQ === q.uid
                           ? "bg-[var(--theme-color)]/5 border-[var(--theme-color)]/20"
-                          : "bg-slate-50 border-transparent text-slate-600 hover:bg-slate-100"
+                          : "bg-slate-50 dark:bg-neutral-900 border-transparent text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800"
                       }`}
                     onClick={() => setSelectedQ(q.uid)}
                   >
@@ -418,7 +418,7 @@ export default function CreateAssessmentPage() {
                       >
                         Q{idx + 1}: {q.title || "Question Title"}
                       </p>
-                      <p className="text-[11px] text-slate-400 mt-0.5">
+                      <p className="text-[11px] text-slate-400 dark:text-neutral-500 mt-0.5">
                         {q.type}
                       </p>
                     </div>
@@ -448,10 +448,10 @@ export default function CreateAssessmentPage() {
         </div>
 
         {currentQ && (
-          <div className="flex-1 overflow-y-auto p-8 space-y-5 bg-white">
-            <div className="border border-slate-200 rounded-xl p-6 space-y-5">
+          <div className="flex-1 overflow-y-auto p-8 space-y-5 bg-white dark:bg-neutral-950">
+            <div className="border border-slate-200 dark:border-neutral-800 rounded-xl p-6 space-y-5">
               <div className="flex items-center justify-between">
-                <span className="text-[13px] font-semibold text-slate-700">
+                <span className="text-[13px] font-semibold text-slate-700 dark:text-neutral-300">
                   Question Details
                 </span>
                 <button
@@ -465,7 +465,7 @@ export default function CreateAssessmentPage() {
               </div>
 
               <div>
-                <Label className="text-[13px] font-medium text-slate-600 mb-1.5 block">
+                <Label className="text-[13px] font-medium text-slate-600 dark:text-neutral-400 mb-1.5 block">
                   Question Title
                 </Label>
                 <Input
@@ -479,9 +479,9 @@ export default function CreateAssessmentPage() {
               </div>
 
               <div>
-                <Label className="text-[13px] font-medium text-slate-600 mb-1.5 block">
+                <Label className="text-[13px] font-medium text-slate-600 dark:text-neutral-400 mb-1.5 block">
                   Description{" "}
-                  <span className="text-slate-400 font-normal">(optional)</span>
+                  <span className="text-slate-400 dark:text-neutral-500 font-normal">(optional)</span>
                 </Label>
                 <textarea
                   placeholder="Add more context for this question ..."
@@ -505,16 +505,16 @@ export default function CreateAssessmentPage() {
                       changeType(selectedQ, val as QuestionType)
                     }
                   >
-                    <SelectTrigger className="h-11 bg-white border-slate-200 rounded-lg shadow-none text-sm focus:ring-0 focus:border-slate-400 gap-2 transition-colors">
+                    <SelectTrigger className="h-11 bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 rounded-lg shadow-none text-sm focus:ring-0 focus:border-slate-400 dark:focus:border-neutral-600 gap-2 transition-colors">
                       <div className="flex items-center gap-2">
                         <HugeiconsIcon
                           icon={RadioButtonIcon}
-                          className="size-4 text-slate-400 shrink-0"
+                          className="size-4 text-slate-400 dark:text-neutral-500 shrink-0"
                         />
                         <SelectValue />
                       </div>
                     </SelectTrigger>
-                    <SelectContent className="rounded-lg shadow-lg border-slate-200">
+                    <SelectContent className="rounded-lg shadow-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
                       <SelectItem value="Multiple Choice">
                         Multiple Choice
                       </SelectItem>
@@ -524,7 +524,7 @@ export default function CreateAssessmentPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label className="text-[13px] font-medium text-slate-600 mb-1.5 block">
+                  <Label className="text-[13px] font-medium text-slate-600 dark:text-neutral-400 mb-1.5 block">
                     Points
                   </Label>
                   <Select
@@ -533,10 +533,10 @@ export default function CreateAssessmentPage() {
                       updateQuestion(selectedQ, { points: val || "" })
                     }
                   >
-                    <SelectTrigger className="h-11 bg-white border-slate-200 rounded-lg shadow-none text-sm focus:ring-0 focus:border-slate-400 transition-colors">
+                    <SelectTrigger className="h-11 bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 rounded-lg shadow-none text-sm focus:ring-0 focus:border-slate-400 dark:focus:border-neutral-600 transition-colors">
                       <SelectValue placeholder="Select" />
                     </SelectTrigger>
-                    <SelectContent className="rounded-lg shadow-lg border-slate-200">
+                    <SelectContent className="rounded-lg shadow-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
                       <SelectItem value="5">5 pts</SelectItem>
                       <SelectItem value="10">10 pts</SelectItem>
                       <SelectItem value="15">15 pts</SelectItem>
@@ -548,11 +548,11 @@ export default function CreateAssessmentPage() {
             </div>
 
             {isShortAnswer ? (
-              <div className="border border-slate-200 rounded-xl p-6 space-y-4">
-                <h3 className="text-[13px] font-semibold text-slate-700">
+              <div className="border border-slate-200 dark:border-neutral-800 rounded-xl p-6 space-y-4">
+                <h3 className="text-[13px] font-semibold text-slate-700 dark:text-neutral-300">
                   Correct Answer (Key)
                 </h3>
-                <p className="text-[12px] text-slate-400">
+                <p className="text-[12px] text-slate-400 dark:text-neutral-500">
                   Candidates' answers will be compared against this key for
                   grading.
                 </p>
@@ -569,9 +569,9 @@ export default function CreateAssessmentPage() {
                 />
               </div>
             ) : (
-              <div className="border border-slate-200 rounded-xl p-6 space-y-4">
+              <div className="border border-slate-200 dark:border-neutral-800 rounded-xl p-6 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-[13px] font-semibold text-slate-700">
+                  <h3 className="text-[13px] font-semibold text-slate-700 dark:text-neutral-300">
                     Answer Options
                   </h3>
                   <span className="text-[11px] text-slate-400">
@@ -585,8 +585,8 @@ export default function CreateAssessmentPage() {
                     <div
                       key={opt.id}
                       className={`flex items-center gap-3 border rounded-lg px-4 py-3 transition-all ${opt.isCorrect
-                        ? "border-emerald-300 bg-emerald-50/40"
-                        : "border-slate-200 bg-white"
+                        ? "border-emerald-300 dark:border-emerald-800 bg-emerald-50/40 dark:bg-emerald-950/20"
+                        : "border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900"
                         }`}
                     >
                       <button
@@ -600,7 +600,7 @@ export default function CreateAssessmentPage() {
                               ? CheckmarkCircle01Icon
                               : RadioButtonIcon
                           }
-                          className={`size-5 transition-colors ${opt.isCorrect ? "text-emerald-500" : "text-slate-300 hover:text-slate-500"}`}
+                          className={`size-5 transition-colors ${opt.isCorrect ? "text-emerald-500" : "text-slate-300 dark:text-neutral-600 hover:text-slate-500 dark:hover:text-neutral-400"}`}
                         />
                       </button>
 
@@ -611,14 +611,14 @@ export default function CreateAssessmentPage() {
                           updateOptionText(selectedQ, opt.id, e.target.value)
                         }
                         disabled={isTrueFalse}
-                        className={`flex-1 text-sm bg-transparent outline-none placeholder:text-slate-400 ${opt.isCorrect
-                          ? "text-emerald-700 font-medium"
-                          : "text-slate-700"
+                        className={`flex-1 text-sm bg-transparent outline-none placeholder:text-slate-400 dark:placeholder:text-neutral-600 ${opt.isCorrect
+                          ? "text-emerald-700 dark:text-emerald-400 font-medium"
+                          : "text-slate-700 dark:text-neutral-300"
                           } disabled:cursor-default`}
                       />
 
                       {opt.isCorrect && (
-                        <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full shrink-0">
+                        <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full shrink-0">
                           Correct
                         </span>
                       )}

@@ -102,18 +102,18 @@ function RowMenu({
     <div ref={ref} className="relative flex justify-end">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="p-1.5 rounded-md text-[var(--theme-color)]/50 hover:text-[var(--theme-color)] hover:bg-slate-100 transition-colors"
+        className="p-1.5 rounded-md text-[var(--theme-color)]/50 hover:text-[var(--theme-color)] hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
       >
         <HugeiconsIcon icon={MoreVerticalIcon} className="size-4" />
       </button>
       {open && (
-        <div className="absolute right-0 top-8 z-50 w-44 bg-white border border-slate-200 rounded-lg shadow-lg py-1 text-sm">
+        <div className="absolute right-0 top-8 z-50 w-44 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-lg shadow-lg py-1 text-sm">
           <button
             onClick={() => {
               setOpen(false);
               onEdit();
             }}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-slate-700 hover:bg-slate-50"
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-slate-700 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800"
           >
             <HugeiconsIcon
               icon={PencilEdit01Icon}
@@ -126,7 +126,7 @@ function RowMenu({
               setOpen(false);
               onDuplicate();
             }}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-slate-700 hover:bg-slate-50"
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-slate-700 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800"
           >
             <HugeiconsIcon
               icon={Copy01Icon}
@@ -134,13 +134,13 @@ function RowMenu({
             />{" "}
             Duplicate
           </button>
-          <div className="border-t border-slate-100 my-1" />
+          <div className="border-t border-slate-100 dark:border-neutral-800 my-1" />
           <button
             onClick={() => {
               setOpen(false);
               onDelete();
             }}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-red-500 hover:bg-red-50"
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
           >
             <HugeiconsIcon icon={Delete02Icon} className="size-4" /> Delete
           </button>
@@ -190,9 +190,9 @@ export default function TemplatesPage() {
   });
 
   return (
-    <div className="flex flex-1 flex-col bg-white">
+    <div className="flex flex-1 flex-col bg-white dark:bg-neutral-950">
       <div className="px-8 py-4 flex items-center justify-between">
-        <h1 className="text-[28px] font-medium text-slate-900 leading-none">
+        <h1 className="text-[28px] font-medium text-slate-900 dark:text-neutral-100 leading-none">
           Templates
         </h1>
         <button
@@ -211,7 +211,7 @@ export default function TemplatesPage() {
         </button>
       </div>
 
-      <div className="border-y border-slate-200 px-8 py-3.5 flex items-center gap-4">
+      <div className="border-y border-slate-200 dark:border-neutral-800 px-8 py-3.5 flex items-center gap-4">
         <div className="relative w-80">
           <HugeiconsIcon
             icon={Search01Icon}
@@ -221,7 +221,7 @@ export default function TemplatesPage() {
             placeholder="Search templates..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-11 h-10! bg-white border-slate-200 shadow-none rounded-lg text-sm placeholder:text-slate-300 focus-visible:border-slate-300 focus-visible:ring-0"
+            className="pl-11 h-10! bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 shadow-none rounded-lg text-sm placeholder:text-slate-300 dark:placeholder:text-neutral-600 focus-visible:border-slate-300 dark:focus-visible:border-neutral-700 focus-visible:ring-0"
           />
         </div>
 
@@ -229,10 +229,10 @@ export default function TemplatesPage() {
           value={filterType}
           onValueChange={(val) => setFilterType(val || "")}
         >
-          <SelectTrigger className="w-48 h-10! bg-white border-slate-200 shadow-none rounded-lg text-slate-500 text-sm focus:ring-0 px-4">
+          <SelectTrigger className="w-48 h-10! bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 shadow-none rounded-lg text-slate-500 dark:text-neutral-400 text-sm focus:ring-0 px-4">
             <SelectValue placeholder="All Types" />
           </SelectTrigger>
-          <SelectContent className="rounded-lg shadow-lg border-slate-200">
+          <SelectContent className="rounded-lg shadow-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
             <SelectItem value="all">All Types</SelectItem>
             <SelectItem value="offer">Offer Letter</SelectItem>
             <SelectItem value="rejection">Rejection</SelectItem>
@@ -248,7 +248,7 @@ export default function TemplatesPage() {
               setSearch("");
               setFilterType("all");
             }}
-            className="text-slate-600 text-sm h-10 px-4 hover:bg-transparent hover:text-slate-900 border-none"
+            className="text-slate-600 dark:text-neutral-400 text-sm h-10 px-4 hover:bg-transparent hover:text-slate-900 dark:hover:text-neutral-100 border-none"
           >
             Clear All
           </Button>
@@ -256,20 +256,20 @@ export default function TemplatesPage() {
       </div>
 
       <div className="px-8 py-6">
-        <div className="border border-slate-200 rounded-xl bg-white shadow-none overflow-hidden text-[var(--theme-color)]">
+        <div className="border border-slate-200 dark:border-neutral-800 rounded-xl bg-white dark:bg-neutral-950 shadow-none overflow-hidden text-[var(--theme-color)]">
           <Table>
             <TableHeader>
-              <TableRow className="border-b border-slate-200 bg-white hover:bg-transparent">
-                <TableHead className="h-13 px-8 font-semibold text-slate-900 text-sm">
+              <TableRow className="border-b border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 hover:bg-transparent">
+                <TableHead className="h-13 px-8 font-semibold text-slate-900 dark:text-neutral-100 text-sm">
                   Template Name
                 </TableHead>
-                <TableHead className="h-13 px-8 font-semibold text-slate-900 text-sm">
+                <TableHead className="h-13 px-8 font-semibold text-slate-900 dark:text-neutral-100 text-sm">
                   Type
                 </TableHead>
-                <TableHead className="h-13 px-8 font-semibold text-slate-900 text-sm">
+                <TableHead className="h-13 px-8 font-semibold text-slate-900 dark:text-neutral-100 text-sm">
                   Created By
                 </TableHead>
-                <TableHead className="h-13 px-8 font-semibold text-slate-900 text-sm">
+                <TableHead className="h-13 px-8 font-semibold text-slate-900 dark:text-neutral-100 text-sm">
                   Last Edited
                 </TableHead>
                 <TableHead className="h-13 px-4" />
@@ -289,7 +289,7 @@ export default function TemplatesPage() {
                 filtered.map((t) => (
                   <TableRow
                     key={t.id}
-                    className="border-b border-slate-200 last:border-0 font-medium hover:bg-slate-50/50"
+                    className="border-b border-slate-200 dark:border-neutral-800 last:border-0 font-medium hover:bg-slate-50/50 dark:hover:bg-neutral-900/50"
                   >
                     <TableCell className="h-14 px-8 py-0">
                       <Link
@@ -327,14 +327,14 @@ export default function TemplatesPage() {
             </TableBody>
           </Table>
 
-          <div className="flex items-center justify-between px-8 py-3.5 border-t border-slate-200 bg-white">
-            <span className="text-sm font-medium text-slate-400">
+          <div className="flex items-center justify-between px-8 py-3.5 border-t border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-950">
+            <span className="text-sm font-medium text-slate-400 dark:text-neutral-500">
               Showing 1–{filtered.length} of {filtered.length} results
             </span>
             <div className="flex items-center gap-3">
               <Button
                 variant="outline"
-                className="h-10 px-6 rounded-lg bg-white border-slate-200 text-[var(--theme-color)] font-semibold text-sm hover:bg-slate-50 shadow-none gap-2"
+                className="h-10 px-6 rounded-lg bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 text-[var(--theme-color)] font-semibold text-sm hover:bg-slate-50 dark:hover:bg-neutral-800 shadow-none gap-2"
               >
                 <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />{" "}
                 Previous
@@ -349,12 +349,12 @@ export default function TemplatesPage() {
       </div>
 
       <Dialog open={typePickerOpen} onOpenChange={setTypePickerOpen}>
-        <DialogContent className="!top-[20%] !translate-y-0 sm:max-w-[500px] max-w-[500px] rounded-xl border-slate-200 shadow-lg p-7 duration-0 data-open:zoom-in-100 data-closed:zoom-out-100">
+        <DialogContent className="!top-[20%] !translate-y-0 sm:max-w-[500px] max-w-[500px] rounded-xl border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-lg p-7 duration-0 data-open:zoom-in-100 data-closed:zoom-out-100">
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold text-slate-900">
+            <DialogTitle className="text-[18px] font-semibold text-slate-900 dark:text-neutral-100">
               What type of template is this?
             </DialogTitle>
-            <p className="text-[13px] text-slate-500 mt-1">
+            <p className="text-[13px] text-slate-500 dark:text-neutral-400 mt-1">
               The type sets which variables are available in the builder.
             </p>
           </DialogHeader>
@@ -368,8 +368,8 @@ export default function TemplatesPage() {
                 onClick={() => setPickedType(t)}
                 className={`flex flex-col items-start gap-2.5 p-4 rounded-xl border-2 text-left transition-all ${
                   pickedType === t
-                    ? "border-[var(--theme-color)] bg-[var(--theme-color)]/5"
-                    : "border-slate-200 hover:border-slate-300 bg-white"
+                    ? "border-[var(--theme-color)] bg-[var(--theme-color)]/5 dark:bg-[var(--theme-color)]/10"
+                    : "border-slate-200 dark:border-neutral-800 hover:border-slate-300 dark:hover:border-neutral-700 bg-white dark:bg-neutral-900"
                 }`}
               >
                 <span
@@ -377,7 +377,7 @@ export default function TemplatesPage() {
                 >
                   {TYPE_META[t].label}
                 </span>
-                <span className="text-[12px] text-slate-500 leading-snug">
+                <span className="text-[12px] text-slate-500 dark:text-neutral-400 leading-snug">
                   {t === "offer" && "Offer letters with salary & start date"}
                   {t === "rejection" &&
                     "Notify candidates who weren't selected"}
@@ -392,7 +392,7 @@ export default function TemplatesPage() {
             <Button
               variant="outline"
               onClick={() => setTypePickerOpen(false)}
-              className="h-10 px-6 border-slate-200 text-slate-600 hover:bg-slate-50 font-medium shadow-none rounded-lg text-sm"
+              className="h-10 px-6 border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-slate-600 dark:text-neutral-400 hover:bg-slate-50 dark:hover:bg-neutral-800 font-medium shadow-none rounded-lg text-sm"
             >
               Cancel
             </Button>
@@ -416,18 +416,18 @@ export default function TemplatesPage() {
         open={deleteId !== null}
         onOpenChange={(o) => !o && setDeleteId(null)}
       >
-        <AlertDialogContent className="max-w-sm rounded-xl border-slate-200 shadow-lg">
+        <AlertDialogContent className="max-w-sm rounded-xl border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-lg">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-[17px] font-semibold text-slate-900">
+            <AlertDialogTitle className="text-[17px] font-semibold text-slate-900 dark:text-neutral-100">
               Delete Template?
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-[13px] text-slate-500 leading-relaxed">
-              <strong className="text-slate-700">{deleteName}</strong> will be
+            <AlertDialogDescription className="text-[13px] text-slate-500 dark:text-neutral-400 leading-relaxed">
+              <strong className="text-slate-700 dark:text-neutral-200">{deleteName}</strong> will be
               permanently removed. This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2">
-            <AlertDialogCancel className="h-9 px-5 rounded-lg border-slate-200 text-slate-600 text-[13px] font-medium shadow-none">
+            <AlertDialogCancel className="h-9 px-5 rounded-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-slate-600 dark:text-neutral-400 text-[13px] font-medium shadow-none hover:bg-slate-50 dark:hover:bg-neutral-800">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
