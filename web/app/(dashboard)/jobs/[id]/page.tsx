@@ -36,9 +36,14 @@ import {
   useJobAssessments,
   useAttachAssessment,
   useDetachAssessment,
+  useHiringTeam,
+  useAddHiringTeamMember,
+  useRemoveHiringTeamMember,
+  useUsers,
+  useTemplates,
 } from "@/hooks/use-api";
 import { useJobChat } from "@/hooks/use-job-chat";
-import type { PipelineStage, JobDetail, CustomQuestion } from "@/types";
+import type { PipelineStage, JobDetail, CustomQuestion, User } from "@/types";
 
 const STAGE_COLORS: Record<PipelineStage["stageType"], string> = {
   none: "bg-slate-400",
@@ -145,10 +150,39 @@ export default function JobDetailsPage() {
   const updateQuestionMutation = useUpdateQuestion(jobId);
   const deleteQuestionMutation = useDeleteQuestion(jobId);
 
+  const { data: templatesData } = useTemplates();
+  const allTemplates = templatesData?.data ?? [];
+  const offerTemplates = allTemplates.filter((t) => t.type === "offer");
+  const emailTemplates = allTemplates.filter((t) => t.type === "rejection");
+
   const { data: allAssessmentsData } = useAssessments();
   const { data: jobAssessmentsData } = useJobAssessments(jobId);
   const attachAssessmentMutation = useAttachAssessment(jobId);
   const detachAssessmentMutation = useDetachAssessment(jobId);
+
+  const { data: teamData } = useHiringTeam(jobId);
+  const { data: allUsersData } = useUsers();
+  const team = teamData?.data ?? [];
+  const allUsers = allUsersData?.data ?? [];
+  const addTeamMemberMutation = useAddHiringTeamMember(jobId);
+  const removeTeamMemberMutation = useRemoveHiringTeamMember(jobId);
+
+  const [addTeamMemberOpen, setAddTeamMemberOpen] = useState(false);
+  const [newMemberRole, setNewMemberRole] = useState("hiring_manager");
+  const [newMemberId, setNewMemberId] = useState("");
+
+  const handleAddTeamMember = () => {
+    if (!newMemberId) return;
+    addTeamMemberMutation.mutate(
+      { userId: Number(newMemberId), role: newMemberRole },
+      {
+        onSuccess: () => {
+          setAddTeamMemberOpen(false);
+          setNewMemberId("");
+        },
+      }
+    );
+  };
 
   const allAssessments = allAssessmentsData?.data ?? [];
   const attachedAssessments = jobAssessmentsData?.data ?? [];
@@ -243,13 +277,17 @@ export default function JobDetailsPage() {
   const [configExpiry, setConfigExpiry] = useState("");
   const [configRejectTemplate, setConfigRejectTemplate] = useState("");
 
-  const openConfigure = (stage: { id: number; name: string }) => {
-    setConfigStage(stage);
-    setConfigType("none");
-    setConfigOfferTemplate("");
-    setConfigMode("");
-    setConfigExpiry("");
-    setConfigRejectTemplate("");
+  const openConfigure = (stage: PipelineStage & { color: string }) => {
+    setConfigStage({ id: stage.id, name: stage.name });
+    setConfigType(
+      stage.stageType === "offer" || stage.stageType === "rejection" 
+        ? stage.stageType 
+        : "none"
+    );
+    setConfigOfferTemplate(stage.offerTemplateId ? String(stage.offerTemplateId) : "");
+    setConfigMode(stage.offerMode ?? "");
+    setConfigExpiry(stage.offerExpiryDays ? String(stage.offerExpiryDays) : "");
+    setConfigRejectTemplate(stage.rejectionTemplateId ? String(stage.rejectionTemplateId) : "");
     setConfigOpen(true);
   };
 
@@ -418,56 +456,112 @@ export default function JobDetailsPage() {
             value="hiring-team"
             className="pt-10 space-y-12 animate-in fade-in duration-300"
           >
-            <div className="space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                <div className="flex items-center gap-4">
-                  <span className="text-slate-500 dark:text-neutral-400 font-medium text-[15px]">
-                    Hiring Manager
-                  </span>
-                  <button className="flex items-center gap-2 text-[var(--theme-color)] hover:underline font-medium text-[14px]">
-                    <HugeiconsIcon
-                      icon={PlusSignIcon}
-                      className="size-3.5"
-                      strokeWidth={3}
-                    />
-                    <span>Add New Hiring Manager</span>
-                  </button>
-                </div>
-              </div>
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-neutral-800 pb-4">
               <div className="flex items-center gap-4">
-                <div className="size-11 rounded-full bg-[var(--theme-color)] flex items-center justify-center text-white font-medium text-sm overflow-hidden">
-                  <div className="w-full h-full bg-[var(--theme-color)]" />
-                </div>
-                <span className="text-slate-700 dark:text-neutral-300 font-medium text-[15px]">
-                  Chamal Senarathna
+                <span className="text-slate-500 dark:text-neutral-400 font-medium text-[15px]">
+                  Team Members
                 </span>
+                <Dialog open={addTeamMemberOpen} onOpenChange={setAddTeamMemberOpen}>
+                  <DialogTrigger asChild>
+                    <button className="flex items-center gap-2 text-[var(--theme-color)] hover:underline font-medium text-[14px]">
+                      <HugeiconsIcon
+                        icon={PlusSignIcon}
+                        className="size-3.5"
+                        strokeWidth={3}
+                      />
+                      <span>Add New Member</span>
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Add Team Member</DialogTitle>
+                      <DialogDescription>
+                        Assign a user to this job's hiring team.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                        <Label>Select User</Label>
+                        <Select value={newMemberId} onValueChange={setNewMemberId}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select user" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {allUsers
+                              .filter((u) => !team.some((t) => t.id === u.id))
+                              .map((u) => (
+                                <SelectItem key={u.id} value={u.id.toString()}>
+                                  {u.firstName} {u.lastName} ({u.role})
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-2">
+                        <Label>Role Context</Label>
+                        <Select value={newMemberRole} onValueChange={setNewMemberRole}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="hiring_manager">Hiring Manager</SelectItem>
+                            <SelectItem value="interviewer">Interviewer</SelectItem>
+                            <SelectItem value="recruiter">Recruiter</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setAddTeamMemberOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button
+                        disabled={!newMemberId || addTeamMemberMutation.isPending}
+                        onClick={handleAddTeamMember}
+                        className="bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white"
+                      >
+                        {addTeamMemberMutation.isPending ? "Adding..." : "Add Member"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
 
-            <div className="space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-neutral-800 pb-4">
-                <div className="flex items-center gap-4">
-                  <span className="text-slate-500 dark:text-neutral-400 font-medium text-[15px]">
-                    Interviewer
-                  </span>
-                  <button className="flex items-center gap-2 text-[var(--theme-color)] hover:underline font-medium text-[14px]">
-                    <HugeiconsIcon
-                      icon={PlusSignIcon}
-                      className="size-3.5"
-                      strokeWidth={3}
-                    />
-                    <span>Add New Interviewer</span>
-                  </button>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="size-11 rounded-full bg-[var(--theme-color)] flex items-center justify-center text-white font-medium text-sm overflow-hidden">
-                  <div className="w-full h-full bg-[var(--theme-color)]" />
-                </div>
-                <span className="text-slate-700 dark:text-neutral-300 font-medium text-[15px]">
-                  Risikesan Jegatheesan
-                </span>
-              </div>
+            <div className="space-y-4 pt-2">
+              {team.length === 0 ? (
+                <p className="text-slate-500 text-sm">No members assigned to this job.</p>
+              ) : (
+                team.map((member) => (
+                  <div key={member.id} className="flex items-center justify-between group">
+                    <div className="flex items-center gap-4">
+                      {member.avatarUrl ? (
+                        <img src={member.avatarUrl} alt={member.firstName} className="size-11 rounded-full object-cover" />
+                      ) : (
+                        <div className="size-11 rounded-full bg-[var(--theme-color)] flex items-center justify-center text-white font-medium text-sm overflow-hidden">
+                          {member.firstName.charAt(0)}{member.lastName.charAt(0)}
+                        </div>
+                      )}
+                      <div className="flex flex-col">
+                        <span className="text-slate-700 dark:text-neutral-300 font-medium text-[15px]">
+                          {member.firstName} {member.lastName}
+                        </span>
+                        <span className="text-slate-500 text-xs font-medium uppercase tracking-wider">
+                          {member.role?.replace("_", " ")}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => removeTeamMemberMutation.mutate(member.id)}
+                      disabled={removeTeamMemberMutation.isPending}
+                      className="p-2 text-slate-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-50"
+                      title="Remove Member"
+                    >
+                      <HugeiconsIcon icon={Delete02Icon} className="size-5" />
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
           </TabsContent>
 
@@ -563,7 +657,7 @@ export default function JobDetailsPage() {
                         <div className="flex items-center gap-4">
                           <button
                             onClick={() =>
-                              openConfigure({ id: stage.id, name: stage.name })
+                              openConfigure(stage)
                             }
                             className="text-[var(--theme-color)]/60 hover:text-[var(--theme-color)] transition-colors"
                             title="Configure Stage"
@@ -1161,9 +1255,7 @@ export default function JobDetailsPage() {
                       : "text-slate-600 dark:text-neutral-400"
                   }`}
                 >
-                  {t === "rejection"
-                    ? "Rejecttion"
-                    : t.charAt(0).toUpperCase() + t.slice(1)}
+                  {t.charAt(0).toUpperCase() + t.slice(1)}
                 </span>
               </label>
             ))}
@@ -1180,18 +1272,18 @@ export default function JobDetailsPage() {
                   onValueChange={(val) => setConfigOfferTemplate(val || "")}
                 >
                   <SelectTrigger className="w-full h-10 border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 rounded-md shadow-none text-slate-400 dark:text-neutral-500 focus:ring-0 text-sm">
-                    <SelectValue placeholder="Software Engineering Offer Template" />
+                    <SelectValue placeholder="Select an offer template" />
                   </SelectTrigger>
                   <SelectContent className="rounded-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-md">
-                    <SelectItem value="se-offer">
-                      Software Engineering Offer Template
-                    </SelectItem>
-                    <SelectItem value="design-offer">
-                      Design Offer Template
-                    </SelectItem>
-                    <SelectItem value="ops-offer">
-                      Operations Offer Template
-                    </SelectItem>
+                    {offerTemplates.length === 0 ? (
+                      <SelectItem value="_none" disabled>No offer templates found</SelectItem>
+                    ) : (
+                      offerTemplates.map((t) => (
+                        <SelectItem key={t.id} value={String(t.id)}>
+                          {t.name}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -1208,8 +1300,8 @@ export default function JobDetailsPage() {
                       <SelectValue placeholder="Click here to select the mode" />
                     </SelectTrigger>
                     <SelectContent className="rounded-lg border-slate-200 shadow-md">
-                      <SelectItem value="auto-draft">Auto-Draft</SelectItem>
-                      <SelectItem value="auto-send">Auto-Send</SelectItem>
+                      <SelectItem value="auto_draft">Auto-Draft</SelectItem>
+                      <SelectItem value="auto_send">Auto-Send</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1238,15 +1330,18 @@ export default function JobDetailsPage() {
                 onValueChange={(val) => setConfigRejectTemplate(val || "")}
               >
                 <SelectTrigger className="w-full h-10 border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-none text-slate-400 dark:text-neutral-500 focus:ring-0 text-sm">
-                  <SelectValue placeholder="Software Engineering Offer Template" />
+                  <SelectValue placeholder="Select a rejection email template" />
                 </SelectTrigger>
                 <SelectContent className="rounded-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-md">
-                  <SelectItem value="se-reject">
-                    Software Engineering Rejection Template
-                  </SelectItem>
-                  <SelectItem value="generic-reject">
-                    Generic Rejection Template
-                  </SelectItem>
+                  {emailTemplates.length === 0 ? (
+                    <SelectItem value="_none" disabled>No rejection templates found</SelectItem>
+                  ) : (
+                    emailTemplates.map((t) => (
+                      <SelectItem key={t.id} value={String(t.id)}>
+                        {t.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -1261,10 +1356,36 @@ export default function JobDetailsPage() {
               Cancel
             </Button>
             <Button
-              onClick={() => setConfigOpen(false)}
-              className="h-10 px-6 bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white font-medium shadow-none rounded-md border-none"
+              disabled={updateStageMutation.isPending}
+              onClick={() => {
+                if (!configStage) return;
+                updateStageMutation.mutate(
+                  {
+                    stageId: configStage.id,
+                    data: {
+                      stageType: configType,
+                      offerTemplateId:
+                        configType === "offer" && configOfferTemplate
+                          ? Number(configOfferTemplate)
+                          : null,
+                      offerMode:
+                        configType === "offer" && configMode ? configMode : null,
+                      offerExpiryDays:
+                        configType === "offer" && configExpiry
+                          ? Number(configExpiry)
+                          : null,
+                      rejectionTemplateId:
+                        configType === "rejection" && configRejectTemplate
+                          ? Number(configRejectTemplate)
+                          : null,
+                    },
+                  },
+                  { onSuccess: () => setConfigOpen(false) }
+                );
+              }}
+              className="h-10 px-6 bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white font-medium shadow-none rounded-md border-none disabled:opacity-50"
             >
-              Save
+              {updateStageMutation.isPending ? "Saving…" : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>

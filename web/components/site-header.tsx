@@ -86,13 +86,13 @@ export function SiteHeader() {
 
         <div className="flex items-center gap-4">
           <ModeToggle />
-          
+
           <button className="flex items-center justify-center size-9 rounded-full bg-slate-100/80 dark:bg-neutral-900 text-slate-500 dark:text-neutral-400 hover:bg-slate-200 dark:hover:bg-neutral-800 transition-colors">
             <HugeiconsIcon icon={Notification03Icon} className="size-5" />
           </button>
 
           <Avatar className="size-9 border-2 border-slate-100 dark:border-neutral-800">
-            <AvatarImage src="https://github.com/nutlope.png" alt="User" />
+            <AvatarImage src="https://github.com/chamals3n4.png" alt="User" />
             <AvatarFallback className="bg-orange-100 text-orange-600 font-medium">
               JD
             </AvatarFallback>

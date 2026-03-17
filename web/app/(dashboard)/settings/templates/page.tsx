@@ -51,12 +51,13 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import {
-  getTemplates,
-  deleteTemplate,
-  duplicateTemplate,
-  type Template,
-  type TemplateType,
-} from "./store";
+  useTemplates,
+  useDeleteTemplate,
+  useCreateTemplate,
+} from "@/hooks/use-api";
+import type { Template } from "@/types";
+
+type TemplateType = "offer" | "rejection" | "assessment" | "general";
 
 const TYPE_META: Record<TemplateType, { label: string; badge: string }> = {
   offer: {
@@ -152,7 +153,12 @@ function RowMenu({
 
 export default function TemplatesPage() {
   const router = useRouter();
-  const [templates, setTemplates] = useState<Template[]>([]);
+  const { data: templatesRes, isLoading } = useTemplates();
+  const templates = templatesRes?.data || [];
+  
+  const createMutation = useCreateTemplate();
+  const deleteMutation = useDeleteTemplate();
+  
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("all");
 
@@ -162,23 +168,20 @@ export default function TemplatesPage() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const deleteName = templates.find((t) => t.id === deleteId)?.name;
 
-  const refresh = useCallback(() => setTemplates(getTemplates()), []);
-  useEffect(() => {
-    refresh();
-    window.addEventListener("focus", refresh);
-    return () => window.removeEventListener("focus", refresh);
-  }, [refresh]);
-
   const handleDuplicate = (t: Template) => {
-    duplicateTemplate(t.id);
-    refresh();
+    createMutation.mutate({
+      name: `${t.name} (Copy)`,
+      type: t.type,
+      subject: t.subject,
+      bodyJson: t.bodyJson,
+    });
   };
 
   const handleDelete = () => {
     if (deleteId === null) return;
-    deleteTemplate(deleteId);
-    setDeleteId(null);
-    refresh();
+    deleteMutation.mutate(deleteId, {
+      onSuccess: () => setDeleteId(null),
+    });
   };
 
   const filtered = templates.filter((t) => {
@@ -276,7 +279,16 @@ export default function TemplatesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.length === 0 ? (
+              {isLoading ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className="h-32 text-center text-slate-400 text-sm animate-pulse"
+                  >
+                    Loading templates...
+                  </TableCell>
+                </TableRow>
+              ) : filtered.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={5}
@@ -301,16 +313,17 @@ export default function TemplatesPage() {
                     </TableCell>
                     <TableCell className="h-14 px-8 py-0">
                       <span
-                        className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${TYPE_META[t.type].badge}`}
+                        className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${TYPE_META[t.type as TemplateType].badge}`}
                       >
-                        {TYPE_META[t.type].label}
+                        {TYPE_META[t.type as TemplateType].label}
                       </span>
                     </TableCell>
                     <TableCell className="h-14 px-8 py-0 text-[var(--theme-color)] font-normal">
-                      {t.createdBy}
+                      {/* You'd display the real createdBy name here, hardcoded user ID 1 for now if needed */}
+                      System
                     </TableCell>
                     <TableCell className="h-14 px-8 py-0 text-[var(--theme-color)] font-normal">
-                      {t.editedAt}
+                      {new Date(t.updatedAt).toLocaleDateString()}
                     </TableCell>
                     <TableCell className="h-14 px-4 py-0">
                       <RowMenu
@@ -432,9 +445,10 @@ export default function TemplatesPage() {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="h-9 px-5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-[13px] font-medium shadow-none border-none"
+              disabled={deleteMutation.isPending}
+              className="h-9 px-5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-[13px] font-medium shadow-none border-none disabled:opacity-50"
             >
-              Delete
+              {deleteMutation.isPending ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -17,6 +17,12 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { archiveItem } from "@/lib/archive-store";
+import {
+  useOffers,
+  useUpdateOffer,
+  useUpdateOfferStatus,
+  useDeleteOffer,
+} from "@/hooks/use-api";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -98,128 +104,7 @@ const STAGE_STYLES: Record<string, string> = {
   Withdrawn: "bg-slate-50 dark:bg-neutral-800 text-slate-500 dark:text-neutral-400",
 };
 
-const MOCK_OFFERS: Offer[] = [
-  {
-    id: 1,
-    candidateName: "Chamal Senarathna",
-    jobTitle: "Tech Lead",
-    department: "Engineering",
-    status: "Draft",
-    salary: "",
-    currency: "",
-    createdAt: "14/02/2026",
-    expiredDate: "14/02/2026",
-    stage: "Interview",
-    phone: "+94 71 7110 160",
-    email: "chamals@gmail.com",
-    linkedin: "in/chamalsena",
-    templateName: "Software Engineering Offer Letter",
-    budgetMin: "3000",
-    budgetMax: "4000",
-    startDate: "",
-    expiryDate: "",
-  },
-  {
-    id: 2,
-    candidateName: "Nisal Periyapperuma",
-    jobTitle: "Software Engineer",
-    department: "Engineering",
-    status: "Sent",
-    salary: "5000",
-    currency: "USD",
-    createdAt: "14/02/2026",
-    expiredDate: "14/02/2026",
-    stage: "Offer",
-    phone: "+94 77 234 5678",
-    email: "nisal.p@gmail.com",
-    linkedin: "in/nisalp",
-    templateName: "Software Engineering Offer Letter",
-    budgetMin: "4000",
-    budgetMax: "6000",
-    startDate: "2026-03-01",
-    expiryDate: "2026-03-10",
-  },
-  {
-    id: 3,
-    candidateName: "Palihawadana Lastname",
-    jobTitle: "UI UX Intern",
-    department: "Design",
-    status: "Pending",
-    salary: "1500",
-    currency: "USD",
-    createdAt: "14/02/2026",
-    expiredDate: "14/02/2026",
-    stage: "Applied",
-    phone: "+94 76 111 2222",
-    email: "pali@gmail.com",
-    linkedin: "in/pali",
-    templateName: "General Update Email",
-    budgetMin: "1000",
-    budgetMax: "2000",
-    startDate: "2026-04-01",
-    expiryDate: "2026-04-15",
-  },
-  {
-    id: 4,
-    candidateName: "Risikeesan LastName",
-    jobTitle: "ML Engineer",
-    department: "Engineering",
-    status: "Accepted",
-    salary: "7000",
-    currency: "USD",
-    createdAt: "14/02/2026",
-    expiredDate: "14/02/2026",
-    stage: "Offer",
-    phone: "+94 75 999 0000",
-    email: "risi@gmail.com",
-    linkedin: "in/risikesan",
-    templateName: "Backend Engineer Offer Letter",
-    budgetMin: "6000",
-    budgetMax: "8000",
-    startDate: "2026-03-15",
-    expiryDate: "2026-03-22",
-  },
-  {
-    id: 5,
-    candidateName: "Prasad Lastname",
-    jobTitle: "Software Engineer",
-    department: "Engineering",
-    status: "Declined",
-    salary: "4500",
-    currency: "USD",
-    createdAt: "14/02/2026",
-    expiredDate: "14/02/2026",
-    stage: "Rejected",
-    phone: "+94 71 777 8888",
-    email: "prasad@gmail.com",
-    linkedin: "in/prasad",
-    templateName: "Software Engineering Offer Letter",
-    budgetMin: "4000",
-    budgetMax: "5500",
-    startDate: "2026-02-15",
-    expiryDate: "2026-02-22",
-  },
-  {
-    id: 6,
-    candidateName: "Jathusha LastName",
-    jobTitle: "Business Analyst",
-    department: "Operations",
-    status: "Withdrawn",
-    salary: "4000",
-    currency: "USD",
-    createdAt: "14/02/2026",
-    expiredDate: "14/02/2026",
-    stage: "Withdrawn",
-    phone: "+94 70 333 4444",
-    email: "jathusha@gmail.com",
-    linkedin: "in/jathusha",
-    templateName: "General Update Email",
-    budgetMin: "3500",
-    budgetMax: "5000",
-    startDate: "2026-02-01",
-    expiryDate: "2026-02-10",
-  },
-];
+
 
 function RowMenu({ onArchive }: { onArchive(): void }) {
   const [open, setOpen] = useState(false);
@@ -265,7 +150,45 @@ function RowMenu({ onArchive }: { onArchive(): void }) {
 }
 
 export default function ManageOffersPage() {
-  const [offers, setOffers] = useState<Offer[]>(MOCK_OFFERS);
+  const { data: offersRes, isLoading } = useOffers();
+  const updateOfferMutation = useUpdateOffer();
+  const updateOfferStatusMutation = useUpdateOfferStatus();
+  const deleteOfferMutation = useDeleteOffer();
+
+  const rawOffers = offersRes?.data ?? [];
+
+  const offers: Offer[] = rawOffers.map((o: any) => {
+    const statusMap: Record<string, OfferStatus> = {
+      draft: "Draft",
+      sent: "Sent",
+      pending: "Pending",
+      accepted: "Accepted",
+      declined: "Declined",
+      withdrawn: "Withdrawn",
+    };
+
+    return {
+      id: o.id,
+      candidateName: `${o.candidate?.firstName ?? ""} ${o.candidate?.lastName ?? ""}`.trim() || "Unknown Candidate",
+      jobTitle: o.job?.title ?? "Unknown Job",
+      status: statusMap[o.status] ?? "Draft",
+      salary: String(o.salary ?? ""),
+      currency: o.currency ?? "USD",
+      createdAt: o.createdAt ? new Date(o.createdAt).toLocaleDateString() : "",
+      expiredDate: o.expiryDate ? new Date(o.expiryDate).toLocaleDateString() : "",
+      department: o.job?.department?.name ?? "Other",
+      stage: o.candidate?.currentStage?.name ?? "Unknown Stage",
+      phone: o.candidate?.phone ?? "",
+      email: o.candidate?.email ?? "",
+      linkedin: o.candidate?.linkedinUrl ?? "",
+      templateName: o.template?.name ?? "No Template",
+      budgetMin: String(o.job?.salaryMin ?? ""),
+      budgetMax: String(o.job?.salaryMax ?? ""),
+      startDate: o.startDate ? o.startDate.split("T")[0] : "",
+      expiryDate: o.expiryDate ? o.expiryDate.split("T")[0] : "",
+    };
+  });
+
   const [search, setSearch] = useState("");
   const [filterDept, setFilterDept] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -280,7 +203,6 @@ export default function ManageOffersPage() {
   const [offerStartDate, setOfferStartDate] = useState("");
   const [offerExpiryDate, setOfferExpiryDate] = useState("");
   const [offerStatus, setOfferStatus] = useState<OfferStatus>("Draft");
-  const [sendSuccess, setSendSuccess] = useState(false);
 
   const openOffer = (o: Offer) => {
     setSelected(o);
@@ -289,14 +211,32 @@ export default function ManageOffersPage() {
     setOfferStartDate(o.startDate);
     setOfferExpiryDate(o.expiryDate);
     setOfferStatus(o.status);
-    setSendSuccess(false);
     setSheetOpen(true);
   };
 
   const handleSend = () => {
-    setOfferStatus("Sent");
-    setSendSuccess(true);
-    setTimeout(() => setSendSuccess(false), 3000);
+    if (!selected) return;
+    updateOfferStatusMutation.mutate(
+      { id: selected.id, status: "sent" },
+      {
+        onSuccess: () => {
+          setOfferStatus("Sent");
+        }
+      }
+    );
+  };
+
+  const handleSaveOfferDetails = () => {
+    if (!selected) return;
+    updateOfferMutation.mutate({
+      offerId: selected.id,
+      data: {
+        salary: Number(offerSalary) || null,
+        currency: offerCurrency || null,
+        startDate: offerStartDate || null,
+        expiryDate: offerExpiryDate || null,
+      }
+    });
   };
 
   const confirmArchive = () => {
@@ -307,8 +247,9 @@ export default function ManageOffersPage() {
       name: archiveTarget.candidateName,
       detail: archiveTarget.jobTitle,
     });
-    setOffers((prev) => prev.filter((o) => o.id !== archiveTarget.id));
-    setArchiveTarget(null);
+    deleteOfferMutation.mutate(archiveTarget.id, {
+      onSuccess: () => setArchiveTarget(null)
+    });
   };
 
   const filtered = offers.filter((o) => {
@@ -768,34 +709,47 @@ export default function ManageOffersPage() {
                           </div>
                         </div>
 
-                        {sendSuccess ? (
+                        {updateOfferStatusMutation.isSuccess ? (
                           <div className="w-full h-11 rounded-lg bg-emerald-500 flex items-center justify-center gap-2 text-white font-semibold text-[14px]">
                             <HugeiconsIcon icon={SentIcon} className="size-4" />
                             Offer Sent Successfully!
                           </div>
                         ) : (
-                          <button
-                            onClick={handleSend}
-                            disabled={
-                              offerStatus === "Sent" ||
-                              offerStatus === "Accepted" ||
-                              offerStatus === "Declined" ||
-                              offerStatus === "Withdrawn"
-                            }
-                            className="w-full h-11 rounded-lg text-white font-semibold text-[14px] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                            style={{ backgroundColor: "var(--theme-color)" }}
-                          >
-                            <HugeiconsIcon icon={SentIcon} className="size-4" />
-                            {offerStatus === "Sent"
-                              ? "Offer Already Sent"
-                              : offerStatus === "Accepted"
-                                ? "Offer Accepted"
-                                : offerStatus === "Declined"
-                                  ? "Offer Declined"
-                                  : offerStatus === "Withdrawn"
-                                    ? "Offer Withdrawn"
-                                    : "Send Offer"}
-                          </button>
+                          <div className="flex flex-col gap-2">
+                            <Button
+                              onClick={handleSaveOfferDetails}
+                              disabled={updateOfferMutation.isPending}
+                              variant="outline"
+                              className="w-full h-11 rounded-lg font-semibold text-[14px] bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 disabled:opacity-50"
+                            >
+                              {updateOfferMutation.isPending ? "Saving..." : "Save Details"}
+                            </Button>
+                            <button
+                              onClick={handleSend}
+                              disabled={
+                                offerStatus === "Sent" ||
+                                offerStatus === "Accepted" ||
+                                offerStatus === "Declined" ||
+                                offerStatus === "Withdrawn" ||
+                                updateOfferStatusMutation.isPending
+                              }
+                              className="w-full h-11 rounded-lg text-white font-semibold text-[14px] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                              style={{ backgroundColor: "var(--theme-color)" }}
+                            >
+                              <HugeiconsIcon icon={SentIcon} className="size-4" />
+                              {updateOfferStatusMutation.isPending
+                                ? "Sending..."
+                                : offerStatus === "Sent"
+                                  ? "Offer Already Sent"
+                                  : offerStatus === "Accepted"
+                                    ? "Offer Accepted"
+                                    : offerStatus === "Declined"
+                                      ? "Offer Declined"
+                                      : offerStatus === "Withdrawn"
+                                        ? "Offer Withdrawn"
+                                        : "Send Offer"}
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>

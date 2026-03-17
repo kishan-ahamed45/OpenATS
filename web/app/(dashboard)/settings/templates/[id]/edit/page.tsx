@@ -20,12 +20,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import {
-  getTemplate,
-  updateTemplate,
-  type TemplateType,
-  type Block,
-  type BlockKind,
-} from "../../store";
+  useTemplate,
+  useUpdateTemplate,
+} from "@/hooks/use-api";
+import type { TemplateBodyBlock } from "@/types";
+
+type TemplateType = "offer" | "rejection" | "assessment" | "general";
+type BlockKind = TemplateBodyBlock["type"] | "divider" | "spacer";
+
+export interface Block {
+  id: string;
+  kind: BlockKind;
+  content: string;
+}
 
 const TYPE_META: Record<TemplateType, { label: string; badge: string }> = {
   offer: {
@@ -253,25 +260,37 @@ export default function EditTemplatePage() {
   const params = useParams();
   const id = Number(params.id);
 
+  const { data: templateRes, isLoading, isError } = useTemplate(id);
+  const updateMutation = useUpdateTemplate();
+
   const [name, setName] = useState("");
   const [subject, setSubject] = useState("");
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [templateType, setTemplateType] = useState<TemplateType>("general");
-  const [createdBy, setCreatedBy] = useState("You");
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    const t = getTemplate(id);
-    if (!t) {
+    if (isError) {
       setNotFound(true);
       return;
     }
-    setName(t.name);
-    setSubject(t.subject);
-    setBlocks(t.blocks);
-    setTemplateType(t.type);
-    setCreatedBy(t.createdBy);
-  }, [id]);
+    const t = templateRes?.data;
+    if (t) {
+      setName(t.name);
+      setSubject(t.subject);
+      setTemplateType(t.type === "offer_letter" ? "offer" : "general"); // Mapping back to UI type roughly, ideally they should match
+      
+      // Map API blocks to UI Blocks
+      const mappedBlocks: Block[] = t.bodyJson.map((b, i) => ({
+        id: `blk-${i}-${Date.now()}`,
+        kind: b.type,
+        content: b.content,
+      }));
+      if (mappedBlocks.length > 0) {
+        setBlocks(mappedBlocks);
+      }
+    }
+  }, [templateRes, isError]);
 
   const vars = VARIABLES[templateType];
 
@@ -291,15 +310,28 @@ export default function EditTemplatePage() {
 
   const handleSave = () => {
     if (!name.trim()) return;
-    updateTemplate(id, {
-      name: name.trim(),
-      type: templateType,
-      subject,
-      blocks,
-      editedAt: new Date().toLocaleDateString("en-GB"),
-      createdBy,
+
+    // Convert editor blocks to API TemplateBodyBlocks, filtering out UI-only blocks 
+    const bodyJson: TemplateBodyBlock[] = blocks
+      .filter((b) => ["heading", "text", "button", "image"].includes(b.kind))
+      .map((b) => ({
+        type: b.kind as TemplateBodyBlock["type"],
+        content: b.content,
+      }));
+
+    updateMutation.mutate({
+      id,
+      data: {
+        name: name.trim(),
+        type: templateType === "offer" ? "offer_letter" : "email",
+        subject,
+        bodyJson,
+      }
+    }, {
+      onSuccess: () => {
+        router.push("/settings/templates");
+      }
     });
-    router.push("settings/templates");
   };
 
   const BLOCK_BTNS: { kind: BlockKind; label: string }[] = [
@@ -317,12 +349,20 @@ export default function EditTemplatePage() {
         <div className="text-center space-y-3">
           <p className="text-slate-500 dark:text-neutral-400 text-[15px]">Template not found.</p>
           <Link
-            href="settings/templates"
+            href="/settings/templates"
             className="text-[var(--theme-color)] font-medium hover:underline text-sm"
           >
             ← Back to Templates
           </Link>
         </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-1 items-center justify-center bg-white dark:bg-neutral-950">
+        <p className="text-slate-400 animate-pulse text-sm">Loading template...</p>
       </div>
     );
   }
@@ -355,10 +395,10 @@ export default function EditTemplatePage() {
         </div>
         <Button
           onClick={handleSave}
-          disabled={!name.trim()}
+          disabled={!name.trim() || updateMutation.isPending}
           className="h-9 px-6 bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white font-medium shadow-none rounded-lg text-sm border-none disabled:opacity-50"
         >
-          Save Changes
+          {updateMutation.isPending ? "Saving..." : "Save Changes"}
         </Button>
       </div>
 

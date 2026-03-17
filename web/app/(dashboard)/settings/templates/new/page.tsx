@@ -20,11 +20,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import {
-  addTemplate,
-  type TemplateType,
-  type Block,
-  type BlockKind,
-} from "../store";
+  useCreateTemplate,
+} from "@/hooks/use-api";
+import type { TemplateBodyBlock } from "@/types";
+
+type TemplateType = "offer" | "rejection" | "assessment" | "general";
+type BlockKind = TemplateBodyBlock["type"] | "divider" | "spacer";
+
+export interface Block {
+  id: string;
+  kind: BlockKind;
+  content: string;
+}
 
 const TYPE_META: Record<TemplateType, { label: string; badge: string }> = {
   offer: {
@@ -249,6 +256,8 @@ function BlockEditor({
 
 export default function NewTemplatePage() {
   const router = useRouter();
+  const createMutation = useCreateTemplate();
+  
   const searchParams = useSearchParams();
   const rawType = searchParams.get("type") as TemplateType | null;
   const templateType: TemplateType =
@@ -273,15 +282,26 @@ export default function NewTemplatePage() {
 
   const handleSave = () => {
     if (!name.trim()) return;
-    addTemplate({
+    
+    // Convert editor blocks to API TemplateBodyBlocks, filtering out UI-only blocks 
+    // The API schema only supports [heading, text, button, image]
+    const bodyJson: TemplateBodyBlock[] = blocks
+      .filter((b) => ["heading", "text", "button", "image"].includes(b.kind))
+      .map((b) => ({
+        type: b.kind as TemplateBodyBlock["type"],
+        content: b.content,
+      }));
+
+    createMutation.mutate({
       name: name.trim(),
-      type: templateType,
+      type: templateType === "offer" ? "offer_letter" : "email", // The API only accepts offer_letter or email 
       subject,
-      blocks,
-      editedAt: new Date().toLocaleDateString("en-GB").replace(/\//g, "/"),
-      createdBy: "You",
+      bodyJson,
+    }, {
+      onSuccess: () => {
+        router.push("/settings/templates");
+      }
     });
-    router.push("settings/templates");
   };
 
   const BLOCK_BTNS: { kind: BlockKind; label: string }[] = [
@@ -321,10 +341,10 @@ export default function NewTemplatePage() {
         </div>
         <Button
           onClick={handleSave}
-          disabled={!canSave}
+          disabled={!canSave || createMutation.isPending}
           className="h-9 px-6 bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white font-medium shadow-none rounded-lg text-sm border-none disabled:opacity-50 gap-2"
         >
-          Save Template
+          {createMutation.isPending ? "Saving..." : "Save Template"}
         </Button>
       </div>
 

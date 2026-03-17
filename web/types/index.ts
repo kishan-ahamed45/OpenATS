@@ -155,6 +155,7 @@ export type CandidateDetail = Candidate & {
     id: number;
     candidateId: number;
     questionId: number;
+    questionTitle?: string | null;
     answerText: string | null;
     createdAt: string;
   }[];
@@ -162,7 +163,9 @@ export type CandidateDetail = Candidate & {
     id: number;
     candidateId: number;
     questionId: number;
+    questionTitle?: string | null;
     optionId: number;
+    optionLabel?: string | null;
     createdAt: string;
   }[];
   history: {
@@ -183,4 +186,47 @@ export type CandidateDetail = Candidate & {
     sentAt: string | null;
     renderedHtml: string | null;
   } | null;
+};
+
+export type User = {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: "super_admin" | "admin" | "recruiter" | "hiring_manager" | "interviewer";
+  avatarUrl: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type TemplateBodyBlock = {
+  type: "heading" | "text" | "button" | "image";
+  content: string;
+};
+
+export type Template = {
+  id: number;
+  name: string;
+  type: "offer" | "rejection" | "assessment_invite" | "general";
+  subject: string;
+  bodyJson: TemplateBodyBlock[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type Offer = {
+  id: number;
+  candidateId: number;
+  jobId: number;
+  templateId: number | null;
+  salary: number | null;
+  currency: string | null;
+  payFrequency: "hourly" | "daily" | "weekly" | "monthly" | "yearly" | null;
+  startDate: string | null;
+  expiryDate: string | null;
+  status: "draft" | "sent" | "pending" | "accepted" | "declined" | "withdrawn";
+  renderedHtml: string | null;
+  createdAt: string;
+  updatedAt: string;
 };

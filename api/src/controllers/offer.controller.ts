@@ -31,6 +31,15 @@ const statusUpdateSchema = z.object({
   status: z.enum(["draft", "sent", "pending", "accepted", "declined", "withdrawn"]),
 });
 
+export const getAllOffers = async (req: Request, res: Response) => {
+  try {
+    const result = await offerService.getAllDetails();
+    res.status(200).json({ data: result });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch all offers" });
+  }
+};
+
 export const getAllOffersByJob = async (req: Request, res: Response) => {
   try {
     const jobId = parseInt((req.params.jobId ?? "").toString());

@@ -7,6 +7,7 @@ import {
   candidateCustomAnswerSelections,
   jobPipelineStages,
   jobCustomQuestions,
+  jobCustomQuestionOptions,
   jobAssessmentAttachments,
   jobs,
   offers,
@@ -161,13 +162,31 @@ export const candidateService = {
     if (!candidate) return null;
 
     const answers = await db
-      .select()
+      .select({
+        id: candidateCustomAnswers.id,
+        candidateId: candidateCustomAnswers.candidateId,
+        questionId: candidateCustomAnswers.questionId,
+        answerText: candidateCustomAnswers.answerText,
+        createdAt: candidateCustomAnswers.createdAt,
+        questionTitle: jobCustomQuestions.title,
+      })
       .from(candidateCustomAnswers)
+      .leftJoin(jobCustomQuestions, eq(candidateCustomAnswers.questionId, jobCustomQuestions.id))
       .where(eq(candidateCustomAnswers.candidateId, id));
 
     const selections = await db
-      .select()
+      .select({
+        id: candidateCustomAnswerSelections.id,
+        candidateId: candidateCustomAnswerSelections.candidateId,
+        questionId: candidateCustomAnswerSelections.questionId,
+        optionId: candidateCustomAnswerSelections.optionId,
+        createdAt: candidateCustomAnswerSelections.createdAt,
+        questionTitle: jobCustomQuestions.title,
+        optionLabel: jobCustomQuestionOptions.label,
+      })
       .from(candidateCustomAnswerSelections)
+      .leftJoin(jobCustomQuestions, eq(candidateCustomAnswerSelections.questionId, jobCustomQuestions.id))
+      .leftJoin(jobCustomQuestionOptions, eq(candidateCustomAnswerSelections.optionId, jobCustomQuestionOptions.id))
       .where(eq(candidateCustomAnswerSelections.candidateId, id));
 
     const history = await db
@@ -271,6 +290,13 @@ export const candidateService = {
               ? "draft"
               : "sent";
 
+          let expiryDate: string | null = null;
+          if (stage.offerExpiryDays) {
+            const expiry = new Date();
+            expiry.setDate(expiry.getDate() + stage.offerExpiryDays);
+            expiryDate = expiry.toISOString();
+          }
+
           await offerService.create({
             candidateId: candidate.id,
             jobId: job.id,
@@ -278,6 +304,7 @@ export const candidateService = {
             salary,
             currency: job.currency,
             payFrequency: job.payFrequency,
+            expiryDate,
             status: mode,
             createdBy: movedBy ?? 1,
           });

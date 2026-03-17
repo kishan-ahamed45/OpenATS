@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { useCandidate, usePipeline, useUpdateOffer, useCandidateAssessments } from "@/hooks/use-api";
+import { useCandidate, usePipeline, useUpdateOffer, useUpdateOfferStatus, useCandidateAssessments } from "@/hooks/use-api";
 
 function timeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -73,6 +73,7 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
   const [editStatus, setEditStatus] = useState("draft");
 
   const updateOfferMutation = useUpdateOffer();
+  const updateOfferStatusMutation = useUpdateOfferStatus();
   const tabsScrollRef = useRef<HTMLDivElement>(null);
 
   const handleTabsWheel = (e: React.WheelEvent<HTMLDivElement>) => {
@@ -96,6 +97,9 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
 
   const saveOffer = () => {
     if (!offer) return;
+    const statusChanged = editStatus !== offer.status;
+    const newStatus = editStatus as "draft" | "sent" | "pending" | "accepted" | "declined" | "withdrawn";
+
     updateOfferMutation.mutate(
       {
         offerId: offer.id,
@@ -105,10 +109,20 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
           payFrequency: editPayFreq as "hourly" | "daily" | "weekly" | "monthly" | "yearly",
           startDate: editStartDate || null,
           expiryDate: editExpiryDate || null,
-          status: editStatus as "draft" | "sent" | "pending" | "accepted" | "declined" | "withdrawn",
         },
       },
-      { onSuccess: () => setIsEditingOffer(false) },
+      {
+        onSuccess: () => {
+          if (statusChanged) {
+            updateOfferStatusMutation.mutate(
+              { id: offer.id, status: newStatus },
+              { onSuccess: () => setIsEditingOffer(false) },
+            );
+          } else {
+            setIsEditingOffer(false);
+          }
+        },
+      },
     );
   };
 
@@ -176,14 +190,14 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
         </div>
 
         <TabsContent value="answers" className="flex-1 overflow-y-auto p-5 outline-none min-h-0">
-           {candidate.answers.length === 0 && candidate.selections.length === 0 ? (
+          {candidate.answers.length === 0 && candidate.selections.length === 0 ? (
             <p className="text-slate-400 dark:text-neutral-500 text-sm italic">No custom answers submitted.</p>
           ) : (
             <div className="space-y-5">
               {candidate.answers.map((a) => (
                 <div key={a.id} className="space-y-1.5">
-                  <p className="text-[11px] font-semibold text-slate-400 dark:text-neutral-500 uppercase tracking-wide">
-                    Question #{a.questionId}
+                  <p className="text-[11px] font-semibold text-slate-500 dark:text-neutral-400 uppercase tracking-wide">
+                    {a.questionTitle || `Question #${a.questionId}`}
                   </p>
                   <p className="text-[14px] text-slate-700 dark:text-neutral-300 leading-relaxed">
                     {a.answerText ?? <em className="text-slate-400 dark:text-neutral-500">No text answer</em>}
@@ -191,17 +205,23 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
                 </div>
               ))}
               {candidate.selections.length > 0 && (
-                <div className="space-y-1.5 pt-3 border-t border-slate-100 dark:border-neutral-800">
-                  <p className="text-[11px] font-semibold text-slate-400 dark:text-neutral-500 uppercase tracking-wide">
-                    Selected Options
-                  </p>
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    {candidate.selections.map((s) => (
-                      <span key={s.id} className="text-[12px] bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400 px-2.5 py-1 rounded-full font-medium">
-                        Option #{s.optionId}
-                      </span>
-                    ))}
-                  </div>
+                <div className="space-y-4 pt-3 border-t border-slate-100 dark:border-neutral-800">
+                  {Array.from(new Set(candidate.selections.map(s => s.questionTitle || `Question #${s.questionId}`))).map((title) => (
+                    <div key={title} className="space-y-1.5">
+                      <p className="text-[11px] font-semibold text-slate-500 dark:text-neutral-400 uppercase tracking-wide">
+                        {title}
+                      </p>
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {candidate.selections
+                          .filter((s) => (s.questionTitle || `Question #${s.questionId}`) === title)
+                          .map((s) => (
+                            <span key={s.id} className="text-[12px] bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-300 px-2.5 py-1 rounded-md font-medium border border-slate-200 dark:border-neutral-700">
+                              {s.optionLabel || `Option #${s.optionId}`}
+                            </span>
+                          ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -219,8 +239,8 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
                   <div key={h.id} className="relative">
                     <div
                       className={`absolute -left-6 top-1 size-3.5 rounded-full border-2 border-white dark:border-neutral-950 ring-2 ${i === candidate.history.length - 1
-                          ? "bg-[var(--theme-color)] ring-[var(--theme-color)]/30"
-                          : "bg-slate-300 dark:bg-neutral-700 ring-slate-200 dark:ring-neutral-800"
+                        ? "bg-[var(--theme-color)] ring-[var(--theme-color)]/30"
+                        : "bg-slate-300 dark:bg-neutral-700 ring-slate-200 dark:ring-neutral-800"
                         }`}
                     />
                     <div className="flex items-start justify-between gap-2">
@@ -375,15 +395,44 @@ export function CandidateSidePanel({ candidateId }: CandidateSidePanelProps) {
                     {offer.status}
                   </Badge>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={openOfferEdit}
-                  className="h-8 px-3 text-[12px] border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-slate-500 dark:text-neutral-400 hover:text-slate-700 dark:hover:text-neutral-200 shadow-none rounded-lg gap-1.5"
-                >
-                  <HugeiconsIcon icon={PencilEdit01Icon} className="size-3.5" />
-                  Edit
-                </Button>
+                <div className="flex items-center gap-2">
+                  {(offer.status === "draft") && (
+                    <Button
+                      size="sm"
+                      disabled={updateOfferStatusMutation.isPending}
+                      onClick={() =>
+                        updateOfferStatusMutation.mutate({ id: offer.id, status: "sent" })
+                      }
+                      className="h-8 px-3 text-[12px] bg-[var(--theme-color)] hover:bg-[var(--theme-color-hover)] text-white shadow-none border-none rounded-lg gap-1.5 disabled:opacity-50"
+                    >
+                      <HugeiconsIcon icon={SentIcon} className="size-3.5 rotate-[-45deg]" strokeWidth={2.5} />
+                      {updateOfferStatusMutation.isPending ? "Sending…" : "Send Offer"}
+                    </Button>
+                  )}
+                  {(offer.status === "sent" || offer.status === "pending") && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={updateOfferStatusMutation.isPending}
+                      onClick={() =>
+                        updateOfferStatusMutation.mutate({ id: offer.id, status: "sent" })
+                      }
+                      className="h-8 px-3 text-[12px] border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-slate-500 dark:text-neutral-400 hover:text-slate-700 dark:hover:text-neutral-200 shadow-none rounded-lg gap-1.5 disabled:opacity-50"
+                    >
+                      <HugeiconsIcon icon={SentIcon} className="size-3.5 rotate-[-45deg]" strokeWidth={2.5} />
+                      {updateOfferStatusMutation.isPending ? "Resending…" : "Resend"}
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={openOfferEdit}
+                    className="h-8 px-3 text-[12px] border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-slate-500 dark:text-neutral-400 hover:text-slate-700 dark:hover:text-neutral-200 shadow-none rounded-lg gap-1.5"
+                  >
+                    <HugeiconsIcon icon={PencilEdit01Icon} className="size-3.5" />
+                    Edit
+                  </Button>
+                </div>
               </div>
 
               <div className="divide-y divide-slate-100 dark:divide-neutral-800 rounded-xl border border-slate-200 dark:border-neutral-800 overflow-hidden">

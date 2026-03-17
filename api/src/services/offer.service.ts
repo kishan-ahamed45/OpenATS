@@ -1,4 +1,4 @@
-import { eq, and, desc } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { db } from "../db";
 import { offers, candidates, jobs, templates, users } from "../db/schema";
 import { variableService } from "./variable.service";
@@ -33,6 +33,21 @@ export interface UpdateOfferInput {
 
 
 export const offerService = {
+  async getAllDetails() {
+    return await db.query.offers.findMany({
+      with: {
+        candidate: {
+          with: { currentStage: true },
+        },
+        job: {
+          with: { department: true },
+        },
+        template: true,
+      },
+      orderBy: (offers, { desc }) => [desc(offers.createdAt)],
+    });
+  },
+
   async getAllByJob(jobId: number) {
     return db
       .select()
@@ -69,16 +84,35 @@ export const offerService = {
       renderedHtml = await this._renderOfferHtml(input);
     }
 
+    const isSent = input.status === "sent";
+
     const [newOffer] = await db
       .insert(offers)
       .values(clean({
         status: "draft",
         ...input,
         renderedHtml,
+        sentAt: isSent ? new Date() : null,
       }))
       .returning();
 
     if (!newOffer) throw new Error("Failed to create offer");
+
+    if (isSent && newOffer.renderedHtml) {
+      let subject = "Offer Letter";
+      if (newOffer.templateId) {
+        const [template] = await db
+          .select()
+          .from(templates)
+          .where(eq(templates.id, newOffer.templateId));
+        if (template) {
+          const context = await variableService.getContextForOffer(candidate.id, newOffer);
+          subject = templateEngineService.replaceVariables(template.subject, context);
+        }
+      }
+      await mailService.sendOfferEmail(candidate.email, subject, newOffer.renderedHtml);
+    }
+
     return newOffer;
   },
 
