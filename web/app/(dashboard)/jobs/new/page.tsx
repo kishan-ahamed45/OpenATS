@@ -97,6 +97,20 @@ export default function CreateNewJobPage() {
     );
   };
 
+  const EMPLOYEMENT_LABELS: Record<string, string> = {
+    full_time: "Full Time",
+    part_time: "Part Time",
+    contract: "Contract",
+    internship: "Internship",
+    freelance: "Freelance",
+  }
+
+  const PAY_FREQUENCY_LABELS: Record<string, string> = {
+    hourly: "Hourly",
+    monthly: "Monthly",
+    yearly: "Yearly",
+  };
+
   return (
     <div className="flex flex-1 flex-col bg-white dark:bg-neutral-950">
       <div className="px-14 py-10 pb-20 max-w-5xl">
@@ -144,7 +158,12 @@ export default function CreateNewJobPage() {
               </Label>
               <Select onValueChange={(val) => setDepartmentId(Number(val))}>
                 <SelectTrigger className="w-full h-10! bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 shadow-none rounded-lg text-slate-500 dark:text-neutral-400 focus:ring-0">
-                  <SelectValue placeholder="Select" />
+                  <SelectValue placeholder="Select">
+                    {departmentId
+                      ? departments.find((d) => d.id == departmentId)?.name ?? null :
+                      null
+                    }
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="rounded-lg shadow-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
                   {departments.map((dept) => (
@@ -161,7 +180,9 @@ export default function CreateNewJobPage() {
               </Label>
               <Select onValueChange={(val) => setEmploymentType(val as string)}>
                 <SelectTrigger className="w-full h-10! bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 shadow-none rounded-lg text-slate-500 dark:text-neutral-400 focus:ring-0">
-                  <SelectValue placeholder="Select" />
+                  <SelectValue placeholder="Select">
+                    {employmentType ? EMPLOYEMENT_LABELS[employmentType] : null}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="rounded-lg shadow-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
                   <SelectItem value="full_time">Full Time</SelectItem>
@@ -378,7 +399,9 @@ export default function CreateNewJobPage() {
                       </Label>
                       <Select value={payFrequency} onValueChange={(val) => setPayFrequency(val || "yearly")}>
                         <SelectTrigger className="w-full h-10! bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 shadow-none rounded-lg text-slate-500 dark:text-neutral-400 focus:ring-0">
-                          <SelectValue placeholder="Month" />
+                          <SelectValue placeholder="Month">
+                            {PAY_FREQUENCY_LABELS[payFrequency] ?? null}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent className="rounded-lg shadow-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
                           <SelectItem value="hourly">Hourly</SelectItem>

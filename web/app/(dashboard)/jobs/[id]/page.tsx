@@ -295,6 +295,24 @@ export default function JobDetailsPage() {
   const [newStageName, setNewStageName] = useState("");
   const [isAssessmentDialogOpen, setIsAssessmentDialogOpen] = useState(false);
   const [detachTarget, setDetachTarget] = useState<number | null>(null);
+  const [assessmentSelectId, setAssessmentSelectId] = useState("");
+  const [triggerStageSelectId, setTriggerStageSelectId] = useState("");
+
+  const QUESTION_TYPE_LABELS: Record<string, string> = {
+    short_answer: "Short Answer",
+    long_answer: "Long Answer",
+    checkbox: "Checkbox",
+    radio: "Radio Button",
+  };
+  const MEMBER_ROLE_LABELS: Record<string, string> = {
+    hiring_manager: "Hiring Manager",
+    interviewer: "Interviewer",
+    recruiter: "Recruiter",
+  };
+  const OFFER_MODE_LABELS: Record<string, string> = {
+    auto_draft: "Auto-Draft",
+    auto_send: "Auto-Send",
+  };
 
   const handleAddStage = () => {
     if (!newStageName.trim()) return;
@@ -484,7 +502,14 @@ export default function JobDetailsPage() {
                         <Label>Select User</Label>
                         <Select value={newMemberId} onValueChange={setNewMemberId}>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select user" />
+                            <SelectValue placeholder="Select user">
+                              {newMemberId
+                                ? (() => {
+                                    const u = allUsers.find((u) => u.id.toString() === newMemberId);
+                                    return u ? `${u.firstName} ${u.lastName}` : null;
+                                  })()
+                                : null}
+                            </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             {allUsers
@@ -501,7 +526,9 @@ export default function JobDetailsPage() {
                         <Label>Role Context</Label>
                         <Select value={newMemberRole} onValueChange={setNewMemberRole}>
                           <SelectTrigger>
-                            <SelectValue />
+                            <SelectValue>
+                              {MEMBER_ROLE_LABELS[newMemberRole] ?? newMemberRole}
+                            </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="hiring_manager">Hiring Manager</SelectItem>
@@ -747,7 +774,9 @@ export default function JobDetailsPage() {
                                 }
                               >
                                 <SelectTrigger className="w-[180px] h-10 border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-slate-600 dark:text-neutral-300 shadow-none focus:ring-1 focus:ring-slate-300">
-                                  <SelectValue />
+                                  <SelectValue>
+                                    {QUESTION_TYPE_LABELS[editQuestionType] ?? editQuestionType}
+                                  </SelectValue>
                                 </SelectTrigger>
                                 <SelectContent className="border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-md">
                                   <SelectItem value="short_answer">
@@ -884,13 +913,15 @@ export default function JobDetailsPage() {
                   <div className="p-3 border border-slate-200 dark:border-neutral-800 rounded-lg bg-white dark:bg-neutral-900 space-y-4 animate-in slide-in-from-top-2 duration-200">
                     <div className="flex flex-wrap items-center gap-4">
                       <Select
-                        defaultValue="short_answer"
+                        value={newQuestionType}
                         onValueChange={(val) =>
                           setNewQuestionType(val as "short_answer" | "long_answer" | "checkbox" | "radio")
                         }
                       >
                         <SelectTrigger className="w-[180px] h-10 border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-slate-600 dark:text-neutral-300 shadow-none focus:ring-1 focus:ring-slate-300">
-                          <SelectValue placeholder="Question Type" />
+                          <SelectValue placeholder="Question Type">
+                            {QUESTION_TYPE_LABELS[newQuestionType] ?? newQuestionType}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent className="border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-md">
                           <SelectItem value="short_answer">
@@ -1067,7 +1098,7 @@ export default function JobDetailsPage() {
                 <p className="text-[18px] font-semibold text-slate-900 dark:text-neutral-100">Automated Assessments</p>
                 <p className="text-[13px] text-slate-400 dark:text-neutral-500 mt-1">Sent automatically when a candidate reaches the trigger stage.</p>
               </div>
-              <Dialog open={isAssessmentDialogOpen} onOpenChange={setIsAssessmentDialogOpen}>
+              <Dialog open={isAssessmentDialogOpen} onOpenChange={(open) => { setIsAssessmentDialogOpen(open); if (!open) { setAssessmentSelectId(""); setTriggerStageSelectId(""); } }}>
                 <DialogTrigger
                   render={
                     <button className="inline-flex items-center gap-2 h-10 px-5 rounded-lg text-[13px] font-medium border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800 hover:text-slate-800 dark:hover:text-neutral-100 transition-colors">
@@ -1100,9 +1131,13 @@ export default function JobDetailsPage() {
                   >
                     <div className="space-y-1.5">
                       <Label className="text-[11px] font-semibold text-slate-400 dark:text-neutral-500 uppercase tracking-wide">Assessment</Label>
-                      <Select name="assessmentId" required>
+                      <Select name="assessmentId" value={assessmentSelectId} onValueChange={setAssessmentSelectId} required>
                         <SelectTrigger className="w-full h-9 border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-none rounded-lg text-[13px] text-slate-600 dark:text-neutral-300 focus:ring-0">
-                          <SelectValue placeholder="Choose assessment…" />
+                          <SelectValue placeholder="Choose assessment…">
+                            {assessmentSelectId
+                              ? (allAssessments.find((a) => a.id.toString() === assessmentSelectId)?.title ?? null)
+                              : null}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent className="rounded-lg shadow-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
                           {allAssessments.map((a) => (
@@ -1113,9 +1148,13 @@ export default function JobDetailsPage() {
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-[11px] font-semibold text-slate-400 dark:text-neutral-500 uppercase tracking-wide">Trigger Stage</Label>
-                      <Select name="triggerStageId" required>
+                      <Select name="triggerStageId" value={triggerStageSelectId} onValueChange={setTriggerStageSelectId} required>
                         <SelectTrigger className="w-full h-9 border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-none rounded-lg text-[13px] text-slate-600 dark:text-neutral-300 focus:ring-0">
-                          <SelectValue placeholder="When candidate moves into…" />
+                          <SelectValue placeholder="When candidate moves into…">
+                            {triggerStageSelectId
+                              ? (stages.find((s) => s.id.toString() === triggerStageSelectId)?.name ?? null)
+                              : null}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent className="rounded-lg shadow-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
                           {stages.map((s) => (
@@ -1272,7 +1311,11 @@ export default function JobDetailsPage() {
                   onValueChange={(val) => setConfigOfferTemplate(val || "")}
                 >
                   <SelectTrigger className="w-full h-10 border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 rounded-md shadow-none text-slate-400 dark:text-neutral-500 focus:ring-0 text-sm">
-                    <SelectValue placeholder="Select an offer template" />
+                    <SelectValue placeholder="Select an offer template">
+                      {configOfferTemplate
+                        ? (offerTemplates.find((t) => String(t.id) === configOfferTemplate)?.name ?? null)
+                        : null}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent className="rounded-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-md">
                     {offerTemplates.length === 0 ? (
@@ -1297,7 +1340,9 @@ export default function JobDetailsPage() {
                     onValueChange={(val) => setConfigMode(val || "")}
                   >
                     <SelectTrigger className="w-full h-10 border-slate-200 rounded-md shadow-none text-slate-400 focus:ring-0 text-sm">
-                      <SelectValue placeholder="Click here to select the mode" />
+                      <SelectValue placeholder="Click here to select the mode">
+                        {configMode ? (OFFER_MODE_LABELS[configMode] ?? configMode) : null}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent className="rounded-lg border-slate-200 shadow-md">
                       <SelectItem value="auto_draft">Auto-Draft</SelectItem>
@@ -1330,7 +1375,11 @@ export default function JobDetailsPage() {
                 onValueChange={(val) => setConfigRejectTemplate(val || "")}
               >
                 <SelectTrigger className="w-full h-10 border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-none text-slate-400 dark:text-neutral-500 focus:ring-0 text-sm">
-                  <SelectValue placeholder="Select a rejection email template" />
+                  <SelectValue placeholder="Select a rejection email template">
+                    {configRejectTemplate
+                      ? (emailTemplates.find((t) => String(t.id) === configRejectTemplate)?.name ?? null)
+                      : null}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="rounded-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-md">
                   {emailTemplates.length === 0 ? (

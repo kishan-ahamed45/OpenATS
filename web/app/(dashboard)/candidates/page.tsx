@@ -176,7 +176,11 @@ export default function ManageCandidatesPage() {
           }
         >
           <SelectTrigger className="w-52 h-10! bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 shadow-none rounded-lg text-slate-500 dark:text-neutral-400 text-sm focus:ring-0 px-4">
-            <SelectValue placeholder="Job Position" />
+            <SelectValue placeholder="Job Position">
+              {selectedJobId
+                ? (jobs.find((j) => j.id === selectedJobId)?.title ?? null)
+                : "All Positions"}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent className="rounded-lg shadow-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
             <SelectItem value="all">All Positions</SelectItem>

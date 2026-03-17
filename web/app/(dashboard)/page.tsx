@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Bar,
   BarChart,
@@ -145,7 +146,24 @@ function ChartCard({
   );
 }
 
+const PERIOD_LABELS: Record<string, string> = {
+  "7d": "Last 7 Days",
+  "30d": "Last 30 Days",
+  "90d": "Last 90 Days",
+};
+
+const DEPT_LABELS: Record<string, string> = {
+  all: "All Departments",
+  engineering: "Engineering",
+  design: "Design",
+  marketing: "Marketing",
+  sales: "Sales",
+};
+
 export default function OverviewPage() {
+  const [period, setPeriod] = useState("7d");
+  const [dept, setDept] = useState("all");
+
   return (
     <div className="flex flex-1 flex-col bg-white dark:bg-neutral-950">
       <div className="px-8 py-4 flex items-center justify-between">
@@ -175,9 +193,9 @@ export default function OverviewPage() {
       </div>
 
       <div className="border-y border-slate-200 dark:border-neutral-800 px-8 py-3.5 flex items-center gap-3">
-        <Select defaultValue="7d">
-          <SelectTrigger className="w-36 h-10! bg-white border-slate-200 shadow-none rounded-lg text-slate-500 text-sm focus:ring-0">
-            <SelectValue />
+        <Select value={period} onValueChange={setPeriod}>
+          <SelectTrigger className="w-52 h-10! bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 shadow-none rounded-lg text-slate-500 dark:text-neutral-400 text-sm focus:ring-0 px-4">
+            <SelectValue>{PERIOD_LABELS[period]}</SelectValue>
           </SelectTrigger>
           <SelectContent className="rounded-lg shadow-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
             <SelectItem value="7d">Last 7 Days</SelectItem>
@@ -186,9 +204,9 @@ export default function OverviewPage() {
           </SelectContent>
         </Select>
 
-        <Select defaultValue="all">
-          <SelectTrigger className="w-44 h-10! bg-white border-slate-200 shadow-none rounded-lg text-slate-500 text-sm focus:ring-0">
-            <SelectValue />
+        <Select value={dept} onValueChange={setDept}>
+          <SelectTrigger className="w-52 h-10! bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 shadow-none rounded-lg text-slate-500 dark:text-neutral-400 text-sm focus:ring-0 px-4">
+            <SelectValue>{DEPT_LABELS[dept]}</SelectValue>
           </SelectTrigger>
           <SelectContent className="rounded-lg shadow-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
             <SelectItem value="all">All Departments</SelectItem>

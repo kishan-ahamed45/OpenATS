@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import {
   Home01Icon,
   Briefcase01Icon,
@@ -9,7 +8,9 @@ import {
   CheckListIcon,
   Message01Icon,
   Settings02Icon,
+  OpenSourceIcon,
 } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 import { usePathname } from "next/navigation";
 
@@ -101,15 +102,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       {...props}
     >
       <SidebarHeader className="h-16 justify-center px-6">
-        <div className="flex items-center justify-start w-full">
-          <Image
-            src="/logo.png"
-            alt="OpenATS"
-            width={200}
-            height={56}
-            priority
-            className="object-contain"
-          />
+        <div className="flex items-center gap-2 justify-start w-full">
+          <HugeiconsIcon icon={OpenSourceIcon} className="size-9 text-sidebar-foreground shrink-0 -translate-y-1" />
+          <span className="font-bebas text-[2.25rem] leading-none tracking-wider text-sidebar-foreground select-none">
+            OpenATS
+          </span>
         </div>
       </SidebarHeader>
       <SidebarContent>

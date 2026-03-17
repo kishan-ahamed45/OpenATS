@@ -1,34 +1,22 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import {
   Search01Icon,
   ArrowLeft01Icon,
   ArrowRight01Icon,
-  CallIcon,
-  Mail01Icon,
-  Linkedin01Icon,
-  SentIcon,
-  ArrowUpRight01Icon,
-  EyeIcon,
   MoreVerticalIcon,
   Archive01Icon,
+  CallIcon,
+  Mail01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { archiveItem } from "@/lib/archive-store";
-import {
-  useOffers,
-  useUpdateOffer,
-  useUpdateOfferStatus,
-  useDeleteOffer,
-} from "@/hooks/use-api";
+import { useOffers, useDeleteOffer } from "@/hooks/use-api";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -45,7 +33,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -56,6 +43,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { CandidateSidePanel } from "@/components/candidate-side-panel";
 
 type OfferStatus =
   | "Draft"
@@ -67,6 +55,7 @@ type OfferStatus =
 
 interface Offer {
   id: number;
+  candidateId: number;
   candidateName: string;
   jobTitle: string;
   status: OfferStatus;
@@ -78,12 +67,7 @@ interface Offer {
   stage: string;
   phone: string;
   email: string;
-  linkedin: string;
-  templateName: string;
-  budgetMin: string;
-  budgetMax: string;
-  startDate: string;
-  expiryDate: string;
+  resumeUrl: string;
 }
 
 const OFFER_STATUS_STYLES: Record<OfferStatus, string> = {
@@ -95,14 +79,6 @@ const OFFER_STATUS_STYLES: Record<OfferStatus, string> = {
   Withdrawn: "bg-slate-50 dark:bg-neutral-800 text-slate-500 dark:text-neutral-400",
 };
 
-const STAGE_STYLES: Record<string, string> = {
-  Interview: "bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400",
-  Offer: "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400",
-  Applied: "bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400",
-  Accepted: "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400",
-  Rejected: "bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400",
-  Withdrawn: "bg-slate-50 dark:bg-neutral-800 text-slate-500 dark:text-neutral-400",
-};
 
 
 
@@ -150,14 +126,13 @@ function RowMenu({ onArchive }: { onArchive(): void }) {
 }
 
 export default function ManageOffersPage() {
-  const { data: offersRes, isLoading } = useOffers();
-  const updateOfferMutation = useUpdateOffer();
-  const updateOfferStatusMutation = useUpdateOfferStatus();
+  const { data: offersRes } = useOffers();
   const deleteOfferMutation = useDeleteOffer();
 
   const rawOffers = offersRes?.data ?? [];
 
-  const offers: Offer[] = rawOffers.map((o: any) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const offers: Offer[] = rawOffers.map((o: Record<string, any>) => {
     const statusMap: Record<string, OfferStatus> = {
       draft: "Draft",
       sent: "Sent",
@@ -169,6 +144,7 @@ export default function ManageOffersPage() {
 
     return {
       id: o.id,
+      candidateId: o.candidate?.id ?? 0,
       candidateName: `${o.candidate?.firstName ?? ""} ${o.candidate?.lastName ?? ""}`.trim() || "Unknown Candidate",
       jobTitle: o.job?.title ?? "Unknown Job",
       status: statusMap[o.status] ?? "Draft",
@@ -178,14 +154,9 @@ export default function ManageOffersPage() {
       expiredDate: o.expiryDate ? new Date(o.expiryDate).toLocaleDateString() : "",
       department: o.job?.department?.name ?? "Other",
       stage: o.candidate?.currentStage?.name ?? "Unknown Stage",
-      phone: o.candidate?.phone ?? "",
-      email: o.candidate?.email ?? "",
-      linkedin: o.candidate?.linkedinUrl ?? "",
-      templateName: o.template?.name ?? "No Template",
-      budgetMin: String(o.job?.salaryMin ?? ""),
-      budgetMax: String(o.job?.salaryMax ?? ""),
-      startDate: o.startDate ? o.startDate.split("T")[0] : "",
-      expiryDate: o.expiryDate ? o.expiryDate.split("T")[0] : "",
+      phone: o.candidate?.phone ?? "—",
+      email: o.candidate?.email ?? "—",
+      resumeUrl: o.candidate?.resumeUrl ?? "",
     };
   });
 
@@ -198,45 +169,9 @@ export default function ManageOffersPage() {
   const [selected, setSelected] = useState<Offer | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const [offerSalary, setOfferSalary] = useState("");
-  const [offerCurrency, setOfferCurrency] = useState("");
-  const [offerStartDate, setOfferStartDate] = useState("");
-  const [offerExpiryDate, setOfferExpiryDate] = useState("");
-  const [offerStatus, setOfferStatus] = useState<OfferStatus>("Draft");
-
   const openOffer = (o: Offer) => {
     setSelected(o);
-    setOfferSalary(o.salary);
-    setOfferCurrency(o.currency);
-    setOfferStartDate(o.startDate);
-    setOfferExpiryDate(o.expiryDate);
-    setOfferStatus(o.status);
     setSheetOpen(true);
-  };
-
-  const handleSend = () => {
-    if (!selected) return;
-    updateOfferStatusMutation.mutate(
-      { id: selected.id, status: "sent" },
-      {
-        onSuccess: () => {
-          setOfferStatus("Sent");
-        }
-      }
-    );
-  };
-
-  const handleSaveOfferDetails = () => {
-    if (!selected) return;
-    updateOfferMutation.mutate({
-      offerId: selected.id,
-      data: {
-        salary: Number(offerSalary) || null,
-        currency: offerCurrency || null,
-        startDate: offerStartDate || null,
-        expiryDate: offerExpiryDate || null,
-      }
-    });
   };
 
   const confirmArchive = () => {
@@ -290,7 +225,9 @@ export default function ManageOffersPage() {
           onValueChange={(v) => setFilterDept(v ?? "all")}
         >
           <SelectTrigger className="w-48 h-10! bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 shadow-none rounded-lg text-slate-500 dark:text-neutral-400 text-sm focus:ring-0 px-4">
-            <SelectValue placeholder="Departments" />
+            <SelectValue placeholder="Departments">
+              {({ all: "All Departments", Engineering: "Engineering", Design: "Design", Operations: "Operations" } as Record<string, string>)[filterDept] ?? filterDept}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent className="rounded-lg shadow-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
             <SelectItem value="all">All Departments</SelectItem>
@@ -304,7 +241,9 @@ export default function ManageOffersPage() {
           onValueChange={(v) => setFilterStatus(v ?? "all")}
         >
           <SelectTrigger className="w-40 h-10! bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 shadow-none rounded-lg text-slate-500 dark:text-neutral-400 text-sm focus:ring-0 px-4">
-            <SelectValue placeholder="Status" />
+            <SelectValue placeholder="Status">
+              {({ all: "All Statuses", draft: "Draft", sent: "Sent", pending: "Pending", accepted: "Accepted", declined: "Declined", withdrawn: "Withdrawn" } as Record<string, string>)[filterStatus] ?? filterStatus}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent className="rounded-lg shadow-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
             <SelectItem value="all">All Statuses</SelectItem>
@@ -435,327 +374,63 @@ export default function ManageOffersPage() {
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent
           showCloseButton={true}
-          className="w-[95vw] sm:max-w-[1320px] p-0 flex flex-row gap-0 border-l border-slate-200 dark:border-neutral-800 shadow-none overflow-hidden bg-white dark:bg-neutral-950"
+          className="w-[98vw] sm:max-w-[98vw] p-0 flex flex-row gap-0 border-l border-slate-200 dark:border-neutral-800 shadow-none overflow-hidden bg-white dark:bg-neutral-950"
         >
           {selected && (
             <>
+              {/* Left — CV preview */}
               <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-                <div className="px-6 lg:px-10 py-6 lg:py-10 border-b border-slate-100 dark:border-neutral-800 shrink-0 bg-white dark:bg-neutral-950">
-                  <div className="flex items-start sm:items-center gap-6 min-w-0">
-                    <Avatar className="size-14 lg:size-16 rounded-full shrink-0">
-                      <AvatarImage
-                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${selected.candidateName}`}
-                      />
-                      <AvatarFallback>
-                        {selected.candidateName
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 space-y-2 min-w-0">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <h2 className="text-xl lg:text-2xl font-semibold text-slate-900 dark:text-neutral-100 tracking-tight truncate">
-                          {selected.candidateName}
-                        </h2>
-                        <Badge
-                          className={`${STAGE_STYLES[selected.stage] ?? "bg-slate-100 text-slate-500"} hover:opacity-100 border-none shadow-none font-medium px-2 py-0.5 rounded-full text-[10px] lg:text-[11px] uppercase tracking-wider whitespace-nowrap`}
-                        >
-                          {selected.stage}
-                        </Badge>
+                <div className="px-6 lg:px-8 py-4 lg:py-5 border-b border-slate-100 dark:border-neutral-800 shrink-0 bg-white dark:bg-neutral-950">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 min-w-0">
+                    <h2 className="text-lg font-semibold text-slate-900 dark:text-neutral-100 tracking-tight">
+                      {selected.candidateName}
+                    </h2>
+                    {selected.stage && (
+                      <Badge className="bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 border-none shadow-none font-medium px-2 py-0.5 rounded-full text-[11px] uppercase tracking-wider whitespace-nowrap">
+                        {selected.stage}
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-slate-500 dark:text-neutral-400 text-[13px] mt-0.5">
+                    {selected.jobTitle}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-x-5 gap-y-1 mt-1.5">
+                    {[
+                      [CallIcon, selected.phone],
+                      [Mail01Icon, selected.email],
+                    ].map(([icon, value], i) => (
+                      <div
+                        key={i}
+                        className="flex items-center gap-1.5 text-slate-500 dark:text-neutral-400 text-[12px] font-medium hover:text-theme cursor-pointer whitespace-nowrap"
+                      >
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                        <HugeiconsIcon icon={icon as any} className="size-3.5 text-slate-400" />
+                        <span>{value as string}</span>
                       </div>
-                      <p className="text-slate-500 dark:text-neutral-400 font-medium text-xs lg:text-[14px]">
-                        {selected.jobTitle}{" "}
-                        <span className="mx-1 opacity-30 mt-1">•</span> Applied 4
-                        days ago
-                      </p>
-                      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-1 lg:pt-3">
-                        {[
-                          [CallIcon, selected.phone],
-                          [Mail01Icon, selected.email],
-                          [Linkedin01Icon, selected.linkedin],
-                        ].map(([icon, value], i) => (
-                          <div
-                            key={i}
-                            className="flex items-center gap-2 text-slate-500 dark:text-neutral-400 text-[12px] lg:text-[13px] font-medium hover:text-[var(--theme-color)] cursor-pointer whitespace-nowrap"
-                          >
-                            <HugeiconsIcon
-                              icon={icon as any}
-                              className="size-3.5 lg:size-4 text-slate-400"
-                            />
-                            <span>{value as string}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
 
-                <div className="flex-1 bg-slate-50 dark:bg-neutral-900 p-8 overflow-y-auto flex flex-col items-center">
-                  <div className="bg-slate-200/40 dark:bg-neutral-800/40 rounded-xl w-full max-w-4xl h-[1200px] border border-slate-200 dark:border-neutral-800 flex flex-col items-center justify-center text-slate-400 font-semibold shadow-inner relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-slate-200/10 dark:from-neutral-700/10 to-transparent pointer-events-none" />
-                    <div className="text-4xl opacity-10 font-bold uppercase tracking-[0.2em] transform -rotate-12 select-none">
-                      CV PREVIEW (PDF)
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="w-[500px] border-l border-slate-100 dark:border-neutral-800 flex flex-col bg-white dark:bg-neutral-950 overflow-hidden">
-                <div className="h-20 shrink-0 flex items-center justify-start px-6">
-                  <Button
-                    className="text-white font-medium text-[12px] gap-2 px-5 h-10 rounded-[10px] shadow-none border-none"
-                    style={{ backgroundColor: "var(--theme-color)" }}
-                  >
-                    <span>View CV in New Tab</span>
-                    <HugeiconsIcon
-                      icon={ArrowUpRight01Icon}
-                      className="size-4"
-                      strokeWidth={2.5}
+                <div className="flex-1 overflow-hidden">
+                  {selected.resumeUrl ? (
+                    <iframe
+                      src={`${selected.resumeUrl}#toolbar=0&navpanes=0&scrollbar=0`}
+                      title="Resume"
+                      className="w-full h-full border-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                     />
-                  </Button>
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-slate-400">
+                      <svg className="size-10 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <p className="text-[13px] font-medium">No resume uploaded</p>
+                    </div>
+                  )}
                 </div>
-
-                <Tabs
-                  defaultValue="offer"
-                  className="flex-1 flex flex-col overflow-hidden m-0"
-                >
-                  <div className="py-3 border-y border-slate-100 dark:border-neutral-800 px-6 bg-white dark:bg-neutral-950">
-                    <TabsList className="bg-transparent h-fit w-full justify-start gap-2 p-0">
-                      {["notes", "messages", "scores", "offer"].map((tab) => (
-                        <TabsTrigger
-                          key={tab}
-                          value={tab}
-                          className="data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:border-[var(--theme-color)] data-[state=active]:text-[var(--theme-color)] border border-slate-200 dark:border-neutral-800 rounded-[10px] px-4 py-2 text-[13px] font-medium text-slate-600 dark:text-neutral-400 shadow-none h-[38px] bg-white dark:bg-neutral-900 cursor-pointer capitalize"
-                        >
-                          {tab === "scores"
-                            ? "Assessments"
-                            : tab === "notes"
-                              ? "Internal Notes"
-                              : tab.charAt(0).toUpperCase() + tab.slice(1)}
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
-                  </div>
-
-                  <TabsContent
-                    value="notes"
-                    className="flex-1 flex flex-col p-0 m-0 overflow-hidden outline-none"
-                  >
-                    <div className="flex-1 overflow-y-auto p-6 divide-y divide-slate-50 dark:divide-neutral-900">
-                      {[
-                        {
-                          seed: "Narendra",
-                          name: "Narendra Modi",
-                          time: "5 minutes ago",
-                          note: "Big Data, Machine Learning Artificial Intelligence",
-                        },
-                        {
-                          seed: "Anura",
-                          name: "Anura Kumara Dissanayake",
-                          time: "a few minutes ago",
-                          note: '"this guy dont know how to center div"',
-                        },
-                      ].map((n, i) => (
-                        <div key={i} className="py-6 first:pt-0 flex gap-4">
-                          <Avatar className="size-10 rounded-full shrink-0">
-                            <AvatarImage
-                              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${n.seed}`}
-                            />
-                            <AvatarFallback>
-                              {n.name
-                                .split(" ")
-                                .map((x) => x[0])
-                                .join("")
-                                .slice(0, 2)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-[15px] font-bold text-slate-900 dark:text-neutral-100">
-                                {n.name}
-                              </span>
-                              <span className="text-[12px] text-slate-400 dark:text-neutral-500">
-                                {n.time}
-                              </span>
-                            </div>
-                            <p className="text-[14px] text-slate-600 dark:text-neutral-400 leading-relaxed italic">
-                              {n.note}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="p-6 border-t border-slate-100 dark:border-neutral-800 shrink-0">
-                      <div className="relative">
-                        <Input
-                          placeholder="Write your note here..."
-                          className="h-12 pr-14 bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 rounded-xl text-sm focus-visible:ring-1 focus-visible:ring-[var(--theme-color)] shadow-none placeholder:text-slate-400 dark:placeholder:text-neutral-600"
-                        />
-                        <Button
-                          size="icon"
-                          className="absolute right-1 top-1 size-10 rounded-lg shadow-none border-none"
-                          style={{ backgroundColor: "var(--theme-color)" }}
-                        >
-                          <HugeiconsIcon
-                            icon={SentIcon}
-                            className="size-5 text-white rotate-[-45deg]"
-                            strokeWidth={2.5}
-                          />
-                        </Button>
-                      </div>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent
-                    value="messages"
-                    className="flex-1 p-8 text-center outline-none bg-white dark:bg-neutral-950"
-                  >
-                    <p className="text-slate-400 dark:text-neutral-500 text-sm italic">
-                      No communications logs found.
-                    </p>
-                  </TabsContent>
-
-                  <TabsContent
-                    value="scores"
-                    className="flex-1 p-8 text-center outline-none bg-white dark:bg-neutral-950"
-                  >
-                    <p className="text-slate-400 dark:text-neutral-500 text-sm italic">
-                      No assessment scores available.
-                    </p>
-                  </TabsContent>
-
-                  <TabsContent
-                    value="offer"
-                    className="flex-1 overflow-y-auto p-6 outline-none m-0"
-                  >
-                    <div className="bg-white dark:bg-neutral-900 rounded-xl border border-slate-200 dark:border-neutral-800 overflow-hidden">
-                      <div className="px-5 py-4 border-b border-slate-100 dark:border-neutral-800 flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <span className="text-[14px] font-semibold text-slate-800 dark:text-neutral-100 truncate">
-                            {selected.templateName}
-                          </span>
-                          <Badge
-                            className={`${OFFER_STATUS_STYLES[offerStatus]} hover:opacity-100 border-none shadow-none font-medium px-2.5 py-0.5 rounded-full text-[11px] shrink-0`}
-                          >
-                            {offerStatus}
-                          </Badge>
-                        </div>
-                        <Button
-                          variant="outline"
-                          className="h-8 px-3 text-[12px] font-medium border-slate-200 dark:border-neutral-800 text-slate-600 dark:text-neutral-400 hover:bg-slate-50 dark:hover:bg-neutral-800 shadow-none rounded-lg gap-1.5 shrink-0"
-                        >
-                          <HugeiconsIcon icon={EyeIcon} className="size-3.5" />
-                          Preview
-                        </Button>
-                      </div>
-
-                      <div className="p-5 space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <Label className="text-[12px] text-slate-700 dark:text-neutral-300 font-medium mb-1.5 block">
-                              Salary
-                            </Label>
-                            <Input
-                              type="number"
-                              value={offerSalary}
-                              onChange={(e) => setOfferSalary(e.target.value)}
-                              className="h-10 border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 rounded-lg shadow-none focus-visible:ring-0 focus-visible:border-[var(--theme-color)]/50 text-sm"
-                            />
-                          </div>
-                          <div>
-                            <Label className="text-[12px] text-slate-700 dark:text-neutral-300 font-medium mb-1.5 block">
-                              Currency
-                            </Label>
-                            <Input
-                              value={offerCurrency}
-                              onChange={(e) => setOfferCurrency(e.target.value)}
-                              className="h-10 border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 rounded-lg shadow-none focus-visible:ring-0 focus-visible:border-[var(--theme-color)]/50 text-sm"
-                            />
-                          </div>
-                        </div>
-
-                        <p className="text-[12px] text-slate-400 dark:text-neutral-500">
-                          *Budget Range For This Role: USD {selected.budgetMin}{" "}
-                          – {selected.budgetMax}
-                        </p>
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <Label className="text-[12px] text-slate-700 dark:text-neutral-300 font-medium mb-1.5 block">
-                              Start Date
-                            </Label>
-                            <Input
-                              type="date"
-                              value={offerStartDate}
-                              onChange={(e) =>
-                                setOfferStartDate(e.target.value)
-                              }
-                              className="h-10 border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 rounded-lg shadow-none focus-visible:ring-0 focus-visible:border-[var(--theme-color)]/50 text-sm"
-                            />
-                          </div>
-                          <div>
-                            <Label className="text-[12px] text-slate-700 dark:text-neutral-300 font-medium mb-1.5 block">
-                              Expiry Date
-                            </Label>
-                            <Input
-                              type="date"
-                              value={offerExpiryDate}
-                              onChange={(e) =>
-                                setOfferExpiryDate(e.target.value)
-                              }
-                              className="h-10 border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 rounded-lg shadow-none focus-visible:ring-0 focus-visible:border-[var(--theme-color)]/50 text-sm"
-                            />
-                          </div>
-                        </div>
-
-                        {updateOfferStatusMutation.isSuccess ? (
-                          <div className="w-full h-11 rounded-lg bg-emerald-500 flex items-center justify-center gap-2 text-white font-semibold text-[14px]">
-                            <HugeiconsIcon icon={SentIcon} className="size-4" />
-                            Offer Sent Successfully!
-                          </div>
-                        ) : (
-                          <div className="flex flex-col gap-2">
-                            <Button
-                              onClick={handleSaveOfferDetails}
-                              disabled={updateOfferMutation.isPending}
-                              variant="outline"
-                              className="w-full h-11 rounded-lg font-semibold text-[14px] bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 disabled:opacity-50"
-                            >
-                              {updateOfferMutation.isPending ? "Saving..." : "Save Details"}
-                            </Button>
-                            <button
-                              onClick={handleSend}
-                              disabled={
-                                offerStatus === "Sent" ||
-                                offerStatus === "Accepted" ||
-                                offerStatus === "Declined" ||
-                                offerStatus === "Withdrawn" ||
-                                updateOfferStatusMutation.isPending
-                              }
-                              className="w-full h-11 rounded-lg text-white font-semibold text-[14px] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                              style={{ backgroundColor: "var(--theme-color)" }}
-                            >
-                              <HugeiconsIcon icon={SentIcon} className="size-4" />
-                              {updateOfferStatusMutation.isPending
-                                ? "Sending..."
-                                : offerStatus === "Sent"
-                                  ? "Offer Already Sent"
-                                  : offerStatus === "Accepted"
-                                    ? "Offer Accepted"
-                                    : offerStatus === "Declined"
-                                      ? "Offer Declined"
-                                      : offerStatus === "Withdrawn"
-                                        ? "Offer Withdrawn"
-                                        : "Send Offer"}
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </TabsContent>
-                </Tabs>
               </div>
+
+              {/* Right — candidate side panel */}
+              <CandidateSidePanel candidateId={selected.candidateId} />
             </>
           )}
         </SheetContent>

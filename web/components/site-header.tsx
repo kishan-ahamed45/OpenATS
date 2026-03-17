@@ -43,14 +43,13 @@ export function SiteHeader() {
   // Build crumbs from path segments
   const segments = pathname.split("/").filter(Boolean);
 
-  // Each crumb: { label, href }
-  const crumbs = [
-    { label: "OpenATS", href: "/" },
-    ...segments.map((seg, i) => ({
-      label: labelFor(seg),
-      href: "/" + segments.slice(0, i + 1).join("/"),
-    })),
-  ];
+  const crumbs =
+    segments.length === 0
+      ? [{ label: "Dashboard", href: "/" }]
+      : segments.map((seg, i) => ({
+          label: labelFor(seg),
+          href: "/" + segments.slice(0, i + 1).join("/"),
+        }));
 
   return (
     <header className="bg-white dark:bg-neutral-950 sticky top-0 z-50 flex w-full items-center border-b border-slate-100 dark:border-neutral-800">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Search01Icon,
   PlusSignIcon,
@@ -100,9 +100,15 @@ function RowMenu({ onArchive }: { onArchive(): void }) {
 }
 
 export default function ManageJobsPage() {
+  const router = useRouter();
   const { data, isLoading } = useJobs();
   const jobs = data?.data ?? [];
   const [archiveTarget, setArchiveTarget] = useState<Job | null>(null);
+  const [filterDept, setFilterDept] = useState("all");
+  const [filterType, setFilterType] = useState("all");
+
+  const DEPT_LABELS: Record<string, string> = { all: "All Departments", api: "API Management", eng: "Engineering" };
+  const TYPE_LABELS: Record<string, string> = { all: "All Types", fulltime: "Full Time", internship: "Internship" };
 
   const confirmArchive = () => {
     if (!archiveTarget) return;
@@ -146,26 +152,33 @@ export default function ManageJobsPage() {
             className="pl-11 h-10! bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 shadow-none rounded-lg text-sm placeholder:text-slate-300 dark:placeholder:text-neutral-600 transition-[border-color] duration-200 ease-in-out"
           />
         </div>
-        <Select>
+        <Select value={filterDept} onValueChange={(v) => setFilterDept(v ?? "all")}>
           <SelectTrigger className="w-52 h-10! bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 shadow-none rounded-lg text-slate-500 dark:text-neutral-400 text-sm focus:ring-0 px-4">
-            <SelectValue placeholder="Departments" />
+            <SelectValue placeholder="Departments">
+              {DEPT_LABELS[filterDept] ?? filterDept}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent className="rounded-lg shadow-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
+            <SelectItem value="all">All Departments</SelectItem>
             <SelectItem value="api">API Management</SelectItem>
             <SelectItem value="eng">Engineering</SelectItem>
           </SelectContent>
         </Select>
-        <Select>
+        <Select value={filterType} onValueChange={(v) => setFilterType(v ?? "all")}>
           <SelectTrigger className="w-44 h-10! bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 shadow-none rounded-lg text-slate-500 dark:text-neutral-400 text-sm focus:ring-0 px-4">
-            <SelectValue placeholder="Job Types" />
+            <SelectValue placeholder="Job Types">
+              {TYPE_LABELS[filterType] ?? filterType}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent className="rounded-lg shadow-lg border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
+            <SelectItem value="all">All Types</SelectItem>
             <SelectItem value="fulltime">Full Time</SelectItem>
             <SelectItem value="internship">Internship</SelectItem>
           </SelectContent>
         </Select>
         <Button
           variant="ghost"
+          onClick={() => { setFilterDept("all"); setFilterType("all"); }}
           className="text-slate-600 dark:text-neutral-400 font-medium text-sm h-10 px-4 hover:bg-transparent hover:text-slate-900 dark:hover:text-neutral-100 border-none ml-4"
         >
           Clear All
@@ -210,14 +223,11 @@ export default function ManageJobsPage() {
                 </TableRow>
               ) : (
                 jobs.map((job) => (
-                  <TableRow key={job.id} className="border-b border-slate-200 dark:border-neutral-800 last:border-0 font-medium">
+                  <TableRow key={job.id} onClick={() => router.push(`jobs/${job.id}`)} className="border-b border-slate-200 dark:border-neutral-800 last:border-0 font-medium cursor-pointer">
                     <TableCell className="h-13 px-8 py-0">
-                      <Link
-                        href={`jobs/${job.id}`}
-                        className="text-slate-700 dark:text-neutral-300 font-medium hover:underline decoration-1 underline-offset-4 cursor-pointer"
-                      >
+                      <span className="text-slate-700 dark:text-neutral-300 font-medium">
                         {job.title}
-                      </Link>
+                      </span>
                     </TableCell>
                     <TableCell className="h-13 px-8 py-0 text-slate-600 dark:text-neutral-400 font-normal">
                       {EMPLOYMENT_TYPE_LABELS[job.employmentType]}
