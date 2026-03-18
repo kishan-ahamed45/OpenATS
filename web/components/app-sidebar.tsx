@@ -70,8 +70,8 @@ const navMainData = [
         url: "/settings/templates",
       },
       {
-        title: "Team",
-        url: "/settings/team",
+        title: "User Management",
+        url: "/settings/user-management",
       },
       {
         title: "Profile",

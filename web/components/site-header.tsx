@@ -47,9 +47,9 @@ export function SiteHeader() {
     segments.length === 0
       ? [{ label: "Dashboard", href: "/" }]
       : segments.map((seg, i) => ({
-          label: labelFor(seg),
-          href: "/" + segments.slice(0, i + 1).join("/"),
-        }));
+        label: labelFor(seg),
+        href: "/" + segments.slice(0, i + 1).join("/"),
+      }));
 
   return (
     <header className="bg-white dark:bg-neutral-950 sticky top-0 z-50 flex w-full items-center border-b border-slate-100 dark:border-neutral-800">
