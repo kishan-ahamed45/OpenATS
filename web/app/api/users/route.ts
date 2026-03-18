@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { asgardeo } from '@asgardeo/nextjs/server';
+import { serverFetch } from '@/lib/auth-action';
+import { assignAsgardeoRole } from '@/lib/asgardeo-roles';
+import type { User } from '@/types';
 
 async function getToken() {
     const client = await asgardeo();
@@ -10,62 +13,63 @@ async function getToken() {
 
 const BASE = process.env.NEXT_PUBLIC_ASGARDEO_BASE_URL;
 
-// GET /api/users — list all users
 export async function GET() {
     try {
-        const token = await getToken();
-        const url = `${process.env.NEXT_PUBLIC_ASGARDEO_BASE_URL}/scim2/Users`;
-
-        const res = await fetch(url, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-                Accept: 'application/json',
-            },
-        });
-
-        const body = await res.text();
-        // console.log('Asgardeo status:', res.status);
-        // console.log('Asgardeo body:', body);
-
-        if (!res.ok) return NextResponse.json({ error: body }, { status: res.status });
-        return NextResponse.json(JSON.parse(body).Resources ?? []);
+        const data = await serverFetch<{ data: User[] }>('/users');
+        return NextResponse.json(data.data);
     } catch (e: any) {
-        return NextResponse.json({ error: e.message }, { status: 401 });
+        return NextResponse.json({ error: e.message }, { status: 500 });
     }
 }
 
-// POST /api/users — invite/create a new user
 export async function POST(req: Request) {
     try {
         const token = await getToken();
         const body = await req.json();
+        const role = body.role ?? 'interviewer';
 
-        const scimPayload = {
-            schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'],
-            name: {
-                givenName: body.firstName,
-                familyName: body.lastName,
-            },
-            userName: body.userName,
-            password: body.password,
-            emails: [{ primary: true, value: body.email }],
-            'urn:ietf:params:scim:schemas:extension:enterprise:2.0:User': {
-                askPassword: body.askPassword ? 'true' : undefined,
-            },
-        };
-
-        const res = await fetch(`${BASE}/scim2/Users`, {
+        // create user on asgardeo
+        const scimRes = await fetch(`${BASE}/scim2/Users`, {
             method: 'POST',
-            headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(scimPayload),
+            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'],
+                name: { givenName: body.firstName, familyName: body.lastName },
+                userName: `DEFAULT/${body.userName}`,
+                password: body.password,
+                emails: [{ primary: true, value: body.email }],
+                'urn:ietf:params:scim:schemas:extension:enterprise:2.0:User': {
+                    askPassword: body.askPassword ? 'true' : undefined,
+                },
+            }),
         });
 
-        if (!res.ok) return NextResponse.json({ error: await res.text() }, { status: res.status });
-        return NextResponse.json(await res.json(), { status: 201 });
+        if (!scimRes.ok) {
+            const err = await scimRes.json();
+            return NextResponse.json(
+                { error: err.detail ?? 'Failed to create user in Asgardeo' },
+                { status: scimRes.status }
+            );
+        }
+
+        const scimUser = await scimRes.json();
+
+        await assignAsgardeoRole(token, scimUser.id, role);
+
+        // create db record — no waiting for first login ( when user creating through the app)
+        await serverFetch<{ data: unknown }>('/users', {
+            method: 'POST',
+            body: JSON.stringify({
+                asgardeoUserId: scimUser.id,
+                firstName: body.firstName,
+                lastName: body.lastName,
+                email: body.email,
+                role,
+            }),
+        });
+
+        return NextResponse.json({ success: true }, { status: 201 });
     } catch (e: any) {
-        return NextResponse.json({ error: e.message }, { status: 401 });
+        return NextResponse.json({ error: e.message }, { status: 500 });
     }
 }

@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { asgardeo } from '@asgardeo/nextjs/server';
+import { serverFetch } from '@/lib/auth-action';
+import { assignAsgardeoRole, removeAsgardeoRole } from '@/lib/asgardeo-roles';
+import type { User } from '@/types';
 
 async function getToken() {
     const client = await asgardeo();
@@ -10,26 +13,25 @@ async function getToken() {
 
 const BASE = process.env.NEXT_PUBLIC_ASGARDEO_BASE_URL;
 
-// GET /api/users/[id]
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
     try {
-        const token = await getToken();
-        const res = await fetch(`${BASE}/scim2/Users/${params.id}`, {
-            headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
-        });
-        if (!res.ok) return NextResponse.json({ error: await res.text() }, { status: res.status });
-        return NextResponse.json(await res.json());
+        const data = await serverFetch<{ data: User }>(`/users/${params.id}`);
+        return NextResponse.json(data.data);
     } catch (e: any) {
-        return NextResponse.json({ error: e.message }, { status: 401 });
+        return NextResponse.json({ error: e.message }, { status: 500 });
     }
 }
 
-// PATCH /api/users/[id] — update name/email
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
     try {
         const token = await getToken();
         const body = await req.json();
 
+        // 1. Get current user from DB
+        const existing = await serverFetch<{ data: User & { asgardeoUserId: string } }>(`/users/${params.id}`);
+        const { asgardeoUserId, role: oldRole } = existing.data;
+
+        // 2. Update name/email in Asgardeo
         const operations: any[] = [];
         if (body.firstName !== undefined)
             operations.push({ op: 'replace', path: 'name.givenName', value: body.firstName });
@@ -38,40 +40,68 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
         if (body.email !== undefined)
             operations.push({ op: 'replace', path: 'emails[primary eq true].value', value: body.email });
 
-        const scimPayload = {
-            schemas: ['urn:ietf:params:scim:api:messages:2.0:PatchOp'],
-            Operations: operations,
-        };
+        if (operations.length > 0) {
+            const scimRes = await fetch(`${BASE}/scim2/Users/${asgardeoUserId}`, {
+                method: 'PATCH',
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    schemas: ['urn:ietf:params:scim:api:messages:2.0:PatchOp'],
+                    Operations: operations,
+                }),
+            });
+            if (!scimRes.ok)
+                return NextResponse.json({ error: await scimRes.text() }, { status: scimRes.status });
+        }
 
-        const res = await fetch(`${BASE}/scim2/Users/${params.id}`, {
-            method: 'PATCH',
-            headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(scimPayload),
+        // 3. Sync Asgardeo role if changed
+        if (body.role !== undefined && body.role !== oldRole) {
+            await removeAsgardeoRole(token, asgardeoUserId, oldRole);
+            await assignAsgardeoRole(token, asgardeoUserId, body.role);
+        }
+
+        // 4. Update DB
+        const updated = await serverFetch<{ data: User }>(`/users/${params.id}`, {
+            method: 'PUT',
+            body: JSON.stringify({
+                ...(body.firstName !== undefined && { firstName: body.firstName }),
+                ...(body.lastName !== undefined && { lastName: body.lastName }),
+                ...(body.role !== undefined && { role: body.role }),
+            }),
         });
 
-        if (!res.ok) return NextResponse.json({ error: await res.text() }, { status: res.status });
-        // PATCH returns 200 with updated user or 204 with no body
-        const text = await res.text();
-        return NextResponse.json(text ? JSON.parse(text) : { success: true });
+        return NextResponse.json(updated.data);
     } catch (e: any) {
-        return NextResponse.json({ error: e.message }, { status: 401 });
+        return NextResponse.json({ error: e.message }, { status: 500 });
     }
 }
 
-// DELETE /api/users/[id]
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
     try {
         const token = await getToken();
-        const res = await fetch(`${BASE}/scim2/Users/${params.id}`, {
+
+        // 1. Get user from DB
+        const existing = await serverFetch<{ data: User & { asgardeoUserId: string } }>(`/users/${params.id}`);
+        const { asgardeoUserId, role } = existing.data;
+
+        // 2. Remove Asgardeo role
+        await removeAsgardeoRole(token, asgardeoUserId, role);
+
+        // 3. Delete from Asgardeo
+        const scimRes = await fetch(`${BASE}/scim2/Users/${asgardeoUserId}`, {
             method: 'DELETE',
             headers: { Authorization: `Bearer ${token}` },
         });
-        if (!res.ok) return NextResponse.json({ error: await res.text() }, { status: res.status });
+        if (!scimRes.ok)
+            return NextResponse.json({ error: await scimRes.text() }, { status: scimRes.status });
+
+        // 4. Soft delete in DB
+        await serverFetch(`/users/${params.id}`, {
+            method: 'PUT',
+            body: JSON.stringify({ isActive: false }),
+        });
+
         return NextResponse.json({ success: true });
     } catch (e: any) {
-        return NextResponse.json({ error: e.message }, { status: 401 });
+        return NextResponse.json({ error: e.message }, { status: 500 });
     }
 }
