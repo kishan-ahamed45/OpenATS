@@ -193,7 +193,7 @@ export type User = {
   firstName: string;
   lastName: string;
   email: string;
-  role: "super_admin" | "admin" | "recruiter" | "hiring_manager" | "interviewer";
+  role: "super_admin" | "hiring_manager" | "interviewer";
   avatarUrl: string | null;
   isActive: boolean;
   createdAt: string;

@@ -4,6 +4,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { DragDropProvider } from "@/components/drag-drop-provider";
 import { ThemeInitializer } from "@/components/theme-initializer";
 import { QueryProvider } from "@/components/query-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,7 @@ export default function DashboardLayout({
           </div>
         </SidebarProvider>
       </div>
+      <Toaster richColors closeButton />
     </QueryProvider>
   );
 }

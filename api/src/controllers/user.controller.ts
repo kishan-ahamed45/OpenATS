@@ -12,6 +12,15 @@ const updateUserSchema = z.object({
     .optional()
     .nullable(),
   role: z.enum(["super_admin", "hiring_manager", "interviewer"]).optional(),
+  isActive: z.boolean().optional(),
+});
+
+const createUserSchema = z.object({
+  asgardeoUserId: z.string().min(1),
+  firstName: z.string().min(1).max(100),
+  lastName: z.string().min(1).max(100),
+  email: z.string().email().max(255),
+  role: z.enum(['super_admin', 'hiring_manager', 'interviewer']).default('interviewer'),
 });
 
 
@@ -74,5 +83,19 @@ export const updateUser = async (req: Request, res: Response) => {
     res.status(200).json({ data: result });
   } catch (error) {
     res.status(500).json({ error: "Failed to update user" });
+  }
+};
+
+export const createUser = async (req: Request, res: Response) => {
+  try {
+    const parsed = createUserSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten().fieldErrors });
+      return;
+    }
+    const result = await userService.create(parsed.data);
+    res.status(201).json({ data: result });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create user' });
   }
 };
