@@ -12,8 +12,6 @@ const createOfferSchema = z.object({
   payFrequency: z.enum(["hourly", "daily", "weekly", "monthly", "yearly"]).optional().nullable(),
   startDate: z.string().optional().nullable(),
   expiryDate: z.string().optional().nullable(),
-  // TODO: remove default when auth is ready
-  createdBy: z.number().int().positive().default(1),
 });
 
 const updateOfferSchema = z.object({
@@ -86,8 +84,10 @@ export const createOffer = async (req: Request, res: Response) => {
       return;
     }
 
-    const result = await offerService.create(parsed.data);
-    res.status(201).json({ data: result });
+    const result = await offerService.create({
+      ...parsed.data,
+      createdBy: req.user.id, // ← from auth middleware
+    });    res.status(201).json({ data: result });
   } catch (error: any) {
     res.status(400).json({ error: error.message || "Failed to create offer" });
   }
